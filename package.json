@@ -1,0 +1,16 @@
+{
+  "name": "browser-eval-site",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "prepare:data": "node scripts/prepare-data.mjs",
+    "dev": "npm run prepare:data && npm run dev --workspace web",
+    "build": "npm run prepare:data && npm run build --workspace web",
+    "test": "node --experimental-strip-types --test web/lib/results.test.ts tests/data.test.mjs"
+  }
+}

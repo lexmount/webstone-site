@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+web/node_modules/
+
+# next.js build output
+web/.next/
+web/out/
+web/next-env.d.ts
+*.tsbuildinfo
+
+# generated result copies (built from results/ by prepare:data)
+web/public/results/
+
+# env
+.env*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# caches
+coverage/
+.turbo/
+.vercel/
+.cache/
+
+# os and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
