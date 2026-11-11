@@ -1,7 +1,7 @@
 {
-  "id": "simpleqa-verified-20261110",
-  "snapshotDate": "2026-11-10",
-  "dateKind": "imported",
+  "id": "lexbench-websearch-v1",
+  "version": "v1",
+  "datasetDifference": "Evaluates 149 scenario queries, matching the task count of the linked scenarios-v2 edition. The source reports aggregate relevance scores without query IDs, graded pools or reference judgments, so identity with the pinned dataset revision is not verified.",
   "source": {
     "kind": "user-provided-image",
     "url": "https://yours.lexmount.cn/artifact-site/s/-FtUMQm-NmQa",
@@ -14,9 +14,9 @@
   },
   "benchmarks": [
     {
-      "id": "simpleqa-verified",
+      "id": "lexbench-websearch",
       "definitionId": "standard",
-      "taskCount": 773,
+      "taskCount": 149,
       "metricSamples": {
         "responseTime": {
           "sampleCount": 980,
@@ -25,21 +25,21 @@
         "pricePerThousand": {
           "scope": "provider-pricing"
         },
-        "hit5": {
-          "sampleCount": 773,
-          "scope": "simpleqa-verified"
+        "ndcg5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
         },
-        "mrr5": {
-          "sampleCount": 773,
-          "scope": "simpleqa-verified"
+        "precision5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
         },
-        "answerMatch5": {
-          "sampleCount": 773,
-          "scope": "simpleqa-verified"
+        "success5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
         }
       },
       "notes": [
-        "质量指标来自 773 道事实题。",
+        "质量指标来自 149 道场景题。",
         "平均响应时间来自两个题库合计 980 次调用，不作为本题库独立计时。"
       ],
       "reportUrl": null,
@@ -52,9 +52,9 @@
           "scores": {
             "responseTime": 1.46,
             "pricePerThousand": 0.75,
-            "hit5": 78,
-            "mrr5": 0.645,
-            "answerMatch5": 72.1
+            "ndcg5": 64,
+            "precision5": 62.7,
+            "success5": 77.2
           },
           "passed": null
         },
@@ -66,9 +66,9 @@
           "scores": {
             "responseTime": 2.26,
             "pricePerThousand": 1,
-            "hit5": 80.2,
-            "mrr5": 0.72,
-            "answerMatch5": 69
+            "ndcg5": 64.4,
+            "precision5": 71.9,
+            "success5": 74.5
           },
           "passed": null
         },
@@ -80,9 +80,9 @@
           "scores": {
             "responseTime": 3.97,
             "pricePerThousand": 5,
-            "hit5": 76.3,
-            "mrr5": 0.513,
-            "answerMatch5": 20.8
+            "ndcg5": 58.8,
+            "precision5": 62.4,
+            "success5": 71.1
           },
           "passed": null
         },
@@ -94,9 +94,9 @@
           "scores": {
             "responseTime": 46.41,
             "pricePerThousand": 1.5,
-            "hit5": 30.1,
-            "mrr5": 0.267,
-            "answerMatch5": 27.7
+            "ndcg5": 23.2,
+            "precision5": 25.8,
+            "success5": 25.5
           },
           "passed": null
         }

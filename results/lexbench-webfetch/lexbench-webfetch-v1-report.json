@@ -1,7 +1,7 @@
 {
-  "id": "lexbench-webfetch-20261111",
-  "snapshotDate": "2026-11-11",
-  "dateKind": "imported",
+  "id": "lexbench-webfetch-v1",
+  "version": "v1",
+  "datasetDifference": "Uses the 430-task edition referenced by the linked dataset card, not its current 550-task edition. Embedded media (17 cases) and direct media (3 cases) are reported separately. Exact task membership is not supplied.",
   "source": {
     "kind": "user-provided-text",
     "url": "",
@@ -155,8 +155,8 @@
         },
         {
           "id": "kitesurf",
-          "name": "Kitesurf Beta · backend undisclosed",
-          "description": "Kitesurf Beta; hosted backend version not disclosed.",
+          "name": "Kitesurf Beta",
+          "description": "Kitesurf Beta",
           "mode": "Hosted",
           "scores": {
             "requestRate": 84.2,

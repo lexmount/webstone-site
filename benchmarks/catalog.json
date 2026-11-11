@@ -3,12 +3,12 @@
   "tracks": [
     {
       "id": "webfetch",
-      "name": "WebFetch",
+      "name": "Web Fetch",
       "description": "Content retrieval"
     },
     {
       "id": "websearch",
-      "name": "WebSearch",
+      "name": "Web Search",
       "description": "Search retrieval"
     },
     {
@@ -20,11 +20,12 @@
   "benchmarks": [
     {
       "id": "lexbench-webfetch",
-      "name": "LexBench WebFetch",
+      "name": "LexBench Web Fetch",
+      "datasetName": "LexBench-Web-Fetch",
       "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Fetch",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/jGXOOJwkdBK_",
       "trackId": "webfetch",
-      "description": "Compare browser retrieval on real websites, from URL to usable content.",
+      "description": "Compare live-site retrieval on real websites, from URL to usable content.",
       "providerLabel": "Method",
       "definitions": [
         {
@@ -32,20 +33,20 @@
           "primaryMetric": "passRate",
           "metrics": [
             {
-              "id": "requestRate",
-              "label": "Request success",
-              "unit": "percent",
-              "direction": "desc",
-              "decimals": 1,
-              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better."
-            },
-            {
               "id": "passRate",
               "label": "Task success",
               "unit": "percent",
               "direction": "desc",
               "decimals": 1,
               "description": "Share of evaluated cases that meet their task-specific pass criteria. The published percentages are retained as supplied. Higher is better."
+            },
+            {
+              "id": "requestRate",
+              "label": "Request success",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better."
             },
             {
               "id": "totalMean",
@@ -73,8 +74,7 @@
             }
           ],
           "leadingMetricIds": [
-            "requestRate",
-            "passRate"
+            "requestRate"
           ],
           "categories": [
             {
@@ -119,23 +119,22 @@
           "primaryMetric": "passRate",
           "metrics": [
             {
-              "id": "requestRate",
-              "label": "Request success",
-              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better.",
-              "unit": "percent",
-              "direction": "desc"
-            },
-            {
               "id": "passRate",
               "label": "Task success",
               "description": "Share of evaluated cases that meet their task-specific pass criteria. Failures and timeouts count as unsuccessful. Higher is better.",
               "unit": "percent",
               "direction": "desc"
+            },
+            {
+              "id": "requestRate",
+              "label": "Request success",
+              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better.",
+              "unit": "percent",
+              "direction": "desc"
             }
           ],
           "leadingMetricIds": [
-            "requestRate",
-            "passRate"
+            "requestRate"
           ],
           "categories": [
             {
@@ -174,7 +173,8 @@
     },
     {
       "id": "webmainbench",
-      "name": "WebMainBench",
+      "name": "LexBench WebMainBench",
+      "datasetName": "LexBench-WebMainBench",
       "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-WebMainBench",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/zrqPjO672dgg",
       "trackId": "webfetch",
@@ -238,17 +238,26 @@
     },
     {
       "id": "lexbench-websearch",
-      "name": "LexBench WebSearch",
+      "name": "LexBench Web Search",
+      "datasetName": "LexBench-Web-Search",
       "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/W3MxzlJuPRl6",
       "trackId": "websearch",
-      "description": "Compare search retrieval quality on scenario-based queries for agents.",
+      "description": "Compare search retrieval on fixed scenario queries for agents.",
       "providerLabel": "Service",
       "definitions": [
         {
           "id": "standard",
           "primaryMetric": "ndcg5",
           "metrics": [
+            {
+              "id": "ndcg5",
+              "label": "nDCG@5",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Measures relevance and ranking quality in the top 5 results. More relevant results earn more credit at higher ranks. Shown on a 0–100 scale."
+            },
             {
               "id": "responseTime",
               "label": "Avg. response",
@@ -264,14 +273,6 @@
               "direction": "asc",
               "decimals": 2,
               "description": "Published price per 1,000 calls, in USD."
-            },
-            {
-              "id": "ndcg5",
-              "label": "nDCG@5",
-              "unit": "score",
-              "direction": "desc",
-              "decimals": 1,
-              "description": "Measures relevance and ranking quality in the top 5 results. More relevant results earn more credit at higher ranks. Shown on a 0–100 scale."
             },
             {
               "id": "precision5",
@@ -295,17 +296,26 @@
     },
     {
       "id": "simpleqa-verified",
-      "name": "SimpleQA Verified",
+      "name": "LexBench SimpleQA Verified",
+      "datasetName": "LexBench-SimpleQA-Verified",
       "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/W3MxzlJuPRl6",
       "trackId": "websearch",
-      "description": "Compare search retrieval quality on short factual questions.",
+      "description": "Compare search retrieval on short factual questions.",
       "providerLabel": "Service",
       "definitions": [
         {
           "id": "standard",
           "primaryMetric": "hit5",
           "metrics": [
+            {
+              "id": "hit5",
+              "label": "Hit@5",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of questions with at least one annotated reference page in the top 5 results. Higher is better."
+            },
             {
               "id": "responseTime",
               "label": "Avg. response",
@@ -321,14 +331,6 @@
               "direction": "asc",
               "decimals": 2,
               "description": "Published price per 1,000 calls, in USD."
-            },
-            {
-              "id": "hit5",
-              "label": "Hit@5",
-              "unit": "percent",
-              "direction": "desc",
-              "decimals": 1,
-              "description": "Share of questions with at least one annotated reference page in the top 5 results. Higher is better."
             },
             {
               "id": "mrr5",
@@ -352,11 +354,12 @@
     },
     {
       "id": "lexbench-headless-372",
-      "name": "LexBench Headless 372",
-      "datasetUrl": "https://github.com/lexmount/Lexbench-Headless-Browser",
+      "name": "LexBench Headless Browser",
+      "datasetName": "LexBench-Headless-Browser",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Headless-Browser",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/gdwtSGOel0va",
       "trackId": "trajectory-replay",
-      "description": "Compare Moli builds with layout on and off on a Lexbench Headless Browser subset, measuring success, memory and latency.",
+      "description": "Compare Moli builds with layout on and off on a 372-task subset of the LexBench Headless Browser protocol, measuring success, memory and latency.",
       "providerLabel": "Build",
       "definitions": [
         {
@@ -419,11 +422,12 @@
     },
     {
       "id": "webarena-verified",
-      "name": "WebArena Verified",
-      "datasetUrl": "https://github.com/ServiceNow/webarena-verified",
+      "name": "LexBench WebArena Replay",
+      "datasetName": "LexBench-WebArena-Replay",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-WebArena-Replay",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/EFLrNgujgsVc",
       "trackId": "trajectory-replay",
-      "description": "Compare setup success rates and latency on real-world WebArena-Verified tasks.",
+      "description": "Compare browser execution on fixed action trajectories for 812 WebArena-Verified tasks.",
       "providerLabel": "Setup",
       "definitions": [
         {

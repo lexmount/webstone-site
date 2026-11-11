@@ -25,9 +25,10 @@ export function validateCatalog(catalog) {
   uniqueIds(catalog.benchmarks, "benchmark");
   for (const benchmark of catalog.benchmarks) {
     if (!catalog.tracks.some(track => track.id === benchmark.trackId)) throw new Error("Unknown benchmark track");
-    if (![benchmark.name, benchmark.description, benchmark.providerLabel].every(value => typeof value === "string" && value)) throw new Error("Missing benchmark information");
+    if (![benchmark.name, benchmark.datasetName, benchmark.description, benchmark.providerLabel].every(value => typeof value === "string" && value)) throw new Error("Missing benchmark information");
     if (![benchmark.datasetUrl, benchmark.reportUrl].every(httpsUrl)) throw new Error("Missing or invalid benchmark resource URL");
     if (benchmark.datasetUrl === benchmark.reportUrl) throw new Error("Dataset and report must have separate URLs");
+    if (new URL(benchmark.datasetUrl).pathname.split("/").filter(Boolean).at(-1) !== benchmark.datasetName) throw new Error("Dataset name must match its URL");
     uniqueIds(benchmark.definitions, "definition");
     for (const definition of benchmark.definitions) {
       uniqueIds(definition.metrics, "metric");
@@ -39,24 +40,23 @@ export function validateCatalog(catalog) {
         if (!["asc", "desc"].includes(metric.direction)) throw new Error("Invalid metric direction");
         if (metric.signed !== undefined && typeof metric.signed !== "boolean") throw new Error("Invalid metric sign");
         if (metric.decimals !== undefined && (!Number.isInteger(metric.decimals) || metric.decimals < 0 || metric.decimals > 6)) throw new Error("Invalid metric display precision");
-        if ("sampleCount" in metric || "scope" in metric) throw new Error("Metric samples belong in the daily result");
+        if ("sampleCount" in metric || "scope" in metric) throw new Error("Metric samples belong in the result file");
       }
     }
   }
 }
 
 export function parseReportFile(benchmarkId, name) {
-  const match = /^([a-z0-9-]+)-(\d{4})(\d{2})(\d{2})-report\.json$/.exec(name);
-  if (!match || match[1] !== benchmarkId) throw new Error("Expected <benchmark>-YYYYMMDD-report.json directly inside its benchmark directory");
-  const date = `${match[2]}-${match[3]}-${match[4]}`;
-  const parsed = new Date(`${date}T00:00:00Z`);
-  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) throw new Error("Invalid result filename date");
-  return { date, benchmarkId };
+  const match = /^([a-z0-9-]+)-(v[1-9]\d*)-report\.json$/.exec(name);
+  if (!match || match[1] !== benchmarkId) throw new Error("Expected <benchmark>-vN-report.json directly inside its benchmark directory");
+  return { benchmarkId, version: match[2] };
 }
 
 export function validateSnapshot(snapshot, entry, catalog) {
-  if ("schemaVersion" in snapshot || "version" in snapshot) throw new Error("Daily results must not contain a format version");
-  if (typeof snapshot.id !== "string" || !snapshot.id || snapshot.snapshotDate !== entry.date) throw new Error("Result identity or date does not match its filename");
+  if ("schemaVersion" in snapshot || "measuredAt" in snapshot || ("source" in snapshot && "versionId" in snapshot.source)) throw new Error("Results must not contain a format or source version");
+  if (typeof snapshot.id !== "string" || !snapshot.id || snapshot.id !== `${entry.benchmarkId}-${entry.version}`) throw new Error("Result identity does not match its filename");
+  if (snapshot.version !== entry.version) throw new Error("Result version does not match its filename");
+  if (typeof snapshot.datasetDifference !== "string" || !snapshot.datasetDifference.trim() || !/[A-Za-z]/.test(snapshot.datasetDifference) || /\p{Script=Han}/u.test(snapshot.datasetDifference)) throw new Error("Missing or non-English dataset difference");
   if (snapshot.source.kind === "user-provided-text") {
     if (!snapshot.source.method || !snapshot.source.scope) throw new Error("Missing user-provided text provenance");
   } else {
@@ -68,10 +68,10 @@ export function validateSnapshot(snapshot, entry, catalog) {
       if (!/^[a-f0-9]{64}$/.test(snapshot.source.sha256 ?? "")) throw new Error("Invalid image source provenance");
     }
   }
-  if (!Array.isArray(snapshot.benchmarks) || snapshot.benchmarks.length !== 1) throw new Error("Each daily report must contain exactly one benchmark");
+  if (!Array.isArray(snapshot.benchmarks) || snapshot.benchmarks.length !== 1) throw new Error("Each result file must contain exactly one benchmark");
   for (const benchmark of snapshot.benchmarks) {
     const allowed = ["id", "definitionId", "taskCount", "categoryTotals", "metricSamples", "otherBest", "notes", "reportUrl", "providers"];
-    if (Object.keys(benchmark).some(key => !allowed.includes(key))) throw new Error("Unexpected daily result field; put benchmark and page definitions in the catalog");
+    if (Object.keys(benchmark).some(key => !allowed.includes(key))) throw new Error("Unexpected result field; put benchmark and page definitions in the catalog");
     if (entry.benchmarkId !== benchmark.id || !Number.isInteger(benchmark.taskCount) || benchmark.taskCount < 1) {
       throw new Error("Unexpected benchmark or task count");
     }
@@ -88,7 +88,7 @@ export function validateSnapshot(snapshot, entry, catalog) {
     }
     uniqueIds(benchmark.providers, "provider");
     for (const provider of benchmark.providers) {
-      if ("color" in provider || "categories" in provider) throw new Error("Unexpected provider presentation field in daily result");
+      if ("color" in provider || "categories" in provider) throw new Error("Unexpected provider presentation field in result file");
       if (Object.keys(provider.scores).some(id => !definition.metrics.some(metric => metric.id === id))) throw new Error("Unknown metric score reference");
       for (const metric of definition.metrics) {
         const value = provider.scores[metric.id];
@@ -122,7 +122,7 @@ export async function discoverResults(inputRoot, catalog) {
     for (const name of (await readdir(folder)).filter(name => !name.startsWith(".")).sort()) {
       const input = path.join(folder, name);
       const info = await lstat(input);
-      if (info.isSymbolicLink() || !info.isFile()) throw new Error("Daily reports must be direct files, not nested directories or symbolic links");
+      if (info.isSymbolicLink() || !info.isFile()) throw new Error("Result reports must be direct files, not nested directories or symbolic links");
       const entry = parseReportFile(directory, name);
       const report = JSON.parse(await readFile(input, "utf8"));
       validateSnapshot(report, entry, catalog);
@@ -156,5 +156,5 @@ export async function prepareData({ write = true } = {}) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const summary = await prepareData();
-  console.log(`Prepared ${summary.files} result snapshot with ${summary.benchmarks} benchmark views.`);
+  console.log(`Prepared ${summary.files} result versions with ${summary.benchmarks} benchmark views.`);
 }

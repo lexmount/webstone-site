@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, Bot, ChevronLeft, ChevronRight, Globe2, Layers3, Menu, Search } from "lucide-react";
-import { formatMetric, reportEntries, resolveBenchmark, selectEntry, sortProviders, type Catalog, type Entry, type Metric, type Provider, type ReportFile, type Snapshot } from "../lib/results";
+import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, Bot, Globe2, Layers3, Menu, Search } from "lucide-react";
+import { benchmarkEntries, bestValue, formatMetric, isBestValue, latestEntry, reportEntries, resolveBenchmark, selectEntry, sortProviders, type Catalog, type Entry, type Metric, type Provider, type ReportFile, type Snapshot } from "../lib/results";
 import { providerColors } from "../lib/presentation";
 import InfoTooltip from "./info-tooltip";
 
 const TRACK_ICONS: Record<string, typeof Globe2> = { webfetch: Globe2, websearch: Search, "trajectory-replay": Bot };
 const GITHUB_URL = "https://github.com/lexmount/browser-eval-site";
-type Selection = { benchmark: string; date: string; metric: string };
+type Selection = { benchmark: string; version: string; metric: string };
 
 export default function Dashboard() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
-  const [selection, setSelection] = useState<Selection>({ benchmark: "lexbench-webfetch", date: "", metric: "passRate" });
+  const [selection, setSelection] = useState<Selection>({ benchmark: "lexbench-webfetch", version: "", metric: "passRate" });
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,15 +36,17 @@ export default function Dashboard() {
         const params = new URLSearchParams(window.location.search);
         const candidate = params.get("benchmark");
         const benchmark = benchmarkCatalog.benchmarks.some(item => item.id === candidate) ? candidate! : benchmarkCatalog.benchmarks[0].id;
-        const dates = resultEntries.filter(entry => entry.benchmarks.includes(benchmark)).map(entry => entry.date).sort();
-        const date = params.get("date") ?? dates.at(-1) ?? "";
-        const selectedEntry = selectEntry(resultEntries, date, benchmark);
+        const requestedVersion = params.get("version");
+        const selectedEntry = requestedVersion
+          ? selectEntry(resultEntries, requestedVersion, benchmark)
+          : latestEntry(resultEntries, benchmark);
+        const version = requestedVersion ?? selectedEntry?.version ?? "";
         const selectedResult = records.find(record => record.id === selectedEntry?.id)?.benchmarks.find(item => item.id === benchmark);
         const selectedBenchmark = selectedResult ? resolveBenchmark(benchmarkCatalog, selectedResult) : null;
         const selectedMetric = selectedBenchmark?.metrics.find(item => item.id === params.get("metric")) ?? selectedBenchmark?.metrics.find(item => item.id === selectedBenchmark.primaryMetric);
         setSelection({
           benchmark,
-          date,
+          version,
           metric: selectedMetric?.id ?? "passRate",
         });
         setDirection(selectedMetric?.direction ?? "desc");
@@ -58,26 +60,33 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!entries) return;
-    const params = new URLSearchParams({ benchmark: selection.benchmark, date: selection.date, metric: selection.metric });
+    const params = new URLSearchParams({ benchmark: selection.benchmark });
+    if (selection.version) params.set("version", selection.version);
+    params.set("metric", selection.metric);
     window.history.replaceState(null, "", `${window.location.pathname}?${params}`);
   }, [selection, entries]);
 
-  const entry = entries ? selectEntry(entries, selection.date, selection.benchmark) : null;
+  const entry = entries ? selectEntry(entries, selection.version, selection.benchmark) : null;
   const snapshot = snapshots.find(item => item.id === entry?.id) ?? null;
   const result = snapshot?.benchmarks.find(item => item.id === selection.benchmark);
   const benchmark = catalog && result ? resolveBenchmark(catalog, result) : null;
   const details = catalog?.benchmarks.find(item => item.id === selection.benchmark);
   const tracks = catalog?.tracks.map(item => ({ ...item, benchmarks: catalog.benchmarks.filter(bench => bench.trackId === item.id) })) ?? [];
   const track = tracks.find(item => item.id === details?.trackId);
-  const metric = benchmark?.metrics.find(item => item.id === selection.metric) ?? benchmark?.metrics[0];
-  const dates = entries ? [...new Set(entries.filter(item => item.benchmarks.includes(selection.benchmark)).map(item => item.date))].sort() : [];
-  const prevDate = dates.filter(date => date < selection.date).at(-1);
-  const nextDate = dates.find(date => date > selection.date);
+  const metric = benchmark?.metrics.find(item => item.id === selection.metric) ?? benchmark?.metrics.find(item => item.id === benchmark.primaryMetric) ?? benchmark?.metrics[0];
+  const versions = entries ? benchmarkEntries(entries, selection.benchmark).map(item => item.version) : [];
   const providers = benchmark && metric ? sortProviders(benchmark.providers, metric.id, direction) : [];
-  const metricLeader = benchmark && metric ? sortProviders(benchmark.providers, metric.id, metric.direction)[0] : null;
   const categories = benchmark?.categories ?? [];
-  const leadingMetrics = benchmark?.leadingMetricIds?.map(id => benchmark.metrics.find(item => item.id === id)!) ?? [];
-  const trailingMetrics = benchmark?.metrics.filter(item => !benchmark.leadingMetricIds?.includes(item.id)) ?? [];
+  const primaryMetric = benchmark?.metrics.find(item => item.id === benchmark.primaryMetric);
+  const leadingMetrics = benchmark && primaryMetric
+    ? [primaryMetric, ...benchmark.metrics.filter(item => item.id !== primaryMetric.id && benchmark.leadingMetricIds?.includes(item.id))]
+    : [];
+  const trailingMetrics = benchmark
+    ? benchmark.metrics.filter(item => item.id !== primaryMetric?.id && !benchmark.leadingMetricIds?.includes(item.id))
+    : [];
+  const metricBest = new Map((benchmark?.metrics ?? []).map(item => [item.id, bestValue((benchmark?.providers ?? []).map(provider => provider.scores[item.id]), item.direction)]));
+  const categoryBest = new Map(categories.map(category => [category.id, bestValue((benchmark?.providers ?? []).map(provider => provider.categoryPassed?.[category.id] ?? null), "desc")]));
+  const passedBest = bestValue((benchmark?.providers ?? []).map(provider => provider.passed), "desc");
   const showPassed = benchmark?.providers.some(provider => provider.passed != null) ?? false;
   const tableClass = benchmark?.id === "lexbench-webfetch"
     ? "wide-table lexbench-table"
@@ -86,29 +95,28 @@ export default function Dashboard() {
     : "wide-table";
 
   function chooseBenchmark(id: string) {
-    const availableDates = entries?.filter(item => item.benchmarks.includes(id)).map(item => item.date).sort() ?? [];
-    const date = availableDates.at(-1) ?? "";
-    const selectedEntry = entries ? selectEntry(entries, date, id) : null;
-    const selectedResult = snapshots.find(record => record.id === selectedEntry?.id)?.benchmarks.find(item => item.id === id);
+    const latest = entries ? latestEntry(entries, id) : null;
+    const version = latest?.version ?? "";
+    const selectedResult = snapshots.find(record => record.id === latest?.id)?.benchmarks.find(item => item.id === id);
     const selected = catalog && selectedResult ? resolveBenchmark(catalog, selectedResult) : null;
     const primary = selected?.metrics.find(item => item.id === selected.primaryMetric);
-    setSelection({ benchmark: id, date, metric: primary?.id ?? "passRate" });
+    setSelection({ benchmark: id, version, metric: primary?.id ?? "passRate" });
     setDirection(primary?.direction ?? "desc");
     setMenuOpen(false);
   }
 
-  function chooseDate(date: string) {
-    const selectedEntry = entries ? selectEntry(entries, date, selection.benchmark) : null;
+  function chooseVersion(version: string) {
+    const selectedEntry = entries ? selectEntry(entries, version, selection.benchmark) : null;
     const selectedResult = snapshots.find(record => record.id === selectedEntry?.id)?.benchmarks.find(item => item.id === selection.benchmark);
     const selected = catalog && selectedResult ? resolveBenchmark(catalog, selectedResult) : null;
     const selectedMetric = selected?.metrics.find(item => item.id === selection.metric) ?? selected?.metrics.find(item => item.id === selected.primaryMetric);
-    setSelection(current => ({ ...current, date, metric: selectedMetric?.id ?? current.metric }));
+    setSelection(current => ({ ...current, version, metric: selectedMetric?.id ?? current.metric }));
     if (selectedMetric && selectedMetric.id !== selection.metric) setDirection(selectedMetric.direction);
   }
 
   function metricHeader(item: Metric) {
     const selected = metric?.id === item.id;
-    return <th key={item.id} scope="col" aria-sort={selected ? (direction === "asc" ? "ascending" : "descending") : "none"}>
+    return <th key={item.id} scope="col" aria-sort={selected ? (direction === "asc" ? "ascending" : "descending") : "none"} className={selected ? "sorted" : undefined}>
       <div className="metric-heading">
         <button className={`sort-button ${selected ? "selected" : ""}`} onClick={() => {
           setDirection(selected ? (direction === "desc" ? "asc" : "desc") : item.direction);
@@ -120,9 +128,11 @@ export default function Dashboard() {
   }
 
   function metricCell(provider: Provider, item: Metric) {
-    return <td key={item.id} className={`numeric ${item.id === metric?.id ? "primary-number" : ""}`}
-      title={provider.scores[item.id] == null ? "Not disclosed in the source" : undefined}
-    >{formatMetric(provider.scores[item.id], item.unit, item.decimals, item.signed)}</td>;
+    const value = provider.scores[item.id];
+    const isBest = isBestValue(value, metricBest.get(item.id) ?? null);
+    return <td key={item.id} className={`numeric ${item.id === metric?.id ? "primary-number" : ""} ${isBest ? "best-value" : ""}`}
+      title={isBest ? "Best in this column" : value == null ? "Not disclosed in the source" : undefined}
+    >{formatMetric(value, item.unit, item.decimals, item.signed)}{isBest && <span className="sr-only"> Best in this column</span>}</td>;
   }
 
   return <div className="app-shell">
@@ -148,8 +158,9 @@ export default function Dashboard() {
           <button className="mobile-menu icon-button" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
           <div className="benchmark-heading"><h1>{details?.name ?? "Browser Eval"}</h1>
             {details && <p className="benchmark-description">{details.description}</p>}
+            {snapshot && <p className="dataset-difference"><strong>Dataset difference:</strong> {snapshot.datasetDifference}</p>}
             {details && <div className="benchmark-links">
-              <a href={details.datasetUrl} target="_blank" rel="noreferrer" title="Dataset home. The evaluated sample scope is recorded in the downloaded report.">Dataset<ArrowUpRight size={13} aria-hidden="true" /></a>
+              <a href={details.datasetUrl} target="_blank" rel="noreferrer" title="Dataset home. The evaluated sample scope is recorded in the downloaded report.">Dataset · {details.datasetName}<ArrowUpRight size={13} aria-hidden="true" /></a>
               <a href={benchmark?.reportUrl ?? details.reportUrl} target="_blank" rel="noreferrer" title={result?.reportUrl ? "Evaluation report for these results." : "Related evaluation report. It may cover a different run or sample scope."}>Evaluation report<ArrowUpRight size={13} aria-hidden="true" /></a>
             </div>}
           </div>
@@ -169,17 +180,18 @@ export default function Dashboard() {
               key={item.id} className={`benchmark-tab ${selection.benchmark === item.id ? "active" : ""}`}
               aria-current={selection.benchmark === item.id ? "page" : undefined} onClick={() => chooseBenchmark(item.id)}
             >{item.name}</button>)}</nav>
-            <div className="date-control">
-              <label htmlFor="result-date">Date</label>
-              <button className="icon-button" aria-label="Previous date with results" disabled={!prevDate} onClick={() => prevDate && chooseDate(prevDate)}><ChevronLeft size={16} /></button>
-              <input id="result-date" aria-label="Import date" title="Import date (UTC). The report does not specify an evaluation date." type="date" value={selection.date} onChange={event => chooseDate(event.target.value)} />
-              <button className="icon-button" aria-label="Next date with results" disabled={!nextDate} onClick={() => nextDate && chooseDate(nextDate)}><ChevronRight size={16} /></button>
-            </div>
+            {versions.length > 0 && <div className="version-control">
+              <label htmlFor="result-version">Version</label>
+              <select id="result-version" value={selection.version} onChange={event => chooseVersion(event.target.value)}>
+                {selection.version && !versions.includes(selection.version) && <option value={selection.version}>{selection.version} (no results)</option>}
+                {[...versions].reverse().map(version => <option key={version} value={version}>{version}</option>)}
+              </select>
+            </div>}
           </div>
 
-          {!snapshot || !benchmark || !metric ? <div className="empty-state">
-            <h2>No results for this date</h2>
-            {dates.length > 0 && <button className="text-button" onClick={() => chooseDate(dates.at(-1)!)}>View latest results<ArrowRight size={14} /></button>}
+          {!benchmark || !metric ? <div className="empty-state">
+            <h2>{versions.length > 0 ? "No results for this version" : "No results for this benchmark"}</h2>
+            {versions.length > 0 && <button className="text-button" onClick={() => chooseVersion(versions.at(-1)!)}>View latest version<ArrowRight size={14} /></button>}
           </div> : <>
             <section className="leaderboard" aria-label={`${benchmark.name} leaderboard`}>
               <div className="table-scroll">
@@ -193,13 +205,16 @@ export default function Dashboard() {
                     {trailingMetrics.map(metricHeader)}
                     {showPassed && <th className="count-cell" scope="col"><div className="metric-heading"><span>Passed / Total</span><InfoTooltip label="Passed / Total" description={`Passed cases out of ${benchmark.taskCount} total cases. Undisclosed counts are shown as —.`} /></div></th>}
                   </tr></thead>
-                  <tbody>{providers.map((provider, i) => <tr key={provider.id} className={provider.id === metricLeader?.id ? "highlight-row" : ""}>
+                  <tbody>{providers.map((provider, i) => <tr key={provider.id}>
                     <td className="rank-cell">{provider.scores[metric.id] == null ? "—" : i + 1}</td>
                     <td><div className="provider-name"><span className={`provider-mark ${provider.id}`} style={{ "--provider-color": providerColors[provider.id] ?? "#64748b" } as React.CSSProperties}>{provider.name[0]}</span><span className="provider-label" title={provider.name}>{provider.name}</span></div></td>
                     {leadingMetrics.map(item => metricCell(provider, item))}
-                    {categories.map(category => <td key={category.id} className="numeric category-value">{provider.categoryPassed?.[category.id] ?? "—"}</td>)}
+                    {categories.map(category => {
+                      const isBest = isBestValue(provider.categoryPassed?.[category.id], categoryBest.get(category.id) ?? null);
+                      return <td key={category.id} className={`numeric category-value ${isBest ? "best-value" : ""}`} title={isBest ? "Best in this column" : undefined}>{provider.categoryPassed?.[category.id] ?? "—"}{isBest && <span className="sr-only"> Best in this column</span>}</td>;
+                    })}
                     {trailingMetrics.map(item => metricCell(provider, item))}
-                    {showPassed && <td className="numeric count-cell" title={provider.passed == null ? "Not disclosed in the source" : provider.passedDerivation ?? undefined}>{provider.passed == null ? "—" : <>{provider.passed}<span> / {benchmark.taskCount}</span></>}</td>}
+                    {showPassed && <td className={`numeric count-cell ${isBestValue(provider.passed, passedBest) ? "best-value" : ""}`} title={isBestValue(provider.passed, passedBest) ? "Best in this column" : provider.passed == null ? "Not disclosed in the source" : provider.passedDerivation ?? undefined}>{provider.passed == null ? "—" : <>{provider.passed}<span> / {benchmark.taskCount}</span></>}{isBestValue(provider.passed, passedBest) && <span className="sr-only"> Best in this column</span>}</td>}
                   </tr>)}</tbody>
                 </table>
               </div>

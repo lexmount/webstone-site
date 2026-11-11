@@ -1,7 +1,7 @@
 {
-  "id": "webarena-verified-20261110",
-  "snapshotDate": "2026-11-10",
-  "dateKind": "imported",
+  "id": "webarena-verified-v1",
+  "version": "v1",
+  "datasetDifference": "Evaluates the full 812-task population matching the linked full-812-v1 edition. The source does not state whether portable trajectories or direct action records were replayed, so edition-level identity with the pinned dataset revision is not verified.",
   "source": {
     "kind": "user-provided-text",
     "url": "https://github.com/ServiceNow/webarena-verified",
