@@ -1,7 +1,7 @@
 {
-  "id": "lexbench-webfetch-20261110",
-  "snapshotDate": "2026-11-10",
-  "dateKind": "imported",
+  "id": "webmainbench-v1",
+  "version": "v1",
+  "datasetDifference": "Uses the corrected 545-page edition described by the linked dataset card, with frozen HTML as the extraction input. Scores are transcribed from the published comparison; the source does not state the dataset commit, so revision-level identity is not verified.",
   "source": {
     "url": "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
     "title": "[L1·证据] Moli 以 89.8% 通过率拿下 Web Fetch 第一",
@@ -12,27 +12,31 @@
   },
   "benchmarks": [
     {
-      "id": "lexbench-webfetch",
-      "definitionId": "combined-media",
-      "taskCount": 430,
-      "categoryTotals": {
-        "static": 100,
-        "dynamic": 100,
-        "popular": 100,
-        "antibot": 100,
-        "document": 10,
-        "media": 20
-      },
-      "otherBest": {
-        "antibot": 37,
-        "popular": 58,
-        "dynamic": 58
+      "id": "webmainbench",
+      "definitionId": "standard",
+      "taskCount": 545,
+      "metricSamples": {
+        "fullText": {
+          "sampleCount": 545
+        },
+        "code": {
+          "sampleCount": 110
+        },
+        "formula": {
+          "sampleCount": 257
+        },
+        "tableContent": {
+          "sampleCount": 179
+        },
+        "tableStructure": {
+          "sampleCount": 179
+        }
       },
       "notes": [
-        "430 个用例覆盖六类真实网站（静态、动态、热门、风控各 100，内嵌文档 10，媒体 20），所有浏览器面对相同 URL。",
-        "每个用例端到端时限 45 秒；仅临时网络错误允许最多重试一次。",
-        "失败和超时计入结果。请求成功只代表收到响应，不等于任务通过。",
-        "原文说明通过与失败结果均经过复核；本项目展示原文汇总，不重新评分。"
+        "五款浏览器处理同一批 545 份预先保存的 HTML。",
+        "全文、代码、公式、表格内容、表格结构五项评分；综合分取五项平均。",
+        "输入固定，不测实时网络访问或风控。",
+        "本来源正文仅披露部分分数，缺失值保持为空，未从图形或排名推算。"
       ],
       "reportUrl": null,
       "providers": [
@@ -42,19 +46,14 @@
           "description": "Rust 独立浏览器内核",
           "mode": "本地 · 原生 Markdown",
           "scores": {
-            "passRate": 89.8,
-            "requestRate": 96.3
+            "overall": 39.27,
+            "code": 91.06,
+            "fullText": 40.7,
+            "formula": 28.2,
+            "tableContent": 22.6,
+            "tableStructure": 13.8
           },
-          "passed": 386,
-          "passedDerivation": "430 − 44 failed cases",
-          "categoryPassed": {
-            "static": 97,
-            "dynamic": 90,
-            "popular": 91,
-            "antibot": 88,
-            "document": 1,
-            "media": 19
-          }
+          "passed": null
         },
         {
           "id": "chromium",
@@ -62,19 +61,14 @@
           "description": "Chromium + node-html-markdown",
           "mode": "本地 · HTML 转换",
           "scores": {
-            "passRate": 54.4,
-            "requestRate": 96.7
+            "overall": 27.02,
+            "code": 35.86,
+            "fullText": 39.4,
+            "formula": 21.1,
+            "tableContent": 25,
+            "tableStructure": 13.7
           },
-          "passed": 234,
-          "passedDerivation": "386 − 152 (difference in passed cases stated in the source)",
-          "categoryPassed": {
-            "static": 99,
-            "dynamic": 58,
-            "popular": 58,
-            "antibot": 5,
-            "document": 1,
-            "media": 13
-          }
+          "passed": null
         },
         {
           "id": "lightpanda",
@@ -82,19 +76,14 @@
           "description": "Zig 无头浏览器",
           "mode": "本地 · 原生 Markdown",
           "scores": {
-            "passRate": 53,
-            "requestRate": 87.4
+            "overall": 35,
+            "code": 84.7,
+            "fullText": 41.5,
+            "formula": 13,
+            "tableContent": 21.8,
+            "tableStructure": 14
           },
-          "passed": 228,
-          "passedDerivation": "Sum of passes across six categories (92 + 37 + 38 + 44 + 16 + 1)",
-          "categoryPassed": {
-            "static": 92,
-            "dynamic": 44,
-            "popular": 38,
-            "antibot": 37,
-            "document": 1,
-            "media": 16
-          }
+          "passed": null
         },
         {
           "id": "obscura",
@@ -102,19 +91,14 @@
           "description": "Rust / V8 浏览器",
           "mode": "本地 · 原生 Markdown",
           "scores": {
-            "passRate": 51.9,
-            "requestRate": 89.3
+            "overall": 31.03,
+            "code": 81.8,
+            "fullText": 41.9,
+            "formula": 31.4,
+            "tableContent": 0,
+            "tableStructure": 0
           },
-          "passed": 223,
-          "passedDerivation": "Sum of passes across six categories (94 + 43 + 53 + 16 + 1 + 16)",
-          "categoryPassed": {
-            "static": 94,
-            "dynamic": 43,
-            "popular": 53,
-            "antibot": 16,
-            "document": 1,
-            "media": 16
-          }
+          "passed": null
         },
         {
           "id": "kitesurf",
@@ -122,19 +106,14 @@
           "description": "Cloudflare 远程浏览器",
           "mode": "远程 · 官方 Markdown API",
           "scores": {
-            "passRate": 44.7,
-            "requestRate": 84.2
+            "overall": 33.43,
+            "code": 80.7,
+            "fullText": 37,
+            "formula": 19.3,
+            "tableContent": 18.3,
+            "tableStructure": 11.9
           },
-          "passed": 192,
-          "passedDerivation": "Sum of passes across six categories (90 + 41 + 40 + 10 + 1 + 10)",
-          "categoryPassed": {
-            "static": 90,
-            "dynamic": 41,
-            "popular": 40,
-            "antibot": 10,
-            "document": 1,
-            "media": 10
-          }
+          "passed": null
         }
       ]
     }

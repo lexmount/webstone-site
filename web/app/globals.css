@@ -50,9 +50,11 @@ h1 { margin: 0; font-size: 26px; font-weight: 560; letter-spacing: -.8px; }
 .benchmark-tab { flex-shrink: 0; border: 0; border-bottom: 2px solid transparent; padding: 10px 0; background: transparent; color: #999; font-size: 12px; }
 .benchmark-tab.active { border-bottom-color: #355b43; color: #283b31; font-weight: 550; }
 .benchmark-tab:hover { color: #283b31; }
-.date-control { display: flex; align-items: center; gap: 3px; }
-.date-control label { color: #777; font-size: 12px; margin-right: 10px; }
-.date-control input { border: 1px solid #e5e5e5; border-radius: 6px; padding: 6px 9px; width: 136px; font-size: 12px; background: white; }
+.version-control { display: flex; align-items: center; gap: 8px; }
+.version-control label { color: #777; font-size: 12px; }
+.version-control select { border: 1px solid #e5e5e5; border-radius: 6px; padding: 6px 9px; min-width: 82px; font-size: 12px; background: white; }
+.dataset-difference { margin: 8px 0 0; max-width: 760px; color: #6f7d73; font-size: 12px; line-height: 1.7; }
+.dataset-difference strong { color: #355b43; font-weight: 550; }
 .table-scroll { position: relative; overflow-x: auto; border: 1px solid #e8e8e8; border-radius: 8px; scrollbar-width: thin; scrollbar-color: #d2d2d2 transparent; }
 .table-scroll::-webkit-scrollbar { height: 8px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #d8d8d8; border-radius: 4px; }
@@ -64,7 +66,6 @@ th.rank-cell, td.rank-cell { text-align: center; width: 58px; padding-left: 15px
 th.provider-heading { width: 32%; }
 tbody tr { border-top: 1px solid #eee; }
 td { padding: 20px; font-size: 14px; }
-tbody tr.highlight-row { background: #fcf8ef; }
 tbody tr:hover { background: #f8f8f6; }
 .provider-name { display: flex; align-items: center; gap: 12px; font-weight: 500; white-space: nowrap; }
 .provider-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -76,8 +77,10 @@ tbody tr:hover { background: #f8f8f6; }
 .wide-table thead tr { height: 54px; }
 .wide-table tbody tr { height: 60px; }
 .wide-table th.provider-heading { width: 150px; }
+.wide-table th.sorted { background: #eaf4ee; color: #2f5a3f; font-weight: 600; }
+.wide-table td.best-value { color: #1b6b45; font-weight: 650; background: #eef8f1; }
+.wide-table tbody tr:hover td.best-value { background: #e4f3e9; }
 .wide-table tr { background: #fff; }
-.wide-table tr.highlight-row { background: #fcf8ef; }
 .wide-table td:nth-child(-n+2), .wide-table th:nth-child(-n+2) { position: sticky; left: 0; z-index: 1; }
 .wide-table td:nth-child(-n+2) { background: inherit; }
 .wide-table th:nth-child(-n+2) { background: #fafafa; z-index: 2; }
@@ -105,7 +108,7 @@ tbody tr:hover { background: #f8f8f6; }
 .metric-heading { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .sort-button { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
 .sort-button svg { flex-shrink: 0; }
-.sort-button.selected { color: #8b622f; }
+.sort-button.selected { color: #2f5a3f; }
 .info-trigger { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 14px; width: 14px; height: 24px; padding: 0; border: 0; border-radius: 4px; color: #aaa; background: transparent; }
 /* Keep a 24px hit area without widening the metric columns. */
 .info-trigger::before { content: ""; position: absolute; inset: 0 -5px; }
@@ -123,7 +126,9 @@ h2 { margin: 0; font-size: 21px; font-weight: 550; letter-spacing: -.5px; }
   :root { --sidebar: 200px; }
   .sidebar { padding-left: 12px; padding-right: 12px; }
   .brand { font-size: 20px; gap: 7px; }
-  .topbar { padding-left: 28px; padding-right: 28px; }
+  .topbar { padding-left: 28px; padding-right: 28px; flex-wrap: wrap; }
+  .title-group { flex-basis: 100%; }
+  .topbar-actions { margin-left: auto; }
   .main-content { padding-left: 28px; padding-right: 28px; }
   th, td { padding-left: 14px; padding-right: 14px; }
   .provider-name { gap: 9px; }
@@ -145,8 +150,9 @@ h2 { margin: 0; font-size: 21px; font-weight: 550; letter-spacing: -.5px; }
   .benchmark-tabs { gap: 18px; }
   .benchmark-tab { font-size: 11px; }
   .benchmark-description { font-size: 11px; }
-  .date-control label { font-size: 11px; margin-right: 5px; }
-  .date-control input { width: 130px; font-size: 11px; }
+  .version-control label { font-size: 11px; }
+  .version-control select { min-width: 72px; font-size: 11px; }
+  .dataset-difference { font-size: 11px; }
   table { table-layout: fixed; }
   th, td { padding: 17px 7px; }
   th.rank-cell, td.rank-cell { width: 24px; padding-left: 5px; padding-right: 0; font-size: 10px; }

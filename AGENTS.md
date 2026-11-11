@@ -4,16 +4,18 @@ Instructions for agents and contributors working in this repository.
 
 ## What this is
 
-A static leaderboard for six benchmarks. Browser side: **LexBench WebFetch** (live websites, 430 cases across seven categories in the latest import) and **WebMainBench** (545 frozen HTML pages, five scored dimensions). Search side: **LexBench WebSearch** (149 scenario queries, nDCG@5 / Precision@5 / Success@5) and **SimpleQA Verified** (773 factual queries, Hit@5 / MRR@5 / Answer Match@5). Agent side: **WebArena Verified** (812 tasks from [ServiceNow/webarena-verified](https://github.com/ServiceNow/webarena-verified), success rate plus end-to-end task and per-action latency at mean / P50 / P95). **LexBench Headless 372** covers a 372-task subset from [Lexbench Headless Browser](https://github.com/lexmount/Lexbench-Headless-Browser) with signed deltas against a baseline row, PSS in MiB and latency in milliseconds. The evaluation harness that produces the results lives in [lexmount/browser-eval](https://github.com/lexmount/browser-eval); this repository only publishes the numbers and renders them.
+A static leaderboard for six benchmarks. Browser side: **LexBench Web Fetch** (live websites, 430 cases across seven categories in its published version) and **WebMainBench** (545 frozen HTML pages, five scored dimensions). Search side: **LexBench Web Search** (149 scenario queries, nDCG@5 / Precision@5 / Success@5) and **SimpleQA Verified** (773 factual queries, Hit@5 / MRR@5 / Answer Match@5). Agent side: **LexBench WebArena Replay** (812 tasks from [ServiceNow/webarena-verified](https://github.com/ServiceNow/webarena-verified), success rate plus end-to-end task and per-action latency at mean / P50 / P95). **LexBench Headless Browser** covers a 372-task subset of the historical [Lexbench Headless Browser](https://github.com/lexmount/Lexbench-Headless-Browser) protocol with signed deltas against a baseline row, PSS in MiB and latency in milliseconds. The evaluation harness that produces the results lives in [lexmount/browser-eval](https://github.com/lexmount/browser-eval); this repository only publishes the numbers and renders them.
+
+Page titles use natural English (`Web Fetch`, `Web Search`). Internal IDs stay lowercase and hyphenated (`webfetch`, `websearch`, `lexbench-webfetch`). Never derive a page title by joining a code identifier.
 
 ## Layout
 
-- `benchmarks/catalog.json` — the only source for Track/Benchmark names, introductions, resource links and evaluation definitions (metric and category metadata plus table presentation).
-- `results/<id>/<id>-YYYYMMDD-report.json` — one Benchmark's daily measurements and provenance per file, referencing `id` and `definitionId`. No date subdirectories, manual index or daily format-version field.
-- `scripts/prepare-data.mjs` — scans Benchmark directories, validates filenames/references/values, copies the catalog into `web/public/benchmarks/` and reports into `web/public/results/`, and generates `web/public/results/reports.json` as the page's data bundle.
+- `benchmarks/catalog.json` — the only source for Track/Benchmark names, official Dataset names, introductions, resource links and evaluation definitions (metric and category metadata plus table presentation).
+- `results/<id>/<id>-vN-report.json` — one Benchmark's published evaluation version and provenance per file, referencing `id`, `definitionId` and its own `version`. No date subdirectories, manual index or format-version field.
+- `scripts/prepare-data.mjs` — scans Benchmark directories, validates filenames/references/values/versions, copies the catalog into `web/public/benchmarks/` and reports into `web/public/results/`, and generates `web/public/results/reports.json` as the page's data bundle.
 - `web/` — Next.js app (App Router, Turbopack, static export).
-- `web/components/dashboard.tsx` — the single-page dashboard: three Tracks, six Bench views, date picker, one results table.
-- `web/lib/results.ts` — types, sorting, metric formatting, category helpers.
+- `web/components/dashboard.tsx` — the single-page dashboard: three Tracks, six Bench views, version picker, one results table.
+- `web/lib/results.ts` — types, version selection/comparison, sorting, best-value calculation, metric formatting, category helpers.
 - `web/lib/presentation.ts` — provider colors; Track icons and table layout remain in the website code.
 - `web/app/globals.css` — all styling; there is no component library.
 - `web/lib/results.test.ts`, `tests/data.test.mjs` — Node test runner suites.
@@ -33,31 +35,37 @@ Serve a build with `python3 -m http.server 5173 --directory web/out`; never `nex
 
 ## Data rules
 
-- `benchmarks/` owns reusable definitions; `results/` owns daily observations. Never hand-edit `web/public/benchmarks/`, `web/public/results/` or `web/out/`; all are generated and git-ignored.
-- Add a date by adding only `results/<id>/<id>-YYYYMMDD-report.json`; never create or maintain an index file. Each report must contain exactly one Benchmark, matching its parent directory and filename. Its `snapshotDate` must match the filename's real calendar date. Result IDs must be unique.
-- Daily reports have no `schemaVersion`, `version`, `measuredAt` or `source.versionId` fields. Use the linked report for source details. Keep actual browser/build version information in method names/configurations.
+- `benchmarks/` owns reusable definitions; `results/` owns published evaluation versions. Never hand-edit `web/public/benchmarks/`, `web/public/results/` or `web/out/`; all are generated and git-ignored.
+- Add a version by adding only `results/<id>/<id>-vN-report.json`; never create or maintain an index file. Each report must contain exactly one Benchmark, matching its parent directory and filename.
+- `version` is a required top-level string of the form `v` plus a positive integer (`v1`, `v2`, `v12`). Versions are independent per Benchmark and unique within it. Latest means the highest integer: `v10` is newer than `v2`. Never order versions by filename text, file modification time, array position or `source.importedAt`.
+- The top-level `id` is `<benchmark-id>-<version>` and globally unique. Filename, parent directory, Benchmark `id` and `version` must all agree.
+- `datasetDifference` is a required English sentence or short paragraph. It states how this published version's task population, selection, reference answers or scoring differ from the Dataset linked by the catalog. Mark unverified correspondence as unknown instead of inventing it.
+- Results have no `snapshotDate`, `dateKind`, `schemaVersion`, `measuredAt` or `source.versionId` fields. Use the linked report for source details. Keep actual browser/build version information in method names/configurations.
 - Directory discovery runs before dev and build. Restart dev or run `npm run prepare:data` and refresh after adding/removing result files. Static hosting requires rebuilding and redeploying; the browser does not enumerate server directories.
-- Keep Benchmark names, introductions, dataset links, metric labels/explanations/units, category criteria, display precision and default ordering out of daily result files. Keep provider colors and icons in website code. The validator rejects misplaced Benchmark/page fields in daily results.
-- Each daily Benchmark result must reference an existing `definitionId` under that Benchmark. If category meaning, metric calculation or pass criteria change, add a new definition ID and retain the old definition. Do not silently reinterpret old results with the latest definition.
-- Actual `taskCount`, `categoryTotals`, `metricSamples`, provider versions/configurations, scores, sample counts, execution notes, evidence and provenance belong to the daily result. Derive provider count from the rows.
+- Keep Benchmark names, official Dataset names, introductions, dataset links, metric labels/explanations/units, category criteria, display precision, table order and default ordering out of result files. Keep provider colors and icons in website code. The validator rejects misplaced Benchmark/page fields in results.
+- Each result must reference an existing `definitionId` under that Benchmark. If category meaning, metric calculation or pass criteria change, add a new definition ID and retain the old definition. Do not silently reinterpret old results with the latest definition.
+- Actual `taskCount`, `categoryTotals`, `metricSamples`, provider versions/configurations, scores, sample counts, execution notes, evidence and provenance belong to the published result. Derive provider count from the rows.
 - Every number must be traceable to the evaluation report. Do not invent, interpolate or silently correct a value.
-- Each catalog Benchmark requires separate HTTPS `datasetUrl` and `reportUrl` links. These are related navigation resources, not proof of the displayed numbers. A daily `reportUrl` is null unless a report for that particular result is supplied; when present, the page uses it instead of the related catalog report. Keep provenance in `source` unchanged.
+- Each catalog Benchmark requires separate HTTPS `datasetUrl` and `reportUrl` links. `datasetName` must equal the final path segment of `datasetUrl` and reproduce the official Dataset Card name. These are related navigation resources, not proof of the displayed numbers. A result `reportUrl` is null unless a report for that particular result is supplied; when present, the page uses it instead of the related catalog report. Keep provenance in `source` unchanged.
 - A value the source does not publish is `null` and renders as `—`. A genuine zero stays `0`.
 - Derived pass counts are allowed when every category count is known; record the arithmetic in `passedDerivation` so the tooltip explains where the number came from.
-- Daily `categoryTotals` keys must match the referenced definition's categories and sum to `taskCount`; each `provider.categoryPassed` must be within that category total. Known category pass counts must sum to the published passed count. `prepare:data` throws otherwise and the build fails.
+- Result `categoryTotals` keys must match the referenced definition's categories and sum to `taskCount`; each `provider.categoryPassed` must be within that category total. Known category pass counts must sum to the published passed count. `prepare:data` throws otherwise and the build fails.
 - When a new result changes published numbers, update the assertions that pin those numbers in `web/lib/results.test.ts` in the same change.
-- Dates: `snapshotDate` is the import date, not a measurement date.
 
 ## Rendering rules
 
-- One table per benchmark, with rank and provider first, then the benchmark's data columns. LexBench WebFetch places request success and task success first, then its category columns, then timing metrics. `Passed / Total` is always the last column there. The latest import separates 17 embedded-media and 3 direct-media cases; the initial import retains its combined media category.
-- Opening a Benchmark defaults to its latest available result date. Explicit date selections and URL dates may display older results; missing dates stay empty rather than silently falling back.
+- One table per benchmark, with rank and provider first, then the benchmark's data columns. The default ranking metric is the first numeric column after the provider. LexBench Web Fetch places Task success first, then Request success, then its category columns, then timing metrics. `Passed / Total` is always the last column there. The published version separates 17 embedded-media and 3 direct-media cases.
+- Each Benchmark opens on its highest version. A version explicitly requested through the URL is shown even when it does not exist, with an English empty state and a `View latest version` action; never silently fall back. A Benchmark with no results also gets an empty state, without an undefined version or a broken latest link.
+- URL state uses `?benchmark=<id>&version=vN&metric=<id>`. Ignore and drop legacy `date` parameters. When a version does not contain the currently selected metric, fall back to that version's default metric and direction.
+- Show `datasetDifference` as a short English paragraph near the Benchmark introduction after the version selection. Keep the Dataset and Evaluation report links visible.
 - All data columns are equal width: the tables use `table-layout: fixed` with a minimum width, so the table scrolls horizontally only when the container is narrower than that minimum. Do not reintroduce auto layout.
 - Row heights are fixed: header 54px and rows 60px on desktop; 44px and 48px below 760px. Keep cells single-line (`white-space: nowrap`).
 - The first two columns stay sticky while the table scrolls sideways.
-- All user-facing website text must be English: navigation, benchmark introductions, provider names, table headers, metric explanations, tooltips, buttons, loading/error/empty states, accessibility labels, and page metadata. Keep the document language set to `en`.
+- Highlight the best value in each column independently, using the metric's `direction`. Category pass counts and `Passed / Total` use the highest value. Ties are all highlighted; a column with fewer than two disclosed values or identical values has no winner. `null` and `—` are excluded; real `0` and negative signed deltas participate. Use deep-green bold text on a very light green background and include a screen-reader `Best in this column` label. Do not highlight an entire row.
+- Highlight the whole header of the currently sorted column with a light green background, darker bold text, the direction arrow and `aria-sort`. Changing sort direction must not mark the worst value as best.
+- All user-facing website text must be English: navigation, benchmark introductions, dataset names and differences, provider names, table headers, metric explanations, tooltips, buttons, loading/error/empty states, accessibility labels, and page metadata. Keep the document language set to `en`.
 - Result-file fields rendered on the page must also use English. Preserve original source quotations and provenance; do not display untranslated source text directly in the interface.
-- The download link must always show the visible English label `Download Report`, including on mobile, and use the same accessible name. Do not add a hover tooltip or rely on one to explain the action.
+- The download link must always show the visible English label `Download Report`, including on mobile, and use the same accessible name. It downloads the file for the selected version. Do not add a hover tooltip or rely on one to explain the action.
 - Keep the dependency surface small; prefer plain CSS in `globals.css` over new UI packages.
 
 ## Security

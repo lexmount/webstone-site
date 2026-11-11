@@ -1,7 +1,7 @@
 {
-  "id": "lexbench-headless-372-20261110",
-  "snapshotDate": "2026-11-10",
-  "dateKind": "imported",
+  "id": "lexbench-headless-372-v1",
+  "version": "v1",
+  "datasetDifference": "Uses the historical 372-task protocol referenced by the linked dataset card, not its current 1,928-task executable catalog. The baseline row measures one task directly and inherits the remaining 371 from shared failure relations; other rows measure all 372 tasks.",
   "source": {
     "kind": "user-provided-text",
     "url": "https://github.com/lexmount/Lexbench-Headless-Browser",

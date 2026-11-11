@@ -12,7 +12,7 @@ export type Definition = {
   categories?: CategoryDefinition[]; leadingMetricIds?: string[];
 };
 export type BenchmarkInfo = {
-  id: string; trackId: string; name: string; description: string;
+  id: string; trackId: string; name: string; datasetName: string; description: string;
   datasetUrl: string; reportUrl: string; providerLabel: string;
   definitions: Definition[];
 };
@@ -32,12 +32,11 @@ export type Benchmark = Omit<BenchmarkInfo, "definitions"> & Omit<Definition, "i
   categories: Category[]; providerCount: number;
 };
 export type Entry = {
-  id: string; date: string; dateKind?: string; file: string;
+  id: string; version: string; file: string;
   benchmarks: string[];
 };
 export type Snapshot = {
-  id: string; snapshotDate: string;
-  dateKind: string;
+  id: string; version: string; datasetDifference: string;
   source: { url: string; title: string; kind?: string; sha256?: string; linkLabel?: string; importedAt: string; method: string; scope: string; dateNote: string };
   benchmarks: BenchmarkResult[];
   evidence: { id: string; section: string; text: string }[];
@@ -46,7 +45,7 @@ export type ReportFile = { file: string; report: Snapshot };
 
 export function reportEntries(files: ReportFile[]): Entry[] {
   return files.map(({ file, report }) => ({
-    file, id: report.id, date: report.snapshotDate, dateKind: report.dateKind,
+    file, id: report.id, version: report.version,
     benchmarks: report.benchmarks.map(benchmark => benchmark.id),
   }));
 }
@@ -70,6 +69,30 @@ export function resolveBenchmark(catalog: Catalog, result: BenchmarkResult): Ben
   };
 }
 
+export function versionNumber(version: string) {
+  const match = /^v([1-9]\d*)$/.exec(version);
+  if (!match) throw new Error("Invalid result version");
+  return Number(match[1]);
+}
+
+export function compareVersions(left: string, right: string) {
+  return versionNumber(left) - versionNumber(right);
+}
+
+export function benchmarkEntries(entries: Entry[], benchmark: string) {
+  return entries
+    .filter(entry => entry.benchmarks.includes(benchmark))
+    .sort((left, right) => compareVersions(left.version, right.version));
+}
+
+export function selectEntry(entries: Entry[], version: string, benchmark: string) {
+  return entries.find(entry => entry.version === version && entry.benchmarks.includes(benchmark)) ?? null;
+}
+
+export function latestEntry(entries: Entry[], benchmark: string) {
+  return benchmarkEntries(entries, benchmark).at(-1) ?? null;
+}
+
 export function sortProviders(providers: Provider[], metric: string, direction: "asc" | "desc") {
   return [...providers].sort((a, b) => {
     const left = a.scores[metric], right = b.scores[metric];
@@ -79,8 +102,16 @@ export function sortProviders(providers: Provider[], metric: string, direction: 
   });
 }
 
-export function selectEntry(entries: Entry[], date: string, benchmark: string) {
-  return entries.find(entry => entry.date === date && entry.benchmarks.includes(benchmark)) ?? null;
+export function bestValue(values: (number | null | undefined)[], direction: "asc" | "desc") {
+  const valid = values.filter((value): value is number => value != null);
+  if (valid.length < 2) return null;
+  const best = direction === "asc" ? Math.min(...valid) : Math.max(...valid);
+  if (valid.every(value => value === best)) return null;
+  return best;
+}
+
+export function isBestValue(value: number | null | undefined, best: number | null) {
+  return value != null && best != null && value === best;
 }
 
 export function sumCategoryPasses(provider: Provider, categories: Category[]) {
