@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/.next
+**/out
+web/public/results
+web/public/benchmarks
+**/.env*
+**/*.log
+**/*.tsbuildinfo
+**/.DS_Store
+.gitea
+.rainbond

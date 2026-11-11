@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { benchmarkEntries, bestValue, compareVersions, isBestValue, latestEntry, selectEntry, reportEntries, formatMetric, sumCategoryPasses, resolveBenchmark, sortProviders, type Catalog, type Provider, type Snapshot } from "./results.ts";
+import { benchmarkEntries, bestValue, compareVersions, isBestValue, latestEntry, selectEntry, reportEntries, formatMetric, formatPricing, sumCategoryPasses, resolveBenchmark, sortProviders, type Catalog, type Provider, type Snapshot } from "./results.ts";
 
 const catalog: Catalog = JSON.parse(readFileSync(new URL("../../benchmarks/catalog.json", import.meta.url), "utf8"));
 function readSnapshot(file: string) {
@@ -13,6 +13,81 @@ const snapshot = { ...fetchSnapshot, benchmarks: [...fetchSnapshot.benchmarks, .
 const providers = snapshot.benchmarks[0].providers;
 const searchSnapshot = readSnapshot("lexbench-websearch/lexbench-websearch-v1-report.json");
 const search = { ...searchSnapshot, benchmarks: [...searchSnapshot.benchmarks, ...readSnapshot("simpleqa-verified/simpleqa-verified-v1-report.json").benchmarks] };
+
+test("SWDE keeps eligible denominators, precision and independent quality/latency rankings", () => {
+  const benchmark = readSnapshot("lexbench-swde/lexbench-swde-v1-report.json").benchmarks[0];
+  assert.equal(benchmark.trackId, "webextract");
+  assert.equal(benchmark.primaryMetric, "pageMacroF1");
+  assert.equal(sortProviders(benchmark.providers, "pageMacroF1", "desc")[0].id, "stagehand-deepseek");
+  assert.equal(sortProviders(benchmark.providers, "pageExact", "desc")[0].id, "oxylabs-json");
+  assert.equal(sortProviders(benchmark.providers, "meanTime", "asc")[0].id, "browserbase-json");
+  assert.equal(formatMetric(.807, "ratio", 3), "0.807");
+  assert.equal(formatMetric(800, "count", 0, false, { count: 800, total: 800 }), "800 / 800");
+  assert.equal(formatMetric(30.54, "percent", 2, false, { count: 226, total: 740 }), "226 / 740 (30.54%)");
+  assert.equal(formatMetric(0, "percent", 2, false, { count: 0, total: 25 }), "0 / 25 (0.00%)");
+  assert.equal(formatMetric(4.87, "seconds", 3), "4.870 s");
+  assert.equal(formatPricing(benchmark.providers[0].pricing!), "≈ $1.502–5.069");
+  assert.equal(formatPricing(benchmark.providers[5].pricing!), "$4");
+  assert.equal(formatPricing(benchmark.providers[6].pricing!), "Software $0 + model");
+  assert.equal(formatPricing({ min: null, max: null, description: "Not disclosed." }), "—");
+  assert.equal(bestValue(benchmark.providers.map(p => p.scores.executedPages), "desc"), null);
+});
+
+test("published sample notes reach metric explanations without moving them into the catalog", () => {
+  const raw: Snapshot = JSON.parse(readFileSync(new URL("../../results/lexbench-webfetch/lexbench-webfetch-v1-report.json", import.meta.url), "utf8"));
+  raw.benchmarks[0].metricSamples = { passRate: { sampleCount: 430, note: "430 evaluated cases." } };
+  const resolved = resolveBenchmark(catalog, raw.benchmarks[0]);
+  assert.match(resolved.metrics.find(metric => metric.id === "passRate")!.description!, /430 evaluated cases\./);
+});
+
+test("Zyte Product Extraction preserves all supplied field quality, counts, timing and prices", () => {
+  const raw: Snapshot = JSON.parse(readFileSync(new URL("../../results/lexbench-zyte-product-extraction/lexbench-zyte-product-extraction-v1-report.json", import.meta.url), "utf8"));
+  const benchmark = resolveBenchmark(catalog, raw.benchmarks[0]);
+  assert.equal(raw.version, "v1");
+  assert.equal(benchmark.trackId, "webextract");
+  assert.equal(benchmark.taskCount, 140);
+  assert.equal(benchmark.providerCount, 12);
+  assert.equal(benchmark.primaryMetric, "pageExact");
+  const expected: Record<string, (number | null)[]> = {
+    "cloudflare-json": [138, .843, .631, .904, .640, 68, 48.57, 6, 100, 11.401, 9.485, 25.605, 1.405, 7.205],
+    "firecrawl-json": [140, .798, .840, .917, .545, 100, 71.43, 6, 100, 9.882, 8.221, 19.004, 3.745, 19],
+    "scrapegraph-extract": [140, .880, .838, .896, .667, 97, 69.29, 6, 100, 17.646, 11.976, 48.551, 3.333, 10],
+    "scrapfly-product": [140, .812, .684, .869, .143, 79, 56.43, 1, 16.67, 10.151, 8.355, 21.191, .807, 1.211],
+    "oxylabs-json": [140, .886, .870, .661, .516, 64, 45.71, 6, 100, 7.114, 6.179, 13.052, 3.75, 4],
+    "zyte-product": [140, .824, .853, .750, .667, 76, 54.29, 6, 100, 3.572, 3.030, 6.548, .27, 1.07],
+    "diffbot-product": [140, .878, .714, .943, .636, 86, 61.43, 4, 66.67, 10.697, 7.983, 24.471, .899, 1.196],
+    "browserbase-json": [140, .878, .881, .904, .640, 107, 76.43, 6, 100, 2.770, 2.334, 4.622, 4, 4],
+    "firecrawl-deepseek": [140, .899, .916, .859, .533, 109, 77.86, 6, 100, 5.790, 5.298, 9.280, null, null],
+    "crawl4ai-deepseek": [140, .914, .916, .848, .571, 106, 75.71, 6, 100, 17.905, 16.929, 23.628, null, null],
+    "stagehand-deepseek": [140, .879, .827, .792, .762, 79, 56.43, 6, 100, 8.534, 8.243, 10.958, null, null],
+    "scrapegraphai-deepseek": [140, .906, .912, .852, .593, 105, 75.00, 6, 100, 14.021, 13.179, 19.245, null, null],
+  };
+  for (const provider of benchmark.providers) {
+    assert.deepEqual([provider.scores.returnedObjects, provider.scores.priceF1, provider.scores.skuF1, provider.scores.stockF1,
+      provider.scores.outOfStockF1, provider.counts!.pageExact.count, provider.scores.pageExact,
+      provider.counts!.nullAccuracy.count, provider.scores.nullAccuracy,
+      provider.scores.meanTime, provider.scores.p50Time, provider.scores.p95Time,
+      provider.pricing!.min, provider.pricing!.max], expected[provider.id]);
+    assert.deepEqual(provider.counts!.executedPages, { count: 140, total: 140 });
+    assert.equal(provider.counts!.pageExact.total, 140);
+    assert.equal(provider.counts!.nullAccuracy.total, 6);
+    assert.equal(provider.scores.timedPages, 140);
+    assert.equal(provider.scores.untimedPages, 0);
+    assert.equal(provider.pricing!.approximate, provider.id === "cloudflare-json");
+    if (provider.mode === "Open source / DeepSeek") assert.equal(provider.pricing!.softwareCost, 0);
+  }
+  for (const [id, population] of Object.entries({
+    priceF1: "134 nonempty / 6 empty", skuF1: "135 nonempty / 5 empty",
+    stockF1: "131 in stock / 9 out of stock", outOfStockF1: "9 out of stock / 131 other",
+  })) {
+    assert.equal(benchmark.metricSamples![id].sampleCount, 140);
+    assert.ok(benchmark.metrics.find(metric => metric.id === id)!.description!.includes(population));
+  }
+  assert.equal(sortProviders(benchmark.providers, "pageExact", "desc")[0].id, "firecrawl-deepseek");
+  assert.equal(sortProviders(benchmark.providers, "priceF1", "desc")[0].id, "crawl4ai-deepseek");
+  assert.equal(sortProviders(benchmark.providers, "stockF1", "desc")[0].id, "diffbot-product");
+  assert.equal(sortProviders(benchmark.providers, "meanTime", "asc")[0].id, "browserbase-json");
+});
 
 test("each result resolves its exact definition without changing raw measurements", () => {
   const only = snapshot.benchmarks[0];
@@ -174,8 +249,10 @@ test("benchmark titles, dataset names and links follow the public dataset catalo
     "simpleqa-verified": { name: "LexBench SimpleQA Verified", datasetName: "LexBench-SimpleQA-Verified" },
     "lexbench-headless-372": { name: "LexBench Headless Browser", datasetName: "LexBench-Headless-Browser" },
     "webarena-verified": { name: "LexBench WebArena Replay", datasetName: "LexBench-WebArena-Replay" },
+    "lexbench-swde": { name: "LexBench SWDE", datasetName: "LexBench-SWDE" },
+    "lexbench-zyte-product-extraction": { name: "LexBench Zyte Product Extraction", datasetName: "LexBench-Zyte-Product-Extraction" },
   };
-  assert.deepEqual(catalog.tracks.map(track => track.name), ["Web Fetch", "Web Search", "Trajectory Replay"]);
+  assert.deepEqual(catalog.tracks.map(track => track.name), ["Web Fetch", "Web Search", "Trajectory Replay", "Web Extract"]);
   for (const benchmark of catalog.benchmarks) {
     assert.equal(benchmark.name, expected[benchmark.id].name);
     assert.equal(benchmark.datasetName, expected[benchmark.id].datasetName);

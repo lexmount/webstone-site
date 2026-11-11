@@ -36,7 +36,7 @@ export function validateCatalog(catalog) {
       if (definition.leadingMetricIds && (new Set(definition.leadingMetricIds).size !== definition.leadingMetricIds.length || definition.leadingMetricIds.some(id => !definition.metrics.some(metric => metric.id === id)))) throw new Error("Unknown or duplicate leading metric");
       if (definition.categories) uniqueIds(definition.categories, "category");
       for (const metric of definition.metrics) {
-        if (!["percent", "score", "seconds", "usd", "ratio", "ms", "mib", "points"].includes(metric.unit)) throw new Error("Invalid metric unit");
+        if (!["percent", "score", "seconds", "usd", "ratio", "ms", "mib", "points", "count"].includes(metric.unit)) throw new Error("Invalid metric unit");
         if (!["asc", "desc"].includes(metric.direction)) throw new Error("Invalid metric direction");
         if (metric.signed !== undefined && typeof metric.signed !== "boolean") throw new Error("Invalid metric sign");
         if (metric.decimals !== undefined && (!Number.isInteger(metric.decimals) || metric.decimals < 0 || metric.decimals > 6)) throw new Error("Invalid metric display precision");
@@ -85,6 +85,7 @@ export function validateSnapshot(snapshot, entry, catalog) {
       if (!definition.metrics.some(metric => metric.id === id)) throw new Error("Unknown metric sample reference");
       if (sample.sampleCount !== undefined && (!Number.isInteger(sample.sampleCount) || sample.sampleCount < 0)) throw new Error("Invalid metric sample count");
       if (sample.scope !== undefined && typeof sample.scope !== "string") throw new Error("Invalid metric sample scope");
+      if (sample.note !== undefined && (typeof sample.note !== "string" || !sample.note.trim() || !/[A-Za-z]/.test(sample.note) || /\p{Script=Han}/u.test(sample.note))) throw new Error("Invalid or non-English metric sample note");
     }
     uniqueIds(benchmark.providers, "provider");
     for (const provider of benchmark.providers) {
@@ -97,6 +98,23 @@ export function validateSnapshot(snapshot, entry, catalog) {
         if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < minimum || value > maximum)) {
           throw new Error("Invalid or fabricated metric value");
         }
+        if (metric.unit === "count" && value !== null && (!Number.isInteger(value) || value > benchmark.taskCount)) throw new Error("Invalid metric count");
+      }
+      for (const [id, detail] of Object.entries(provider.counts ?? {})) {
+        const metric = definition.metrics.find(item => item.id === id);
+        if (!metric || !["percent", "count"].includes(metric.unit) || !detail ||
+          !Number.isInteger(detail.count) || !Number.isInteger(detail.total) || detail.count < 0 ||
+          detail.total < 1 || detail.count > detail.total || detail.total > benchmark.taskCount) throw new Error("Invalid count breakdown");
+        const value = metric.unit === "count" ? detail.count : Number((detail.count / detail.total * 100).toFixed(metric.decimals ?? 1));
+        if (provider.scores[id] !== value || (benchmark.metricSamples?.[id]?.sampleCount != null && benchmark.metricSamples[id].sampleCount !== detail.total)) throw new Error("Inconsistent count breakdown");
+      }
+      if (provider.pricing !== undefined) {
+        const pricing = provider.pricing;
+        const disclosed = pricing && [pricing.min, pricing.max].every(value => typeof value === "number" && Number.isFinite(value) && value >= 0);
+        if (!pricing || ((pricing.min !== null || pricing.max !== null) && (!disclosed || pricing.min > pricing.max)) ||
+          typeof pricing.description !== "string" || !pricing.description.trim() || /\p{Script=Han}/u.test(pricing.description) ||
+          (pricing.approximate !== undefined && typeof pricing.approximate !== "boolean") ||
+          (pricing.softwareCost !== undefined && (typeof pricing.softwareCost !== "number" || !Number.isFinite(pricing.softwareCost) || pricing.softwareCost < 0))) throw new Error("Invalid pricing range or description");
       }
       if (provider.passed !== null && (!Number.isInteger(provider.passed) || provider.passed < 0 || provider.passed > benchmark.taskCount)) {
         throw new Error("Invalid passed count");

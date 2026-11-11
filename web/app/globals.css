@@ -98,6 +98,10 @@ tbody tr:hover { background: #f8f8f6; }
 .headless-table th { font-size: 11px; }
 .headless-table th.provider-heading { width: 260px; }
 .headless-table .provider-name { font-size: 13px; }
+.extract-table { --provider-width: 310px; min-width: calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * 220px); }
+.extract-table th.provider-heading { width: var(--provider-width); }
+.extract-table th { font-size: 11px; }
+.extract-table .provider-name { font-size: 13px; }
 .lexbench-table th { font-size: 11px; padding-left: 6px; padding-right: 6px; }
 .lexbench-table .sort-button svg { width: 10px; height: 10px; }
 .lexbench-table th.provider-heading { width: var(--provider-width); }
@@ -163,6 +167,9 @@ h2 { margin: 0; font-size: 21px; font-weight: 550; letter-spacing: -.5px; }
   .wide-table thead tr { height: 44px; }
   .wide-table tbody tr { height: 48px; }
   .wide-table th.provider-heading { width: 120px; }
+  .extract-table { --provider-width: 140px; min-width: calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * 180px); }
+  .extract-table th.provider-heading { width: var(--provider-width); }
+  .extract-table .provider-name { font-size: 12px; }
   .lexbench-table { --provider-width: 220px; min-width: calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * 122px); }
   .lexbench-table th, .lexbench-table .category-total { font-size: 9px; }
   .lexbench-table th.provider-heading { width: var(--provider-width); }

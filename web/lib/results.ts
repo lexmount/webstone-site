@@ -6,7 +6,10 @@ export type Provider = {
   scores: Record<string, number | null>; passed: number | null;
   passedDerivation?: string | null; categoryPassed?: Record<string, number>;
   samples?: Record<string, number>;
+  counts?: Record<string, { count: number; total: number }>;
+  pricing?: Pricing;
 };
+export type Pricing = { min: number | null; max: number | null; approximate?: boolean; softwareCost?: number; description: string };
 export type Definition = {
   id: string; primaryMetric: string; metrics: Metric[];
   categories?: CategoryDefinition[]; leadingMetricIds?: string[];
@@ -24,7 +27,7 @@ export type Catalog = {
 export type BenchmarkResult = {
   id: string; definitionId: string; taskCount: number; providers: Provider[];
   categoryTotals?: Record<string, number>;
-  metricSamples?: Record<string, { sampleCount?: number; scope?: string }>;
+  metricSamples?: Record<string, { sampleCount?: number; scope?: string; note?: string }>;
   notes: string[]; reportUrl: string | null;
   otherBest?: Record<string, number>;
 };
@@ -61,7 +64,7 @@ export function resolveBenchmark(catalog: Catalog, result: BenchmarkResult): Ben
     metrics: definition.metrics.map(metric => {
       const sample = result.metricSamples?.[metric.id];
       const context = [sample?.sampleCount == null ? "" : `${sample.sampleCount} samples.`,
-        sample?.scope === "all-search-calls" ? "Shared across both query sets." : ""].filter(Boolean).join(" ");
+        sample?.scope === "all-search-calls" ? "Shared across both query sets." : "", sample?.note].filter(Boolean).join(" ");
       return context ? { ...metric, description: `${metric.description ?? ""} ${context}`.trim() } : metric;
     }),
     categories: (definition.categories ?? []).map(category => ({ ...category, total: result.categoryTotals![category.id] })),
@@ -124,9 +127,18 @@ export function sumCategoryPasses(provider: Provider, categories: Category[]) {
   return total;
 }
 
-export function formatMetric(value: number | null | undefined, unit: string, decimals = unit === "percent" ? 1 : 2, signed = false) {
+export function formatMetric(value: number | null | undefined, unit: string, decimals = unit === "percent" ? 1 : 2, signed = false, counts?: { count: number; total: number }) {
   if (value == null) return "—";
   const sign = signed && value > 0 ? "+" : "";
   const suffix = unit === "percent" ? "%" : unit === "seconds" ? " s" : unit === "ms" ? " ms" : unit === "mib" ? " MiB" : unit === "points" ? " pp" : "";
-  return `${sign}${unit === "usd" ? "$" : ""}${value.toFixed(decimals)}${suffix}`;
+  const formatted = `${sign}${unit === "usd" ? "$" : ""}${value.toFixed(decimals)}${suffix}`;
+  if (!counts) return formatted;
+  const fraction = `${counts.count} / ${counts.total}`;
+  return unit === "count" ? fraction : `${fraction} (${formatted})`;
+}
+
+export function formatPricing(pricing: Pricing) {
+  if (pricing.min == null || pricing.max == null) return pricing.softwareCost == null ? "—" : `Software $${pricing.softwareCost} + model`;
+  const range = pricing.min === pricing.max ? `$${pricing.min}` : `$${pricing.min}–${pricing.max}`;
+  return `${pricing.approximate ? "≈ " : ""}${range}`;
 }

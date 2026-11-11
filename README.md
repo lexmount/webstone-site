@@ -1,8 +1,8 @@
 # Browser Eval Leaderboard
 
-The public leaderboard for our browser and search evaluation work. It presents browsers and search services side by side in sortable tables.
+The public leaderboard for our browser, search and structured extraction evaluation work. It presents methods side by side in sortable tables.
 
-Six benchmark views are published on this site. The evaluation harness is [lexmount/browser-eval](https://github.com/lexmount/browser-eval).
+Eight benchmark views across four Tracks are published on this site. The evaluation harness is [lexmount/browser-eval](https://github.com/lexmount/browser-eval).
 
 ## Benchmarks
 
@@ -46,6 +46,22 @@ A 372-task subset of the historical [Lexbench Headless Browser](https://github.c
 
 812 end-to-end replay tasks derived from [ServiceNow/webarena-verified](https://github.com/ServiceNow/webarena-verified). Six execution setups (Chromium 153, Moli at #731 + #853, Moli v1.1.11, Lightpanda nightly 9813, Obscura 0.2.3 and Kitesurf on Cloudflare Browser Run) are compared on task success rate, end-to-end task latency and per-action latency. Task latency uses all 812 tasks per setup; action latency is measured per action, so its sample count differs by setup. Both latencies report mean, P50 and P95, and lower is better.
 
+### LexBench SWDE
+
+The Web Extract Track compares ten hosted API and open-source / DeepSeek methods on 800 archived SWDE pages. The single table includes page-hit macro F1, value micro F1, field-set exact match, full-page exact match, null handling, execution and returned-field counts, timing coverage, mean / P50 / P95 elapsed time and USD per 1,000 calls. Page-hit macro F1 is the default ranking metric.
+
+Full-page exact match uses 740 eligible pages: 60 pages are excluded because reference coverage is incomplete. Null handling uses 25 pages. Both show the supplied numerator, denominator and percentage. Every method executed 800 of 800 pages and has 800 timing records, with none missing.
+
+The numbers come from the two user-supplied tables. The linked Dataset contains inputs only; the correspondence to a particular revision and its scoring references is unverified. Pricing ranges and billing conditions are preserved as supplied, not checked against current plans. Ranges are not ranked or reduced to a single price. Open-source software costs $0, with DeepSeek token usage additional and the total undisclosed. Per-method interpretation and official billing-source URLs were not supplied, so no such links are fabricated.
+
+### LexBench Zyte Product Extraction
+
+The Web Extract Track also compares twelve methods on 140 archived product pages. Full-page exact match is the default ranking metric. Other columns cover tested pages, returned objects, price / SKU / stock / out-of-stock F1, null handling, timing coverage, mean / P50 / P95 elapsed time and USD per 1,000 calls.
+
+The supplied reference distributions are 134 nonempty prices / 6 empty, 135 nonempty SKUs / 5 empty, and 131 in-stock / 9 out-of-stock pages. These version-specific populations appear in the metric explanations via `metricSamples.note`; the reusable metric definitions stay in the catalog. Full-page exact match uses all 140 pages, while null handling uses 6. All twelve methods have 140 timing records and no missing timings.
+
+The supplied distributions match the Dataset's original-reference counts, rather than its separately provided source-qualified annotation view. The exact evaluated revision and page hashes remain unverified. Prices and billing conditions are transcribed from the supplied table, with unknown model costs retained as unknown. This benchmark reuses the SWDE table without another renderer or dependency.
+
 ### Dataset alignment
 
 Page titles use natural English, while Dataset links reproduce the official Hugging Face names:
@@ -58,6 +74,8 @@ Page titles use natural English, while Dataset links reproduce the official Hugg
 | LexBench SimpleQA Verified | [LexBench-SimpleQA-Verified](https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified) |
 | LexBench Headless Browser | [LexBench-Headless-Browser](https://huggingface.co/datasets/Lexmount/LexBench-Headless-Browser) |
 | LexBench WebArena Replay | [LexBench-WebArena-Replay](https://huggingface.co/datasets/Lexmount/LexBench-WebArena-Replay) |
+| LexBench SWDE | [LexBench-SWDE](https://huggingface.co/datasets/Lexmount/LexBench-SWDE) |
+| LexBench Zyte Product Extraction | [LexBench-Zyte-Product-Extraction](https://huggingface.co/datasets/Lexmount/LexBench-Zyte-Product-Extraction) |
 
 Each published version records a `datasetDifference` paragraph describing how its task population, selection, reference answers or scoring differ from the linked Dataset. Known differences include Web Fetch using the 430-task edition rather than the current 550-task edition, SimpleQA Verified using 773 questions rather than 831, and Headless Browser using the historical 372-task protocol rather than the current 1,928-task catalog.
 
@@ -87,6 +105,8 @@ Web Fetch publishes the `split-media` definition. A changed metric calculation, 
 
 Pass counts come from the evaluation report or are summed from its category counts. Values the source does not disclose are shown as `—`; a real zero remains zero.
 
+Optional provider `counts` records a metric's numerator and denominator, validated against its numeric score and any declared sample count. Optional `pricing` records the supplied per-1,000-call `min` / `max` range, an `approximate` flag and English billing `description`; undisclosed totals use null bounds, with `softwareCost` recording a known software-only charge. These are version-specific measurements, not catalog metadata.
+
 ## Table behavior
 
 The default ranking metric is the first numeric column after the provider. Task success leads Web Fetch, Overall leads WebMainBench, nDCG@5 leads Web Search, Hit@5 leads SimpleQA Verified, and task success leads both agent benchmarks. Clicking another header sorts by it without moving the column.
@@ -114,6 +134,31 @@ python3 -m http.server 5173 --bind 127.0.0.1 --directory web/out
 ```
 
 Open <http://127.0.0.1:5173>. The output is plain static files and needs no Next.js runtime; do not use `next start`.
+
+## Docker and manual Rainbond deployment
+
+The root `Dockerfile` installs locked dependencies with Node.js 22, runs tests, regenerates the bundled results and exports the static site. The final Nginx image serves only the exported files on HTTP port `8080` using `deploy/nginx.conf`. Generated local build files and environment files are excluded by `.dockerignore`.
+
+To build and preview locally with Docker:
+
+```sh
+docker build -t browser-eval-site:local .
+docker run --rm -p 8080:8080 browser-eval-site:local
+```
+
+Open <http://127.0.0.1:8080>.
+
+For manual Rainbond deployment directly from GitHub:
+
+1. Commit and push the latest code, catalog, result files and these deployment files to the branch Rainbond will build. With a protected `main`, merge the pull request first.
+2. In the target Rainbond application, create a component from source code using `https://github.com/lexmount/browser-eval-site.git` and the published branch, normally `main`. A private repository needs GitHub repository-read authorization configured in Rainbond.
+3. Select Dockerfile as the build method. Use the repository root (`.`) as the build context and the root `Dockerfile` as the Dockerfile path. Do not use `web/` as the build context: workspace packages, the lockfile, catalog, reports and preparation script live at the root.
+4. Use HTTP port `8080`, enable external access and leave the start command at the image default. No runtime environment variables, database or persistent storage are required.
+5. Build and deploy, then open the component URL and verify the leaderboard and report downloads. An existing component created from an image must have its build source switched to Git source if that option is available; otherwise create a new source component, verify it, and move the domain route before removing the old component.
+
+This path uses Rainbond's own Dockerfile builder and image storage. Gitea, GitHub Actions and an external image registry are not required. Later updates need another build from the updated GitHub branch; automatic deployment only applies after configuring it separately.
+
+See the official [Dockerfile deployment guide](https://www.rainbond.com/docs/how-to-guides/app-deploy/source-code/dockefile).
 
 ## Validation and updates
 
