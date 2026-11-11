@@ -1,0 +1,190 @@
+{
+  "id": "lexbench-webfetch-20261111",
+  "snapshotDate": "2026-11-11",
+  "dateKind": "imported",
+  "source": {
+    "kind": "user-provided-text",
+    "url": "",
+    "title": "User-provided LexBench WebFetch comparison",
+    "importedAt": "2026-11-11T02:17:51Z",
+    "method": "user-provided-table transcription",
+    "scope": "Six methods with request success, task success, seven category pass counts, and total elapsed time mean/P50/P95. No per-case traces, timing sample counts, execution date, or timeout/retry settings were supplied.",
+    "dateNote": "The date is the import date, not the evaluation date."
+  },
+  "benchmarks": [
+    {
+      "id": "lexbench-webfetch",
+      "definitionId": "split-media",
+      "taskCount": 430,
+      "categoryTotals": {
+        "static": 100,
+        "dynamic": 100,
+        "popular": 100,
+        "antibot": 100,
+        "document": 10,
+        "embeddedMedia": 17,
+        "directMedia": 3
+      },
+      "notes": [
+        "430 cases: 100 static, 100 dynamic, 100 popular, 100 anti-bot, 10 document, 17 embedded-media and 3 direct-media cases.",
+        "Passed counts are the sum of the seven supplied category pass counts. Percentages and latency values are transcribed without recalculation.",
+        "Total latency is displayed in the supplied milliseconds. Timing sample counts and timeout/retry settings were not supplied.",
+        "The evaluation date was not supplied; the displayed date is the date of import."
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "moli-1-1-17",
+          "name": "Moli 1.1.17",
+          "description": "Moli 1.1.17",
+          "mode": "Not specified",
+          "scores": {
+            "requestRate": 96.3,
+            "passRate": 89.5,
+            "totalMean": 14174,
+            "totalP50": 9868,
+            "totalP95": 40656
+          },
+          "passed": 385,
+          "passedDerivation": "Sum of seven category pass counts (97 + 89 + 90 + 89 + 1 + 16 + 3)",
+          "categoryPassed": {
+            "static": 97,
+            "dynamic": 89,
+            "popular": 90,
+            "antibot": 89,
+            "document": 1,
+            "embeddedMedia": 16,
+            "directMedia": 3
+          }
+        },
+        {
+          "id": "moli-1-1-15",
+          "name": "Moli 1.1.15",
+          "description": "Moli 1.1.15",
+          "mode": "Not specified",
+          "scores": {
+            "requestRate": 97.4,
+            "passRate": 85.3,
+            "totalMean": 12666,
+            "totalP50": 9159,
+            "totalP95": 40608
+          },
+          "passed": 367,
+          "passedDerivation": "Sum of seven category pass counts (96 + 84 + 84 + 85 + 1 + 14 + 3)",
+          "categoryPassed": {
+            "static": 96,
+            "dynamic": 84,
+            "popular": 84,
+            "antibot": 85,
+            "document": 1,
+            "embeddedMedia": 14,
+            "directMedia": 3
+          }
+        },
+        {
+          "id": "chromium",
+          "name": "Chromium 155.0.8059.39",
+          "description": "Google Chrome for Testing 155.0.8059.39",
+          "mode": "Not specified",
+          "scores": {
+            "requestRate": 96.7,
+            "passRate": 54.2,
+            "totalMean": 8211,
+            "totalP50": 4367,
+            "totalP95": 25054
+          },
+          "passed": 233,
+          "passedDerivation": "Sum of seven category pass counts (99 + 57 + 58 + 5 + 1 + 12 + 1)",
+          "categoryPassed": {
+            "static": 99,
+            "dynamic": 57,
+            "popular": 58,
+            "antibot": 5,
+            "document": 1,
+            "embeddedMedia": 12,
+            "directMedia": 1
+          }
+        },
+        {
+          "id": "lightpanda",
+          "name": "Lightpanda 1.0.0",
+          "description": "Lightpanda 1.0.0",
+          "mode": "Not specified",
+          "scores": {
+            "requestRate": 87.4,
+            "passRate": 52.8,
+            "totalMean": 6477,
+            "totalP50": 6722,
+            "totalP95": 8131
+          },
+          "passed": 227,
+          "passedDerivation": "Sum of seven category pass counts (92 + 44 + 37 + 37 + 1 + 13 + 3)",
+          "categoryPassed": {
+            "static": 92,
+            "dynamic": 44,
+            "popular": 37,
+            "antibot": 37,
+            "document": 1,
+            "embeddedMedia": 13,
+            "directMedia": 3
+          }
+        },
+        {
+          "id": "obscura",
+          "name": "Obscura 0.2.4",
+          "description": "Obscura 0.2.4",
+          "mode": "Not specified",
+          "scores": {
+            "requestRate": 89.3,
+            "passRate": 51.6,
+            "totalMean": 13873,
+            "totalP50": 9599,
+            "totalP95": 36418
+          },
+          "passed": 222,
+          "passedDerivation": "Sum of seven category pass counts (94 + 42 + 53 + 16 + 1 + 13 + 3)",
+          "categoryPassed": {
+            "static": 94,
+            "dynamic": 42,
+            "popular": 53,
+            "antibot": 16,
+            "document": 1,
+            "embeddedMedia": 13,
+            "directMedia": 3
+          }
+        },
+        {
+          "id": "kitesurf",
+          "name": "Kitesurf Beta · backend undisclosed",
+          "description": "Kitesurf Beta; hosted backend version not disclosed.",
+          "mode": "Hosted",
+          "scores": {
+            "requestRate": 84.2,
+            "passRate": 45.1,
+            "totalMean": 13408,
+            "totalP50": 6004,
+            "totalP95": 77304
+          },
+          "passed": 194,
+          "passedDerivation": "Sum of seven category pass counts (90 + 44 + 40 + 10 + 1 + 9 + 0)",
+          "categoryPassed": {
+            "static": 90,
+            "dynamic": 44,
+            "popular": 40,
+            "antibot": 10,
+            "document": 1,
+            "embeddedMedia": 9,
+            "directMedia": 0
+          }
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "user-provided-webfetch-table",
+      "section": "User-provided comparison table",
+      "text": "方法\t请求成功率\t综合任务通过率\t静态网站正文\t动态网站正文\t热门网站正文\t风控网页正文\t文档正文\t网页内嵌媒体\t直接媒体文件\t总耗时均值\t总耗时 P50\t总耗时 P95\nMoli 1.1.17\t96.3%\t89.5%\t97/100\t89/100\t90/100\t89/100\t1/10\t16/17\t3/3\t14,174 ms\t9,868 ms\t40,656 ms\nMoli 1.1.15\t97.4%\t85.3%\t96/100\t84/100\t84/100\t85/100\t1/10\t14/17\t3/3\t12,666 ms\t9,159 ms\t40,608 ms\nChromium Google Chrome for Testing 155.0.8059.39\t96.7%\t54.2%\t99/100\t57/100\t58/100\t5/100\t1/10\t12/17\t1/3\t8,211 ms\t4,367 ms\t25,054 ms\nLightpanda 1.0.0\t87.4%\t52.8%\t92/100\t44/100\t37/100\t37/100\t1/10\t13/17\t3/3\t6,477 ms\t6,722 ms\t8,131 ms\nObscura 0.2.4\t89.3%\t51.6%\t94/100\t42/100\t53/100\t16/100\t1/10\t13/17\t3/3\t13,873 ms\t9,599 ms\t36,418 ms\nKitesurf Beta · 托管后端版本未公开\t84.2%\t45.1%\t90/100\t44/100\t40/100\t10/100\t1/10\t9/17\t0/3\t13,408 ms\t6,004 ms\t77,304 ms"
+    }
+  ]
+}

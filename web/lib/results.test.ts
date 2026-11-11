@@ -1,11 +1,77 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { sortProviders, selectEntry, formatMetric, sumCategoryPasses, type Provider, type Snapshot } from "./results.ts";
+import { sortProviders, selectEntry, reportEntries, formatMetric, sumCategoryPasses, resolveBenchmark, type Catalog, type Provider, type Snapshot } from "./results.ts";
 
-const snapshot: Snapshot = JSON.parse(readFileSync(new URL("../../results/webfetch-summary/2026-11-10/report.json", import.meta.url), "utf8"));
+const catalog: Catalog = JSON.parse(readFileSync(new URL("../../benchmarks/catalog.json", import.meta.url), "utf8"));
+function readSnapshot(file: string) {
+  const record: Snapshot = JSON.parse(readFileSync(new URL(`../../results/${file}`, import.meta.url), "utf8"));
+  return { ...record, benchmarks: record.benchmarks.map(result => resolveBenchmark(catalog, result)) };
+}
+const fetchSnapshot = readSnapshot("lexbench-webfetch/lexbench-webfetch-20261110-report.json");
+const snapshot = { ...fetchSnapshot, benchmarks: [...fetchSnapshot.benchmarks, ...readSnapshot("webmainbench/webmainbench-20261110-report.json").benchmarks] };
 const providers = snapshot.benchmarks[0].providers;
-const search: Snapshot = JSON.parse(readFileSync(new URL("../../results/websearch-summary/2026-11-10/report.json", import.meta.url), "utf8"));
+const searchSnapshot = readSnapshot("lexbench-websearch/lexbench-websearch-20261110-report.json");
+const search = { ...searchSnapshot, benchmarks: [...searchSnapshot.benchmarks, ...readSnapshot("simpleqa-verified/simpleqa-verified-20261110-report.json").benchmarks] };
+
+test("each result resolves its exact definition without changing raw measurements", () => {
+  const old = snapshot.benchmarks[0];
+  const latest = readSnapshot("lexbench-webfetch/lexbench-webfetch-20261111-report.json").benchmarks[0];
+  assert.equal(old.definitionId, "combined-media");
+  assert.equal(latest.definitionId, "split-media");
+  assert.deepEqual(old.categories!.map(category => category.id), ["static", "dynamic", "popular", "antibot", "document", "media"]);
+  assert.deepEqual(latest.categories!.slice(-2).map(category => [category.id, category.total]), [["embeddedMedia", 17], ["directMedia", 3]]);
+  const raw: Snapshot = JSON.parse(readFileSync(new URL("../../results/lexbench-webfetch/lexbench-webfetch-20261111-report.json", import.meta.url), "utf8"));
+  const unchanged = structuredClone(raw);
+  const renamed = structuredClone(catalog);
+  renamed.benchmarks[0].description = "Updated benchmark introduction";
+  assert.equal(resolveBenchmark(renamed, raw.benchmarks[0]).description, "Updated benchmark introduction");
+  const runReport = "https://example.com/reports/this-run";
+  assert.equal(resolveBenchmark(catalog, { ...raw.benchmarks[0], reportUrl: runReport }).reportUrl, runReport);
+  assert.equal(resolveBenchmark(catalog, raw.benchmarks[0]).reportUrl, catalog.benchmarks[0].reportUrl);
+  assert.deepEqual(raw, unchanged);
+  assert.throws(() => resolveBenchmark(catalog, { ...raw.benchmarks[0], definitionId: "missing" }), /definition/);
+  assert.equal(search.benchmarks[0].metricSamples?.responseTime.sampleCount, 980);
+  assert.equal(search.benchmarks[1].metricSamples?.responseTime.scope, "all-search-calls");
+});
+
+test("the 2026-11-11 WebFetch table preserves every supplied result", () => {
+  const record = readSnapshot("lexbench-webfetch/lexbench-webfetch-20261111-report.json");
+  const benchmark = record.benchmarks[0];
+  assert.equal(record.snapshotDate, "2026-11-11");
+  assert.equal(record.source.kind, "user-provided-text");
+  assert.equal(benchmark.providerCount, 6);
+  assert.deepEqual(benchmark.metrics.map(item => item.id), ["requestRate", "passRate", "totalMean", "totalP50", "totalP95"]);
+  assert.deepEqual(benchmark.categories!.map(item => item.total), [100, 100, 100, 100, 10, 17, 3]);
+  const expected: Record<string, number[]> = {
+    "moli-1-1-17": [96.3, 89.5, 97, 89, 90, 89, 1, 16, 3, 14174, 9868, 40656],
+    "moli-1-1-15": [97.4, 85.3, 96, 84, 84, 85, 1, 14, 3, 12666, 9159, 40608],
+    chromium: [96.7, 54.2, 99, 57, 58, 5, 1, 12, 1, 8211, 4367, 25054],
+    lightpanda: [87.4, 52.8, 92, 44, 37, 37, 1, 13, 3, 6477, 6722, 8131],
+    obscura: [89.3, 51.6, 94, 42, 53, 16, 1, 13, 3, 13873, 9599, 36418],
+    kitesurf: [84.2, 45.1, 90, 44, 40, 10, 1, 9, 0, 13408, 6004, 77304],
+  };
+  for (const provider of benchmark.providers) {
+    assert.deepEqual([provider.scores.requestRate, provider.scores.passRate,
+      ...benchmark.categories!.map(category => provider.categoryPassed![category.id]),
+      provider.scores.totalMean, provider.scores.totalP50, provider.scores.totalP95,
+    ], expected[provider.id]);
+    assert.equal(provider.passed, sumCategoryPasses(provider, benchmark.categories!));
+    assert.equal(Number((provider.passed! / 430 * 100).toFixed(1)), provider.scores.passRate);
+    assert.ok(provider.passedDerivation);
+  }
+  assert.deepEqual(benchmark.providers.map(item => item.passed), [385, 367, 233, 227, 222, 194]);
+  assert.equal(formatMetric(14174, "ms", 0), "14174 ms");
+  assert.equal(sortProviders(benchmark.providers, "totalP95", "asc")[0].id, "lightpanda");
+});
+
+test("new WebFetch data has its own import date without replacing the initial result", () => {
+  const files = ["lexbench-webfetch/lexbench-webfetch-20261110-report.json", "lexbench-webfetch/lexbench-webfetch-20261111-report.json", "webmainbench/webmainbench-20261110-report.json"];
+  const entries = reportEntries(files.map(file => ({ file, report: JSON.parse(readFileSync(new URL(`../../results/${file}`, import.meta.url), "utf8")) })));
+  assert.equal(selectEntry(entries, "2026-11-10", "lexbench-webfetch")?.id, "lexbench-webfetch-20261110");
+  assert.equal(selectEntry(entries, "2026-11-11", "lexbench-webfetch")?.id, "lexbench-webfetch-20261111");
+  assert.equal(selectEntry(entries, "2026-11-11", "webmainbench"), null);
+});
 
 test("unpublished scores stay last in either sort direction", () => {
   const sample: Provider[] = [
@@ -18,7 +84,7 @@ test("unpublished scores stay last in either sort direction", () => {
 });
 
 test("an empty date never falls back to another day's result", () => {
-  const entries = [{ id: "one", date: "2026-11-10", file: "one.json", benchmarks: [{ id: "lexbench-webfetch", name: "Fetch" }] }];
+  const entries = [{ id: "one", date: "2026-11-10", file: "one.json", benchmarks: ["lexbench-webfetch"] }];
   assert.equal(selectEntry(entries, "2026-11-09", "lexbench-webfetch"), null);
   assert.equal(selectEntry(entries, "2026-11-10", "webmainbench"), null);
   assert.equal(selectEntry(entries, "2026-11-10", "lexbench-webfetch")?.id, "one");
@@ -28,7 +94,6 @@ test("seed totals and percentages match the report, without invented cells", () 
   const moli = providers.find(p => p.id === "moli");
   assert.ok(moli && moli.passed !== null);
   assert.equal(Number((moli.passed / 430 * 100).toFixed(1)), moli.scores.passRate);
-  assert.equal(snapshot.measuredAt, null);
   assert.equal(snapshot.dateKind, "imported");
   assert.equal(formatMetric(null, "percent"), "—");
   assert.equal(formatMetric(39.27, "score"), "39.27");
@@ -48,12 +113,25 @@ test("category pass counts are published per provider against a 430-case split",
   assert.deepEqual(benchmark.providers.map(provider => sumCategoryPasses(provider, categories)), [386, 234, 228, 223, 192]);
 });
 
+test("signed deltas and memory or millisecond units format with direction", () => {
+  assert.equal(formatMetric(4.3, "percent", 2, true), "+4.30%");
+  assert.equal(formatMetric(-0.15, "percent", 2, true), "-0.15%");
+  assert.equal(formatMetric(0, "points", 2, true), "0.00 pp");
+  assert.equal(formatMetric(80.54, "mib", 2), "80.54 MiB");
+  assert.equal(formatMetric(21.41, "ms", 2), "21.41 ms");
+  assert.equal(formatMetric(1, "percent"), "1.0%");
+});
+
 test("request success precedes task success in the table", () => {
   assert.deepEqual(snapshot.benchmarks[0].metrics.map(metric => metric.id), ["requestRate", "passRate"]);
 });
 
 test("all five chart dimensions match the supplied image at its displayed precision", () => {
   const benchmark = snapshot.benchmarks.find(item => item.id === "webmainbench")!;
+  assert.deepEqual(benchmark.metricSamples, {
+    fullText: { sampleCount: 545 }, code: { sampleCount: 110 }, formula: { sampleCount: 257 },
+    tableContent: { sampleCount: 179 }, tableStructure: { sampleCount: 179 },
+  });
   const dimensions = ["fullText", "code", "formula", "tableContent", "tableStructure"];
   assert.deepEqual(benchmark.metrics.map(metric => metric.id), ["overall", ...dimensions]);
   const expected: Record<string, number[]> = {
@@ -113,5 +191,4 @@ test("search datasets keep their own quality metrics and exact image values", ()
   assert.deepEqual(sortProviders(scene.providers, "responseTime", "asc").map(item => item.id), ["lexmount", "serper", "browserbase", "brightdata"]);
   assert.equal(sortProviders(scene.providers, "ndcg5", "desc")[0].id, "serper");
   assert.equal(sortProviders(qa.providers, "hit5", "desc")[0].id, "serper");
-  assert.equal(search.source.versionId, null);
 });

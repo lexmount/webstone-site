@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 1,
+  "tracks": [
+    {
+      "id": "webfetch",
+      "name": "WebFetch",
+      "description": "Content retrieval"
+    },
+    {
+      "id": "websearch",
+      "name": "WebSearch",
+      "description": "Search retrieval"
+    },
+    {
+      "id": "trajectory-replay",
+      "name": "Trajectory Replay",
+      "description": "Recorded browser actions"
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "lexbench-webfetch",
+      "name": "LexBench WebFetch",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Fetch",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/jGXOOJwkdBK_",
+      "trackId": "webfetch",
+      "description": "Compare browser retrieval on real websites, from URL to usable content.",
+      "providerLabel": "Method",
+      "definitions": [
+        {
+          "id": "split-media",
+          "primaryMetric": "passRate",
+          "metrics": [
+            {
+              "id": "requestRate",
+              "label": "Request success",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better."
+            },
+            {
+              "id": "passRate",
+              "label": "Task success",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of evaluated cases that meet their task-specific pass criteria. The published percentages are retained as supplied. Higher is better."
+            },
+            {
+              "id": "totalMean",
+              "label": "Total mean",
+              "unit": "ms",
+              "direction": "asc",
+              "decimals": 0,
+              "description": "Mean total elapsed time reported in the supplied table, in milliseconds. Lower is better."
+            },
+            {
+              "id": "totalP50",
+              "label": "Total P50",
+              "unit": "ms",
+              "direction": "asc",
+              "decimals": 0,
+              "description": "Median total elapsed time (50th percentile), in milliseconds. Lower is better."
+            },
+            {
+              "id": "totalP95",
+              "label": "Total P95",
+              "unit": "ms",
+              "direction": "asc",
+              "decimals": 0,
+              "description": "95th percentile of total elapsed time, in milliseconds. Lower is better."
+            }
+          ],
+          "leadingMetricIds": [
+            "requestRate",
+            "passRate"
+          ],
+          "categories": [
+            {
+              "id": "static",
+              "name": "Static",
+              "criterion": "Complete main content is returned."
+            },
+            {
+              "id": "dynamic",
+              "name": "Dynamic",
+              "criterion": "The target JavaScript-rendered content is present."
+            },
+            {
+              "id": "popular",
+              "name": "Popular",
+              "criterion": "Main content, item counts and link counts meet the thresholds."
+            },
+            {
+              "id": "antibot",
+              "name": "Anti-bot",
+              "criterion": "The target page is returned instead of a challenge page."
+            },
+            {
+              "id": "document",
+              "name": "Documents",
+              "criterion": "PDF and DOCX titles and body text are recovered."
+            },
+            {
+              "id": "embeddedMedia",
+              "name": "Embedded media",
+              "criterion": "Valid image or video links embedded in a web page are returned."
+            },
+            {
+              "id": "directMedia",
+              "name": "Direct media",
+              "criterion": "The downloaded media file matches the original."
+            }
+          ]
+        },
+        {
+          "id": "combined-media",
+          "primaryMetric": "passRate",
+          "metrics": [
+            {
+              "id": "requestRate",
+              "label": "Request success",
+              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better.",
+              "unit": "percent",
+              "direction": "desc"
+            },
+            {
+              "id": "passRate",
+              "label": "Task success",
+              "description": "Share of evaluated cases that meet their task-specific pass criteria. Failures and timeouts count as unsuccessful. Higher is better.",
+              "unit": "percent",
+              "direction": "desc"
+            }
+          ],
+          "leadingMetricIds": [
+            "requestRate",
+            "passRate"
+          ],
+          "categories": [
+            {
+              "id": "static",
+              "name": "Static",
+              "criterion": "Complete main content is returned."
+            },
+            {
+              "id": "dynamic",
+              "name": "Dynamic",
+              "criterion": "The target JavaScript-rendered content is present."
+            },
+            {
+              "id": "popular",
+              "name": "Popular",
+              "criterion": "Main content, item counts and link counts meet the thresholds."
+            },
+            {
+              "id": "antibot",
+              "name": "Anti-bot",
+              "criterion": "The target page is returned instead of a challenge page."
+            },
+            {
+              "id": "document",
+              "name": "Documents",
+              "criterion": "PDF and DOCX titles and body text are recovered."
+            },
+            {
+              "id": "media",
+              "name": "Media",
+              "criterion": "Valid image or video links are returned. Includes 3 direct-media cases whose files must match the originals."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "webmainbench",
+      "name": "WebMainBench",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-WebMainBench",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/zrqPjO672dgg",
+      "trackId": "webfetch",
+      "description": "Compare Markdown main-content extraction using the same frozen HTML pages.",
+      "providerLabel": "Browser",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "overall",
+          "metrics": [
+            {
+              "id": "overall",
+              "label": "Overall",
+              "description": "Mean score across full text, code, formulas, table content and table structure. Higher is better.",
+              "unit": "score",
+              "direction": "desc"
+            },
+            {
+              "id": "fullText",
+              "label": "Full text",
+              "description": "Quality of full-text extraction compared with the reference content. Higher is better.",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1
+            },
+            {
+              "id": "code",
+              "label": "Code",
+              "description": "Quality of code extraction from the page. Higher is better.",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1
+            },
+            {
+              "id": "formula",
+              "label": "Formulas",
+              "description": "Quality of mathematical formula extraction. Higher is better.",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1
+            },
+            {
+              "id": "tableContent",
+              "label": "Table content",
+              "description": "Quality of extracted table-cell text and data. Higher is better.",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1
+            },
+            {
+              "id": "tableStructure",
+              "label": "Table structure",
+              "description": "Quality of preserved table rows, columns and cell structure. Higher is better.",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lexbench-websearch",
+      "name": "LexBench WebSearch",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/W3MxzlJuPRl6",
+      "trackId": "websearch",
+      "description": "Compare search retrieval quality on scenario-based queries for agents.",
+      "providerLabel": "Service",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "ndcg5",
+          "metrics": [
+            {
+              "id": "responseTime",
+              "label": "Avg. response",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Mean response time in seconds. The measurement scope and sample count are recorded with each result."
+            },
+            {
+              "id": "pricePerThousand",
+              "label": "Price / 1K",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Published price per 1,000 calls, in USD."
+            },
+            {
+              "id": "ndcg5",
+              "label": "nDCG@5",
+              "unit": "score",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Measures relevance and ranking quality in the top 5 results. More relevant results earn more credit at higher ranks. Shown on a 0–100 scale."
+            },
+            {
+              "id": "precision5",
+              "label": "Precision@5",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of the top 5 results with relevance grade 2 or 3. Higher is better."
+            },
+            {
+              "id": "success5",
+              "label": "Success@5",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of queries with at least one top-relevance result (grade 3) in the top 5. Higher is better."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simpleqa-verified",
+      "name": "SimpleQA Verified",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/W3MxzlJuPRl6",
+      "trackId": "websearch",
+      "description": "Compare search retrieval quality on short factual questions.",
+      "providerLabel": "Service",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "hit5",
+          "metrics": [
+            {
+              "id": "responseTime",
+              "label": "Avg. response",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Mean response time in seconds. The measurement scope and sample count are recorded with each result."
+            },
+            {
+              "id": "pricePerThousand",
+              "label": "Price / 1K",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Published price per 1,000 calls, in USD."
+            },
+            {
+              "id": "hit5",
+              "label": "Hit@5",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of questions with at least one annotated reference page in the top 5 results. Higher is better."
+            },
+            {
+              "id": "mrr5",
+              "label": "MRR@5",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Mean reciprocal rank of the first reference-page hit in the top 5: rank 1 scores 1, rank 2 scores 0.5, and a miss scores 0. Range: 0–1. Higher is better."
+            },
+            {
+              "id": "answerMatch5",
+              "label": "Answer Match@5",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 1,
+              "description": "Share of questions whose reference answer matches a title or snippet in the top 5 results. Higher is better."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lexbench-headless-372",
+      "name": "LexBench Headless 372",
+      "datasetUrl": "https://github.com/lexmount/Lexbench-Headless-Browser",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/gdwtSGOel0va",
+      "trackId": "trajectory-replay",
+      "description": "Compare Moli builds with layout on and off on a Lexbench Headless Browser subset, measuring success, memory and latency.",
+      "providerLabel": "Build",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "successRate",
+          "metrics": [
+            {
+              "id": "successRate",
+              "label": "Task success",
+              "unit": "percent",
+              "direction": "desc",
+              "description": "Passed tasks divided by the total number of evaluated tasks."
+            },
+            {
+              "id": "successDelta",
+              "label": "Success Δ",
+              "unit": "points",
+              "direction": "desc",
+              "decimals": 2,
+              "signed": true,
+              "description": "Change in percentage points against the Moli 1.1.4 baseline with layout off."
+            },
+            {
+              "id": "pss",
+              "label": "PSS",
+              "unit": "mib",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Peak proportional set size (PSS) during execution, in MiB."
+            },
+            {
+              "id": "pssDelta",
+              "label": "PSS Δ",
+              "unit": "percent",
+              "direction": "asc",
+              "decimals": 2,
+              "signed": true,
+              "description": "Percentage change in PSS against the baseline."
+            },
+            {
+              "id": "latency",
+              "label": "Mean latency",
+              "unit": "ms",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Mean latency per task, in milliseconds."
+            },
+            {
+              "id": "latencyDelta",
+              "label": "Latency Δ",
+              "unit": "percent",
+              "direction": "asc",
+              "decimals": 2,
+              "signed": true,
+              "description": "Percentage change in mean latency against the baseline."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "webarena-verified",
+      "name": "WebArena Verified",
+      "datasetUrl": "https://github.com/ServiceNow/webarena-verified",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/EFLrNgujgsVc",
+      "trackId": "trajectory-replay",
+      "description": "Compare setup success rates and latency on real-world WebArena-Verified tasks.",
+      "providerLabel": "Setup",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "successRate",
+          "metrics": [
+            {
+              "id": "successRate",
+              "label": "Task success",
+              "unit": "percent",
+              "direction": "desc",
+              "description": "Passed WebArena-Verified tasks divided by the total number of evaluated tasks."
+            },
+            {
+              "id": "taskMean",
+              "label": "Task mean",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "Mean end-to-end task latency across evaluated tasks."
+            },
+            {
+              "id": "taskP50",
+              "label": "Task P50",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "Median end-to-end task latency across evaluated tasks."
+            },
+            {
+              "id": "taskP95",
+              "label": "Task P95",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "95th percentile of end-to-end task latency across evaluated tasks."
+            },
+            {
+              "id": "actionMean",
+              "label": "Action mean",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "Mean latency per action. The sample count is the number of actions executed by this setup."
+            },
+            {
+              "id": "actionP50",
+              "label": "Action P50",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "Median action latency. The sample count is the number of actions executed by this setup."
+            },
+            {
+              "id": "actionP95",
+              "label": "Action P95",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 1,
+              "description": "95th percentile of action latency. The sample count is the number of actions executed by this setup."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

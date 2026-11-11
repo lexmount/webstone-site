@@ -1,0 +1,178 @@
+{
+  "id": "lexbench-headless-372-20261110",
+  "snapshotDate": "2026-11-10",
+  "dateKind": "imported",
+  "source": {
+    "kind": "user-provided-text",
+    "url": "https://github.com/lexmount/Lexbench-Headless-Browser",
+    "linkLabel": "评测集",
+    "title": "Lexbench Headless Browser 372 题子集",
+    "importedAt": "2026-11-10T09:40:00Z",
+    "method": "user-provided-table transcription",
+    "scope": "用户在会话中提供的 372 题子集汇总表：七种 Moli 构建在 layout 开关下的通过数、成功率、相对基线差值、PSS 与平均耗时，以及各自采样数。未提供逐题结果。",
+    "dateNote": "日期为数据接收日期，表内未注明执行日期。"
+  },
+  "benchmarks": [
+    {
+      "id": "lexbench-headless-372",
+      "definitionId": "standard",
+      "taskCount": 372,
+      "notes": [
+        "评测集为 Lexbench Headless Browser 的 372 题子集，七种 Moli 构建使用同一批任务。",
+        "基线行只实测 1 题，其余 371 题按共同失败关系继承判定；其余行 372 题全部实测。",
+        "每题采样 3 次：基线共 3 次，其余各行 1,116 次。",
+        "相对值均以基线行为 0；PSS 单位 MiB，耗时单位毫秒，负值表示更低。"
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "headless-1-1-4-off",
+          "name": "Moli 1.1.4 · layout off",
+          "description": "Docker · Linux · 基线",
+          "mode": "全程关闭",
+          "scores": {
+            "successRate": 0,
+            "successDelta": 0,
+            "pss": 77.22,
+            "pssDelta": 0,
+            "latency": 21.41,
+            "latencyDelta": 0
+          },
+          "passed": 0,
+          "passedDerivation": "0 / 372; 1 task measured (3 samples), with 371 tasks inherited from shared failure relationships.",
+          "samples": {
+            "tasks": 1,
+            "runs": 3
+          }
+        },
+        {
+          "id": "headless-1-1-8-off",
+          "name": "Moli 1.1.8 · layout off",
+          "description": "Docker · Linux",
+          "mode": "全程关闭",
+          "scores": {
+            "successRate": 0.3,
+            "successDelta": 0.27,
+            "pss": 77.1,
+            "pssDelta": -0.15,
+            "latency": 21.32,
+            "latencyDelta": -0.4
+          },
+          "passed": 1,
+          "passedDerivation": "1 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        },
+        {
+          "id": "headless-1-1-8-on",
+          "name": "Moli 1.1.8 · layout on",
+          "description": "Docker · Linux",
+          "mode": "全程开启",
+          "scores": {
+            "successRate": 68.5,
+            "successDelta": 68.55,
+            "pss": 80.54,
+            "pssDelta": 4.3,
+            "latency": 21.66,
+            "latencyDelta": 1.16
+          },
+          "passed": 255,
+          "passedDerivation": "255 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        },
+        {
+          "id": "headless-1-1-9-off",
+          "name": "Moli 1.1.9 · layout off",
+          "description": "Docker · Linux",
+          "mode": "全程关闭",
+          "scores": {
+            "successRate": 0.3,
+            "successDelta": 0.27,
+            "pss": 76.94,
+            "pssDelta": -0.36,
+            "latency": 21.11,
+            "latencyDelta": -1.39
+          },
+          "passed": 1,
+          "passedDerivation": "1 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        },
+        {
+          "id": "headless-1-1-9-on",
+          "name": "Moli 1.1.9 · layout on",
+          "description": "Docker · Linux",
+          "mode": "全程开启",
+          "scores": {
+            "successRate": 68.5,
+            "successDelta": 68.55,
+            "pss": 80.23,
+            "pssDelta": 3.9,
+            "latency": 21.04,
+            "latencyDelta": -1.7
+          },
+          "passed": 255,
+          "passedDerivation": "255 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        },
+        {
+          "id": "headless-1-1-9-fixed-off",
+          "name": "Moli 1.1.9 patched · layout off",
+          "description": "Docker · Linux",
+          "mode": "全程关闭",
+          "scores": {
+            "successRate": 0.3,
+            "successDelta": 0.27,
+            "pss": 77.7,
+            "pssDelta": 0.63,
+            "latency": 21,
+            "latencyDelta": -1.92
+          },
+          "passed": 1,
+          "passedDerivation": "1 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        },
+        {
+          "id": "headless-1-1-9-fixed-on",
+          "name": "Moli 1.1.9 patched · layout on",
+          "description": "Docker · Linux",
+          "mode": "全程开启",
+          "scores": {
+            "successRate": 96.8,
+            "successDelta": 96.77,
+            "pss": 80.83,
+            "pssDelta": 4.68,
+            "latency": 21.48,
+            "latencyDelta": 0.36
+          },
+          "passed": 360,
+          "passedDerivation": "360 / 372 (372 tasks measured, 1,116 samples)",
+          "samples": {
+            "tasks": 372,
+            "runs": 1116
+          }
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "headless-372-table",
+      "section": "用户提供的 372 题子集汇总表",
+      "text": "七行的通过数、成功率、相对基线差值、PSS 与平均耗时均由用户逐格提供；未提供逐题证据链接，页面不展示“查看逐题证据”入口。"
+    }
+  ]
+}

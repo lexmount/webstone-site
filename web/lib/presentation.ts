@@ -1,0 +1,27 @@
+// Provider colors are website presentation, not evaluation measurements.
+export const providerColors: Record<string, string> = {
+  "moli-1-1-17": "#16876b",
+  "moli-1-1-15": "#57a27d",
+  "chromium": "#4978c8",
+  "lightpanda": "#d29b32",
+  "obscura": "#9b83b0",
+  "kitesurf": "#dc825e",
+  "moli": "#16876b",
+  "lexmount": "#16876b",
+  "serper": "#4978c8",
+  "browserbase": "#d29b32",
+  "brightdata": "#9b83b0",
+  "chromium-153": "#4978c8",
+  "moli-731-853": "#16876b",
+  "moli-v1-1-11": "#3f9c81",
+  "lightpanda-nightly-9813": "#d29b32",
+  "obscura-0-2-3": "#9b83b0",
+  "kitesurf-cloudflare": "#dc825e",
+  "headless-1-1-4-off": "#16876b",
+  "headless-1-1-8-off": "#16876b",
+  "headless-1-1-8-on": "#16876b",
+  "headless-1-1-9-off": "#16876b",
+  "headless-1-1-9-on": "#16876b",
+  "headless-1-1-9-fixed-off": "#16876b",
+  "headless-1-1-9-fixed-on": "#16876b"
+};
