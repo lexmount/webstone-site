@@ -15,6 +15,11 @@
       "id": "trajectory-replay",
       "name": "Trajectory Replay",
       "description": "Recorded browser actions"
+    },
+    {
+      "id": "webextract",
+      "name": "Web Extract",
+      "description": "Structured field extraction"
     }
   ],
   "benchmarks": [
@@ -488,6 +493,242 @@
               "direction": "asc",
               "decimals": 1,
               "description": "95th percentile of action latency. The sample count is the number of actions executed by this setup."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lexbench-swde",
+      "name": "LexBench SWDE",
+      "datasetName": "LexBench-SWDE",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SWDE",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/AuAOPYUyRBYx",
+      "trackId": "webextract",
+      "description": "Compare structured field extraction on 800 archived SWDE pages across eight domains.",
+      "providerLabel": "Method",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "pageMacroF1",
+          "metrics": [
+            {
+              "id": "pageMacroF1",
+              "label": "Page-hit macro F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Macro-average page-hit F1 as published in the supplied evaluation. Values remain on a 0–1 scale; the detailed matching and aggregation protocol was not supplied."
+            },
+            {
+              "id": "executedPages",
+              "label": "Executed / planned",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Executed pages out of the planned evaluation pages. This is execution coverage, not extraction correctness."
+            },
+            {
+              "id": "pagesWithFields",
+              "label": "Pages with fields",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Pages for which the method returned fields. Returning fields does not imply those fields were correct."
+            },
+            {
+              "id": "valueMicroF1",
+              "label": "Value micro F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Value-level micro-average F1 as published in the supplied evaluation, on a 0–1 scale. The detailed normalization and matching protocol was not supplied."
+            },
+            {
+              "id": "fieldSetExact",
+              "label": "Field-set exact",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Published field-set exact-match rate. This is distinct from all fields and values being correct on a page; the detailed denominator and field-matching protocol were not supplied."
+            },
+            {
+              "id": "pageExact",
+              "label": "Full-page exact",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Pages with a fully correct extraction among pages eligible for full-page scoring. Pages with incomplete reference coverage are excluded; this is not a rate over all executed pages."
+            },
+            {
+              "id": "nullAccuracy",
+              "label": "Null handling",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Correct empty-value handling on the published null-handling subset. The numerator and denominator are shown alongside the supplied rate."
+            },
+            {
+              "id": "timedPages",
+              "label": "Timed pages",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Executed pages with a recorded timing measurement."
+            },
+            {
+              "id": "untimedPages",
+              "label": "Untimed pages",
+              "unit": "count",
+              "direction": "asc",
+              "decimals": 0,
+              "description": "Executed pages without a recorded timing measurement. Lower is better."
+            },
+            {
+              "id": "meanTime",
+              "label": "Mean time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "Mean elapsed time in seconds across the recorded timing measurements."
+            },
+            {
+              "id": "p50Time",
+              "label": "P50 time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "Median elapsed time in seconds across the recorded timing measurements."
+            },
+            {
+              "id": "p95Time",
+              "label": "P95 time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "95th-percentile elapsed time in seconds across the recorded timing measurements."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lexbench-zyte-product-extraction",
+      "name": "LexBench Zyte Product Extraction",
+      "datasetName": "LexBench-Zyte-Product-Extraction",
+      "datasetUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Zyte-Product-Extraction",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/qlQbpXWMlmyA",
+      "trackId": "webextract",
+      "description": "Compare price, SKU and stock extraction from 140 archived product pages.",
+      "providerLabel": "Method",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "pageExact",
+          "metrics": [
+            {
+              "id": "pageExact",
+              "label": "Full-page exact",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Pages where all evaluated product fields are correct. The supplied numerator, denominator and percentage are shown together."
+            },
+            {
+              "id": "executedPages",
+              "label": "Tested / total",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Tested pages out of the total evaluation pages. Coverage does not imply extraction correctness."
+            },
+            {
+              "id": "returnedObjects",
+              "label": "Returned objects",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Number of product objects returned by the method. An object being returned does not imply that its fields are correct."
+            },
+            {
+              "id": "priceF1",
+              "label": "Price F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Published F1 for price extraction, on a 0–1 scale. The reference population for the selected version is recorded below."
+            },
+            {
+              "id": "skuF1",
+              "label": "SKU F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Published F1 for SKU extraction, on a 0–1 scale. The reference population for the selected version is recorded below."
+            },
+            {
+              "id": "stockF1",
+              "label": "Stock F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Published F1 for stock availability, on a 0–1 scale. The reference population for the selected version is recorded below."
+            },
+            {
+              "id": "outOfStockF1",
+              "label": "Out-of-stock F1",
+              "unit": "ratio",
+              "direction": "desc",
+              "decimals": 3,
+              "description": "Published F1 for out-of-stock detection, on a 0–1 scale. This is separate from Stock F1; the reference population for the selected version is recorded below."
+            },
+            {
+              "id": "nullAccuracy",
+              "label": "Null handling",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Correct empty-value handling on the supplied subset, shown as count / total and percentage. This is not a rate over all product pages."
+            },
+            {
+              "id": "timedPages",
+              "label": "Timed pages",
+              "unit": "count",
+              "direction": "desc",
+              "decimals": 0,
+              "description": "Tested pages with a recorded timing measurement."
+            },
+            {
+              "id": "untimedPages",
+              "label": "Untimed pages",
+              "unit": "count",
+              "direction": "asc",
+              "decimals": 0,
+              "description": "Tested pages without a recorded timing measurement. Lower is better."
+            },
+            {
+              "id": "meanTime",
+              "label": "Mean time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "Mean elapsed time in seconds across the recorded timing measurements."
+            },
+            {
+              "id": "p50Time",
+              "label": "P50 time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "Median elapsed time in seconds across the recorded timing measurements."
+            },
+            {
+              "id": "p95Time",
+              "label": "P95 time",
+              "unit": "seconds",
+              "direction": "asc",
+              "decimals": 3,
+              "description": "95th-percentile elapsed time in seconds across the recorded timing measurements."
             }
           ]
         }

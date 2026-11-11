@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, Bot, Globe2, Layers3, Menu, Search } from "lucide-react";
-import { benchmarkEntries, bestValue, formatMetric, isBestValue, latestEntry, reportEntries, resolveBenchmark, selectEntry, sortProviders, type Catalog, type Entry, type Metric, type Provider, type ReportFile, type Snapshot } from "../lib/results";
+import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, Bot, FileJson2, Globe2, Layers3, Menu, Search } from "lucide-react";
+import { benchmarkEntries, bestValue, formatMetric, formatPricing, isBestValue, latestEntry, reportEntries, resolveBenchmark, selectEntry, sortProviders, type Catalog, type Entry, type Metric, type Provider, type ReportFile, type Snapshot } from "../lib/results";
 import { providerColors } from "../lib/presentation";
 import InfoTooltip from "./info-tooltip";
 
-const TRACK_ICONS: Record<string, typeof Globe2> = { webfetch: Globe2, websearch: Search, "trajectory-replay": Bot };
+const TRACK_ICONS: Record<string, typeof Globe2> = { webfetch: Globe2, websearch: Search, "trajectory-replay": Bot, webextract: FileJson2 };
 const GITHUB_URL = "https://github.com/lexmount/browser-eval-site";
 type Selection = { benchmark: string; version: string; metric: string };
 
@@ -88,10 +88,12 @@ export default function Dashboard() {
   const categoryBest = new Map(categories.map(category => [category.id, bestValue((benchmark?.providers ?? []).map(provider => provider.categoryPassed?.[category.id] ?? null), "desc")]));
   const passedBest = bestValue((benchmark?.providers ?? []).map(provider => provider.passed), "desc");
   const showPassed = benchmark?.providers.some(provider => provider.passed != null) ?? false;
+  const showPricing = benchmark?.providers.some(provider => provider.pricing != null) ?? false;
   const tableClass = benchmark?.id === "lexbench-webfetch"
     ? "wide-table lexbench-table"
     : benchmark?.id === "webarena-verified" ? "wide-table arena-table"
     : benchmark?.id === "lexbench-headless-372" ? "wide-table headless-table"
+    : benchmark?.trackId === "webextract" ? "wide-table extract-table"
     : "wide-table";
 
   function chooseBenchmark(id: string) {
@@ -132,7 +134,7 @@ export default function Dashboard() {
     const isBest = isBestValue(value, metricBest.get(item.id) ?? null);
     return <td key={item.id} className={`numeric ${item.id === metric?.id ? "primary-number" : ""} ${isBest ? "best-value" : ""}`}
       title={isBest ? "Best in this column" : value == null ? "Not disclosed in the source" : undefined}
-    >{formatMetric(value, item.unit, item.decimals, item.signed)}{isBest && <span className="sr-only"> Best in this column</span>}</td>;
+    >{formatMetric(value, item.unit, item.decimals, item.signed, provider.counts?.[item.id])}{isBest && <span className="sr-only"> Best in this column</span>}</td>;
   }
 
   return <div className="app-shell">
@@ -195,7 +197,7 @@ export default function Dashboard() {
           </div> : <>
             <section className="leaderboard" aria-label={`${benchmark.name} leaderboard`}>
               <div className="table-scroll">
-                <table className={tableClass} style={{ "--data-columns": categories.length + benchmark.metrics.length + Number(showPassed) } as React.CSSProperties}>
+                <table className={tableClass} style={{ "--data-columns": categories.length + benchmark.metrics.length + Number(showPassed) + Number(showPricing) } as React.CSSProperties}>
                   <caption className="sr-only">{benchmark.name} leaderboard</caption>
                   <thead><tr>
                     <th className="rank-cell" scope="col">#</th>
@@ -203,6 +205,7 @@ export default function Dashboard() {
                     {leadingMetrics.map(metricHeader)}
                     {categories.map(category => <th key={category.id} scope="col" className="category-head"><div className="metric-heading"><span>{category.name}<span className="category-total">/{category.total}</span></span><InfoTooltip label={category.name} description={`${category.total} cases. Pass criteria: ${category.criterion}`} /></div></th>)}
                     {trailingMetrics.map(metricHeader)}
+                    {showPricing && <th scope="col"><div className="metric-heading"><span>Price / 1K</span><InfoTooltip label="Price / 1K" description="USD per 1,000 calls. Ranges reflect different billing conditions and are not sorted or ranked. Software-only prices exclude model usage; total costs were not supplied. Billing source URLs were not supplied." /></div></th>}
                     {showPassed && <th className="count-cell" scope="col"><div className="metric-heading"><span>Passed / Total</span><InfoTooltip label="Passed / Total" description={`Passed cases out of ${benchmark.taskCount} total cases. Undisclosed counts are shown as —.`} /></div></th>}
                   </tr></thead>
                   <tbody>{providers.map((provider, i) => <tr key={provider.id}>
@@ -214,6 +217,7 @@ export default function Dashboard() {
                       return <td key={category.id} className={`numeric category-value ${isBest ? "best-value" : ""}`} title={isBest ? "Best in this column" : undefined}>{provider.categoryPassed?.[category.id] ?? "—"}{isBest && <span className="sr-only"> Best in this column</span>}</td>;
                     })}
                     {trailingMetrics.map(item => metricCell(provider, item))}
+                    {showPricing && <td className="numeric"><div className="metric-heading">{provider.pricing ? <>{formatPricing(provider.pricing)}<InfoTooltip label={`${provider.name} billing`} description={provider.pricing.description} /></> : "—"}</div></td>}
                     {showPassed && <td className={`numeric count-cell ${isBestValue(provider.passed, passedBest) ? "best-value" : ""}`} title={isBestValue(provider.passed, passedBest) ? "Best in this column" : provider.passed == null ? "Not disclosed in the source" : provider.passedDerivation ?? undefined}>{provider.passed == null ? "—" : <>{provider.passed}<span> / {benchmark.taskCount}</span></>}{isBestValue(provider.passed, passedBest) && <span className="sr-only"> Best in this column</span>}</td>}
                   </tr>)}</tbody>
                 </table>

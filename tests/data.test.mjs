@@ -30,8 +30,8 @@ test("result records are versioned files without a hand-maintained index or form
 
 test("report directories are discovered and their declared provenance is validated", async () => {
   const summary = await prepareData({ write: false });
-  assert.equal(summary.files, 6);
-  assert.equal(summary.benchmarks, 6);
+  assert.equal(summary.files, 8);
+  assert.equal(summary.benchmarks, 8);
 });
 
 test("adding and removing a version file needs no index update", async t => {
@@ -217,4 +217,65 @@ test("image provenance, monetary values, latency and ratio limits are validated"
   assert.throws(() => validateSnapshot(negativePrice, searchEntry, catalog), /metric/);
   assert.equal(search.benchmarks[0].metricSamples.responseTime.sampleCount, 980);
   assert.equal(qa.benchmarks[0].metricSamples.responseTime.sampleCount, 980);
+});
+
+test("SWDE preserves all supplied quality, timing, count and pricing measurements", () => {
+  const report = files.find(item => item.report.id === "lexbench-swde-v1")?.report;
+  assert.ok(report, "SWDE v1 must be discoverable");
+  const benchmark = report.benchmarks[0];
+  assert.equal(benchmark.taskCount, 800);
+  assert.equal(benchmark.providers.length, 10);
+  assert.equal(benchmark.metricSamples.pageExact.sampleCount, 740);
+  assert.equal(benchmark.metricSamples.nullAccuracy.sampleCount, 25);
+  // Values are transcribed from the two user-supplied tables in their original order.
+  const expected = [
+    [800, .807, .705, 68.18, 226, 30.54, 0, 0, 3.184, 2.899, 4.870, 1.502, 5.069],
+    [800, .783, .697, 68.76, 208, 28.11, 19, 76, 2.666, 2.416, 4.259, 2.995, 19],
+    [798, .824, .745, 73.54, 257, 34.73, 17, 68, 5.014, 4.049, 9.590, 2.833, 10],
+    [791, .840, .758, 73.57, 279, 37.70, 14, 56, 5.120, 4.747, 8.087, 3.75, 4],
+    [750, .756, .677, 65.96, 206, 27.84, 17, 68, 9.043, 5.198, 62.136, .865, 5.73],
+    [789, .817, .733, 72.48, 242, 32.70, 20, 80, 2.064, 1.894, 2.689, 4, 4],
+    [799, .805, .741, 73.47, 251, 33.92, 20, 80, 23.645, 19.827, 47.326, null, null],
+    [800, .810, .737, 73.89, 243, 32.84, 21, 84, 13.728, 9.268, 34.662, null, null],
+    [799, .845, .771, 75.29, 271, 36.62, 13, 52, 10.719, 8.786, 20.974, null, null],
+    [800, .827, .752, 74.84, 263, 35.54, 18, 72, 5.629, 3.830, 14.745, null, null],
+  ];
+  benchmark.providers.forEach((provider, i) => {
+    assert.deepEqual([provider.scores.pagesWithFields, provider.scores.pageMacroF1, provider.scores.valueMicroF1,
+      provider.scores.fieldSetExact, provider.counts.pageExact.count, provider.scores.pageExact,
+      provider.counts.nullAccuracy.count, provider.scores.nullAccuracy,
+      provider.scores.meanTime, provider.scores.p50Time, provider.scores.p95Time,
+      provider.pricing.min, provider.pricing.max], expected[i]);
+    assert.deepEqual(provider.counts.executedPages, { count: 800, total: 800 });
+    assert.equal(provider.counts.pageExact.total, 740);
+    assert.equal(provider.counts.nullAccuracy.total, 25);
+    assert.equal(provider.scores.timedPages, 800);
+    assert.equal(provider.scores.untimedPages, 0);
+    assert.equal(provider.passed, null, "740 eligible pages must not use the 800-task pass denominator");
+  });
+  assert.deepEqual(benchmark.providers.map(p => p.pricing.approximate), [true, false, false, false, true, false, false, false, false, false]);
+  assert.match(report.datasetDifference, /60 pages/);
+});
+
+test("count breakdowns and price ranges reject inconsistent or fabricated values", () => {
+  const invalid = structuredClone(snapshot);
+  invalid.benchmarks[0].providers[0].counts = { passRate: { count: 431, total: 430 } };
+  assert.throws(() => validateSnapshot(invalid, entry, catalog), /count breakdown/);
+  invalid.benchmarks[0].providers[0].counts = { passRate: { count: 1, total: 430 } };
+  assert.throws(() => validateSnapshot(invalid, entry, catalog), /count breakdown/);
+  delete invalid.benchmarks[0].providers[0].counts;
+  for (const [min, max] of [[5, 1], [-1, 1], [0, null], [0, Infinity]]) {
+    invalid.benchmarks[0].providers[0].pricing = { min, max, description: "Published price range." };
+    assert.throws(() => validateSnapshot(invalid, entry, catalog), /pricing/);
+  }
+});
+
+test("version-specific sample notes must be nonempty English", () => {
+  const record = structuredClone(snapshot);
+  record.benchmarks[0].metricSamples = { passRate: { sampleCount: 430, note: "430 evaluated cases." } };
+  assert.doesNotThrow(() => validateSnapshot(record, entry, catalog));
+  for (const note of ["", "   ", "有值 134 / 空 6", 140]) {
+    record.benchmarks[0].metricSamples.passRate.note = note;
+    assert.throws(() => validateSnapshot(record, entry, catalog), /sample note/);
+  }
 });
