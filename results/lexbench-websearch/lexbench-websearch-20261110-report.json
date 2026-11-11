@@ -1,0 +1,113 @@
+{
+  "id": "lexbench-websearch-20261110",
+  "snapshotDate": "2026-11-10",
+  "dateKind": "imported",
+  "source": {
+    "kind": "user-provided-image",
+    "url": "https://yours.lexmount.cn/artifact-site/s/-FtUMQm-NmQa",
+    "title": "Web Search 结果总览",
+    "sha256": "188f02638c2666ba87fa2a6409d5228121adccc452a553df35fbcfdc99e6ce6d",
+    "importedAt": "2026-11-10T08:23:15Z",
+    "method": "user-provided-image transcription",
+    "scope": "用户提供的结果总览图。149 道场景题与 773 道事实题分库记录；平均响应时间为两个题库合计 980 次调用的共同指标，价格为每千次调用 USD。报告链接为相关汇总博客，未将图片绑定到未知报告版本。",
+    "dateNote": "日期为接收图表的采集日期，原图未注明执行日期。"
+  },
+  "benchmarks": [
+    {
+      "id": "lexbench-websearch",
+      "definitionId": "standard",
+      "taskCount": 149,
+      "metricSamples": {
+        "responseTime": {
+          "sampleCount": 980,
+          "scope": "all-search-calls"
+        },
+        "pricePerThousand": {
+          "scope": "provider-pricing"
+        },
+        "ndcg5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
+        },
+        "precision5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
+        },
+        "success5": {
+          "sampleCount": 149,
+          "scope": "lexbench-websearch"
+        }
+      },
+      "notes": [
+        "质量指标来自 149 道场景题。",
+        "平均响应时间来自两个题库合计 980 次调用，不作为本题库独立计时。"
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "lexmount",
+          "name": "Lexmount",
+          "description": "Lexmount Web Search",
+          "mode": "Search API",
+          "scores": {
+            "responseTime": 1.46,
+            "pricePerThousand": 0.75,
+            "ndcg5": 64,
+            "precision5": 62.7,
+            "success5": 77.2
+          },
+          "passed": null
+        },
+        {
+          "id": "serper",
+          "name": "Serper",
+          "description": "Serper",
+          "mode": "Search API",
+          "scores": {
+            "responseTime": 2.26,
+            "pricePerThousand": 1,
+            "ndcg5": 64.4,
+            "precision5": 71.9,
+            "success5": 74.5
+          },
+          "passed": null
+        },
+        {
+          "id": "browserbase",
+          "name": "Browserbase",
+          "description": "Browserbase Search",
+          "mode": "Search API",
+          "scores": {
+            "responseTime": 3.97,
+            "pricePerThousand": 5,
+            "ndcg5": 58.8,
+            "precision5": 62.4,
+            "success5": 71.1
+          },
+          "passed": null
+        },
+        {
+          "id": "brightdata",
+          "name": "Bright Data",
+          "description": "Bright Data SERP API",
+          "mode": "Search API",
+          "scores": {
+            "responseTime": 46.41,
+            "pricePerThousand": 1.5,
+            "ndcg5": 23.2,
+            "precision5": 25.8,
+            "success5": 25.5
+          },
+          "passed": null
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "websearch-overview-image",
+      "section": "用户提供的结果总览图",
+      "text": "四款服务：Lexmount、Serper、Browserbase、Bright Data。速度和价格越低越好；各质量指标越高越好。149 道场景题、773 道事实题与 980 次调用分别记录，不混用分母。"
+    }
+  ]
+}

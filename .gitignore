@@ -10,6 +10,7 @@ web/next-env.d.ts
 
 # generated result copies (built from results/ by prepare:data)
 web/public/results/
+web/public/benchmarks/
 
 # env
 .env*

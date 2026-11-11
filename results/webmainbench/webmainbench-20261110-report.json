@@ -1,0 +1,182 @@
+{
+  "id": "webmainbench-20261110",
+  "snapshotDate": "2026-11-10",
+  "dateKind": "imported",
+  "source": {
+    "url": "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
+    "title": "[L1·证据] Moli 以 89.8% 通过率拿下 Web Fetch 第一",
+    "importedAt": "2026-11-10T06:15:55Z",
+    "method": "artifact_site_read via authenticated MCP",
+    "scope": "报告正文、用户逐类提供的分类通过数及用户提供的两张图表：包含五款浏览器的任务成功率、六类通过数、WebMainBench 综合分与五维得分。保留正文已有高精度值，五维按原图一位小数显示。未导入逐题结果。",
+    "dateNote": "原报告正文未披露执行日期。当前日期为采集快照日期，不代表运行日期。"
+  },
+  "benchmarks": [
+    {
+      "id": "webmainbench",
+      "definitionId": "standard",
+      "taskCount": 545,
+      "metricSamples": {
+        "fullText": {
+          "sampleCount": 545
+        },
+        "code": {
+          "sampleCount": 110
+        },
+        "formula": {
+          "sampleCount": 257
+        },
+        "tableContent": {
+          "sampleCount": 179
+        },
+        "tableStructure": {
+          "sampleCount": 179
+        }
+      },
+      "notes": [
+        "五款浏览器处理同一批 545 份预先保存的 HTML。",
+        "全文、代码、公式、表格内容、表格结构五项评分；综合分取五项平均。",
+        "输入固定，不测实时网络访问或风控。",
+        "本来源正文仅披露部分分数，缺失值保持为空，未从图形或排名推算。"
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "moli",
+          "name": "Moli",
+          "description": "Rust 独立浏览器内核",
+          "mode": "本地 · 原生 Markdown",
+          "scores": {
+            "overall": 39.27,
+            "code": 91.06,
+            "fullText": 40.7,
+            "formula": 28.2,
+            "tableContent": 22.6,
+            "tableStructure": 13.8
+          },
+          "passed": null
+        },
+        {
+          "id": "chromium",
+          "name": "Chromium",
+          "description": "Chromium + node-html-markdown",
+          "mode": "本地 · HTML 转换",
+          "scores": {
+            "overall": 27.02,
+            "code": 35.86,
+            "fullText": 39.4,
+            "formula": 21.1,
+            "tableContent": 25,
+            "tableStructure": 13.7
+          },
+          "passed": null
+        },
+        {
+          "id": "lightpanda",
+          "name": "Lightpanda",
+          "description": "Zig 无头浏览器",
+          "mode": "本地 · 原生 Markdown",
+          "scores": {
+            "overall": 35,
+            "code": 84.7,
+            "fullText": 41.5,
+            "formula": 13,
+            "tableContent": 21.8,
+            "tableStructure": 14
+          },
+          "passed": null
+        },
+        {
+          "id": "obscura",
+          "name": "Obscura",
+          "description": "Rust / V8 浏览器",
+          "mode": "本地 · 原生 Markdown",
+          "scores": {
+            "overall": 31.03,
+            "code": 81.8,
+            "fullText": 41.9,
+            "formula": 31.4,
+            "tableContent": 0,
+            "tableStructure": 0
+          },
+          "passed": null
+        },
+        {
+          "id": "kitesurf",
+          "name": "Kitesurf",
+          "description": "Cloudflare 远程浏览器",
+          "mode": "远程 · 官方 Markdown API",
+          "scores": {
+            "overall": 33.43,
+            "code": 80.7,
+            "fullText": 37,
+            "formula": 19.3,
+            "tableContent": 18.3,
+            "tableStructure": 11.9
+          },
+          "passed": null
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "lead",
+      "section": "结果总览",
+      "text": "Moli 在真实网站上的任务通过率是 89.8%，正文提取的综合分是 39.27，两项都排第一。"
+    },
+    {
+      "id": "runnerup",
+      "section": "首屏与第 5.1 节",
+      "text": "lexbench-webfetch 第二名 54.4%；WebMainBench 第二名 35.00。Chromium 的请求成功率为 96.7%，任务通过率为 54.4%。"
+    },
+    {
+      "id": "counts",
+      "section": "第 5.2、5.5 节",
+      "text": "Moli 比第二名 Chromium 多通过了 152 个用例。430 个用例里，Moli 有 44 个未通过，其中 16 个请求失败。"
+    },
+    {
+      "id": "categories",
+      "section": "第 5.2、5.5 节",
+      "text": "Moli 的风控、热门和动态网站分别通过 88、91、90 个；其他浏览器在这三类上的最高值分别为 37、58、58。未通过分类数为 12、10、9、9、3、1。"
+    },
+    {
+      "id": "quality",
+      "section": "第 4 节",
+      "text": "Moli 综合分 39.27，比 Lightpanda 高 4.27 分；Moli 代码得分 91.06，Chromium 代码得分 35.86。"
+    },
+    {
+      "id": "webmainbench-dimension-chart",
+      "section": "用户提供的 WebMainBench 图表",
+      "text": "全文、代码、公式、表格内容、表格结构五个维度，五款浏览器共 25 个数值。按原图一位小数显示；保留已有正文中的更高精度代码得分，不据此推算缺失综合分。"
+    },
+    {
+      "id": "category-pass-counts",
+      "section": "用户逐类提供的分类通过数",
+      "text": "五款浏览器的静态、动态、热门、风控、内嵌文档、媒体六类通过数由用户逐类提供，媒体 20 含 3 个直链用例。内嵌文档分母取 10：六类用例合计 430 与任务总数一致，且 Moli 各类未通过数 3、10、9、12、9、1 合计 44，与正文未通过数吻合。五款浏览器的分类合计与正文通过数、通过率一致。"
+    },
+    {
+      "id": "benchmark-ranking-chart",
+      "section": "用户提供的两套评测排名图",
+      "text": "补齐五款浏览器的任务成功率及 WebMainBench 综合分，按图中给出的数值记录，不通过其他分数或成功率反推。请求成功率按原文记录；图中未披露的通过数按六类分类通过数合计补齐。"
+    }
+  ],
+  "supplementalSources": [
+    {
+      "id": "webmainbench-dimension-chart",
+      "kind": "user-provided-image",
+      "title": "WebMainBench 各维度得分",
+      "receivedOn": "2026-11-10",
+      "sha256": "14417ce55f20d6d4f44101ea2a2836b5eeaa250e14ad8faa197aad54e318ae36",
+      "displayDecimals": 1
+    },
+    {
+      "id": "benchmark-ranking-chart",
+      "kind": "user-provided-image",
+      "title": "两套评测的排名",
+      "receivedOn": "2026-11-10",
+      "sha256": "e37bd9a52531af66c351ab496a1ecb05d21e79e471ff39c9ae8dae989fada544",
+      "taskRateDecimals": 1,
+      "overallScoreDecimals": 2
+    }
+  ]
+}

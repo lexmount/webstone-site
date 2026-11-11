@@ -1,0 +1,170 @@
+{
+  "id": "webarena-verified-20261110",
+  "snapshotDate": "2026-11-10",
+  "dateKind": "imported",
+  "source": {
+    "kind": "user-provided-text",
+    "url": "https://github.com/ServiceNow/webarena-verified",
+    "linkLabel": "评测集",
+    "title": "WebArena-Verified 评测结果",
+    "importedAt": "2026-11-10T09:12:00Z",
+    "method": "user-provided-table transcription",
+    "scope": "用户在会话中提供的 WebArena-Verified 汇总表：六种执行方案的通过数、任务成功率、全体任务端到端耗时与单次动作耗时的均值、P50、P95，以及各自样本数。未提供逐题结果与原始日志。",
+    "dateNote": "日期为数据接收日期，表内未注明执行日期。"
+  },
+  "benchmarks": [
+    {
+      "id": "webarena-verified",
+      "definitionId": "standard",
+      "taskCount": 812,
+      "notes": [
+        "812 个 WebArena-Verified 任务，六种执行方案面对同一任务集。",
+        "任务成功率为通过数除以 812；端到端耗时按任务统计，每个方案 812 个样本，缺失 0。",
+        "动作耗时为单次动作耗时，样本数为该方案执行的动作次数，因此各方案样本数不同。",
+        "均值为算术平均，P50、P95 为分位数；耗时类指标越低越好。"
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "chromium-153",
+          "name": "Chromium 153",
+          "description": "Chromium 自动化",
+          "mode": "本地",
+          "passed": 812,
+          "scores": {
+            "successRate": 100,
+            "taskMean": 10.8,
+            "taskP50": 8.1,
+            "taskP95": 23.4,
+            "actionMean": 1.7,
+            "actionP50": 0.7,
+            "actionP95": 4.2
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 3190
+          },
+          "passedDerivation": "812 / 812 tasks passed"
+        },
+        {
+          "id": "moli-731-853",
+          "name": "Moli · #731 + #853",
+          "description": "Rust 内核 · 两个 PR 合并版",
+          "mode": "本地",
+          "passed": 812,
+          "scores": {
+            "successRate": 100,
+            "taskMean": 24.1,
+            "taskP50": 18.1,
+            "taskP95": 61.9,
+            "actionMean": 4.8,
+            "actionP50": 2,
+            "actionP95": 19.6
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 3423
+          },
+          "passedDerivation": "812 / 812 tasks passed"
+        },
+        {
+          "id": "moli-v1-1-11",
+          "name": "Moli v1.1.11",
+          "description": "Rust 内核 · 正式版本",
+          "mode": "本地",
+          "passed": 624,
+          "scores": {
+            "successRate": 76.8,
+            "taskMean": 33.6,
+            "taskP50": 10.7,
+            "taskP95": 73.7,
+            "actionMean": 10.3,
+            "actionP50": 1.4,
+            "actionP95": 60
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 2077
+          },
+          "passedDerivation": "624 / 812 tasks passed"
+        },
+        {
+          "id": "lightpanda-nightly-9813",
+          "name": "Lightpanda nightly 9813",
+          "description": "Zig 无头浏览器",
+          "mode": "本地",
+          "passed": 330,
+          "scores": {
+            "successRate": 40.6,
+            "taskMean": 27.9,
+            "taskP50": 12.7,
+            "taskP95": 65.8,
+            "actionMean": 3.6,
+            "actionP50": 0.9,
+            "actionP95": 10.4
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 1756
+          },
+          "passedDerivation": "330 / 812 tasks passed"
+        },
+        {
+          "id": "obscura-0-2-3",
+          "name": "Obscura 0.2.3",
+          "description": "Rust / V8 浏览器",
+          "mode": "本地",
+          "passed": 386,
+          "scores": {
+            "successRate": 47.5,
+            "taskMean": 17.9,
+            "taskP50": 11.1,
+            "taskP95": 67,
+            "actionMean": 4.5,
+            "actionP50": 1.6,
+            "actionP95": 9
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 1929
+          },
+          "passedDerivation": "386 / 812 tasks passed"
+        },
+        {
+          "id": "kitesurf-cloudflare",
+          "name": "Kitesurf · Cloudflare Browser Run",
+          "description": "Cloudflare 远程浏览器",
+          "mode": "远程",
+          "passed": 441,
+          "scores": {
+            "successRate": 54.3,
+            "taskMean": 40.7,
+            "taskP50": 31.4,
+            "taskP95": 95.7,
+            "actionMean": 7.5,
+            "actionP50": 5,
+            "actionP95": 30.5
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 2166
+          },
+          "passedDerivation": "441 / 812 tasks passed"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "webarena-verified-table",
+      "section": "用户提供的 WebArena-Verified 汇总表",
+      "text": "六种执行方案的通过数、任务成功率、端到端耗时与动作耗时均由用户逐格提供；未披露的项不外推。原表用“优”标注的最低动作耗时未在页面保留标记，改由排序体现。"
+    }
+  ]
+}
