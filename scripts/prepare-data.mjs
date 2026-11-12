@@ -21,6 +21,7 @@ function httpsUrl(value) {
 
 export function validateCatalog(catalog) {
   if (catalog.schemaVersion !== 1) throw new Error("Invalid benchmark catalog");
+  if (!catalog.providerUrls || typeof catalog.providerUrls !== "object" || Array.isArray(catalog.providerUrls) || !Object.keys(catalog.providerUrls).length || !Object.values(catalog.providerUrls).every(httpsUrl)) throw new Error("Missing or invalid provider project URL");
   uniqueIds(catalog.tracks, "track");
   uniqueIds(catalog.benchmarks, "benchmark");
   for (const benchmark of catalog.benchmarks) {
@@ -89,6 +90,7 @@ export function validateSnapshot(snapshot, entry, catalog) {
     }
     uniqueIds(benchmark.providers, "provider");
     for (const provider of benchmark.providers) {
+      if (!httpsUrl(catalog.providerUrls?.[provider.id])) throw new Error(`Missing or invalid provider project URL: ${provider.id}`);
       if ("color" in provider || "categories" in provider) throw new Error("Unexpected provider presentation field in result file");
       if (Object.keys(provider.scores).some(id => !definition.metrics.some(metric => metric.id === id))) throw new Error("Unknown metric score reference");
       for (const metric of definition.metrics) {
