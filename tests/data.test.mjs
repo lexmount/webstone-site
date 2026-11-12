@@ -34,6 +34,22 @@ test("report directories are discovered and their declared provenance is validat
   assert.equal(summary.benchmarks, 8);
 });
 
+test("every participant has a reusable HTTPS project link outside the result files", () => {
+  const ids = new Set(files.flatMap(({ report }) => report.benchmarks.flatMap(benchmark => benchmark.providers.map(provider => provider.id))));
+  for (const id of ids) {
+    assert.ok(catalog.providerUrls?.[id], `Missing project link for ${id}`);
+    assert.equal(new URL(catalog.providerUrls[id]).protocol, "https:");
+  }
+  const missing = structuredClone(catalog);
+  delete missing.providerUrls?.[snapshot.benchmarks[0].providers[0].id];
+  assert.throws(() => validateSnapshot(snapshot, entry, missing), /provider project URL/);
+  for (const url of ["javascript:alert(1)", "http://example.com", "https://user:password@example.com"]) {
+    const unsafe = structuredClone(catalog);
+    unsafe.providerUrls = { ...unsafe.providerUrls, moli: url };
+    assert.throws(() => validateCatalog(unsafe), /provider project URL/);
+  }
+});
+
 test("adding and removing a version file needs no index update", async t => {
   const folder = await mkdtemp(path.join(tmpdir(), "browser-eval-reports-"));
   t.after(() => rm(folder, { recursive: true, force: true }));

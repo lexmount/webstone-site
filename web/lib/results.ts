@@ -21,6 +21,7 @@ export type BenchmarkInfo = {
 };
 export type Catalog = {
   schemaVersion: number;
+  providerUrls: Record<string, string>;
   tracks: { id: string; name: string; description: string }[];
   benchmarks: BenchmarkInfo[];
 };

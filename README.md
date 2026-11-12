@@ -135,6 +135,19 @@ python3 -m http.server 5173 --bind 127.0.0.1 --directory web/out
 
 Open <http://127.0.0.1:5173>. The output is plain static files and needs no Next.js runtime; do not use `next start`.
 
+## Local static-package deployment
+
+The local Rainbond binding deploys an uploaded static package without fetching GitHub. `rainbond.app.json` records the package component; `.rainbond/local.json` and `.rainbond/staging/` stay git-ignored. Build the current local files and refresh the staging directory before each deployment:
+
+```sh
+npm run build
+mkdir -p .rainbond/staging/web/static-package
+rm -rf .rainbond/staging/web/static-package/dist
+cp -R web/out .rainbond/staging/web/static-package/dist
+```
+
+Use the official Rainbond local-package helper and protected upload command to package `.rainbond/staging/web/static-package`. The ZIP must contain `dist/index.html`, the exported assets and result files. Rainbond serves these files with Nginx on HTTP port 8080. Set runtime resources to 1 CPU core (1000m) and 128MB memory. No Node.js process runs in the deployed component. Local dependencies, Git metadata and credentials are excluded. Future updates require another build, upload and manual deployment.
+
 ## Docker and manual Rainbond deployment
 
 The root `Dockerfile` installs locked dependencies with Node.js 22, runs tests, regenerates the bundled results and exports the static site. The final Nginx image serves only the exported files on HTTP port `8080` using `deploy/nginx.conf`. Generated local build files and environment files are excluded by `.dockerignore`.
