@@ -93,6 +93,7 @@ export default function Dashboard() {
     ? "wide-table lexbench-table"
     : benchmark?.id === "webarena-verified" ? "wide-table arena-table"
     : benchmark?.id === "lexbench-headless-372" ? "wide-table headless-table"
+    : benchmark?.trackId === "websearch" ? "wide-table search-table"
     : benchmark?.trackId === "webextract" ? "wide-table extract-table"
     : "wide-table";
 
@@ -141,7 +142,7 @@ export default function Dashboard() {
     <a className="skip-link" href="#main">Skip to results</a>
     {menuOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />}
     <aside className={`sidebar ${menuOpen ? "is-open" : ""}`}>
-      <a href="/" className="brand"><Layers3 size={24} strokeWidth={1.8} /><span>Browser<span className="brand-light">Eval</span></span></a>
+      <a href="/" className="brand" aria-label="Webstone home"><span className="brand-heading"><Layers3 size={24} strokeWidth={1.8} /><span>Webstone</span></span><span className="brand-tagline">The touchstone for your agent&apos;s web tools</span></a>
       <div className="sidebar-label">TRACKS</div>
       <nav aria-label="Tracks">{tracks.map(item => {
         const Icon = TRACK_ICONS[item.id] ?? Layers3;
@@ -158,7 +159,7 @@ export default function Dashboard() {
       <header className="topbar">
         <div className="title-group">
           <button className="mobile-menu icon-button" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
-          <div className="benchmark-heading"><h1>{details?.name ?? "Browser Eval"}</h1>
+          <div className="benchmark-heading"><h1>{details?.name ?? "Webstone"}</h1>
             {details && <p className="benchmark-description">{details.description}</p>}
             {snapshot && <p className="dataset-difference"><strong>Dataset difference:</strong> {snapshot.datasetDifference}</p>}
             {details && <div className="benchmark-links">
@@ -210,7 +211,7 @@ export default function Dashboard() {
                   </tr></thead>
                   <tbody>{providers.map((provider, i) => <tr key={provider.id}>
                     <td className="rank-cell">{provider.scores[metric.id] == null ? "—" : i + 1}</td>
-                    <td><div className="provider-name"><span className={`provider-mark ${provider.id}`} style={{ "--provider-color": providerColors[provider.id] ?? "#64748b" } as React.CSSProperties}>{provider.name[0]}</span><span className="provider-label" title={provider.name}>{provider.name}</span></div></td>
+                    <td><a className="provider-name provider-link" href={catalog?.providerUrls[provider.id]} target="_blank" rel="noopener noreferrer" aria-label={`${provider.name} project (opens in a new tab)`}><span className={`provider-mark ${provider.id}`} style={{ "--provider-color": providerColors[provider.id] ?? "#64748b" } as React.CSSProperties} aria-hidden="true">{provider.name[0]}</span><span className="provider-label" title={provider.name}>{provider.name}</span><ArrowUpRight className="provider-external" size={12} aria-hidden="true" /></a></td>
                     {leadingMetrics.map(item => metricCell(provider, item))}
                     {categories.map(category => {
                       const isBest = isBestValue(provider.categoryPassed?.[category.id], categoryBest.get(category.id) ?? null);

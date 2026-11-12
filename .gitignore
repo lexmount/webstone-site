@@ -34,3 +34,6 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+
+# local Rainbond binding and deployment staging
+.rainbond/

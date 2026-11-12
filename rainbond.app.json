@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "project": {
+    "team_name": "35icya78",
+    "region_name": "rainbond",
+    "app_name": "webstone-site"
+  },
+  "components": [
+    {
+      "name": "web",
+      "role": "frontend",
+      "port": 8080,
+      "access_mode": "unspecified",
+      "source": {
+        "kind": "source",
+        "git": {
+          "remote_url": "https://github.com/lexmount/webstone-site.git",
+          "ref": "deploy-github-dockerfile"
+        }
+      }
+    }
+  ]
+}

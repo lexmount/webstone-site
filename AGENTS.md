@@ -11,6 +11,7 @@ Page titles use natural English (`Web Fetch`, `Web Search`). Internal IDs stay l
 ## Layout
 
 - `benchmarks/catalog.json` — the only source for Track/Benchmark names, official Dataset names, introductions, resource links and evaluation definitions (metric and category metadata plus table presentation).
+- `benchmarks/catalog.json` also owns `providerUrls`, keyed by participant ID. Every participant in every result version needs a verified HTTPS GitHub or official product URL here. Keep project links out of result files; the leaderboard links each participant name to its project in a new tab.
 - `results/<id>/<id>-vN-report.json` — one Benchmark's published evaluation version and provenance per file, referencing `id`, `definitionId` and its own `version`. No date subdirectories, manual index or format-version field.
 - `scripts/prepare-data.mjs` — scans Benchmark directories, validates filenames/references/values/versions, copies the catalog into `web/public/benchmarks/` and reports into `web/public/results/`, and generates `web/public/results/reports.json` as the page's data bundle.
 - `web/` — Next.js app (App Router, Turbopack, static export).
