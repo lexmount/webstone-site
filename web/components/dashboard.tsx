@@ -23,7 +23,7 @@ export default function Dashboard() {
     let active = true;
     async function load() {
       try {
-        const [catalogResponse, resultsResponse] = await Promise.all([fetch("/benchmarks/catalog.json"), fetch("/results/reports.json")]);
+        const [catalogResponse, resultsResponse] = await Promise.all([fetch("/benchmarks/catalog.json", { cache: "no-store" }), fetch("/results/reports.json", { cache: "no-store" })]);
         if (!catalogResponse.ok || !resultsResponse.ok) throw new Error("Unable to load result data.");
         const benchmarkCatalog: Catalog = await catalogResponse.json();
         const files: ReportFile[] = await resultsResponse.json();
