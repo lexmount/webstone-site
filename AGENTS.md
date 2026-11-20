@@ -100,3 +100,7 @@ Serve a build with `python3 -m http.server 5173 --directory web/out`; never `nex
 - For every change to reader-facing text, read `.agents/skills/humanizer/SKILL.md` and `.agents/skills/humanizer-chinese/SKILL.md`. Review the English and Chinese together in the rendered page, including labels, accessibility text, empty states, and text drawn from the catalog or a report. Remove repeated explanations. Keep the facts needed to interpret the results.
 - Preserve published result files and source quotations. Put editorial changes to old results in the display copy. Keep metric names, units, sample counts and billing basis accurate in both languages.
 - Mark the bilingual copy check in the PR after review. The website check requires that attestation for changes to copy-bearing source files. Reviewers check the rendered text against the underlying data.
+
+## Review and merge
+
+Hand ready PRs to the hosted maintainer with `/review-merge` from the [lex-maintainer plugin](https://github.com/lexmount/lex-agent-plugins/tree/main/plugins/lex-maintainer). An agent without the plugin installs it and runs its `onboard` skill first; the skill configures what it can and asks for the rest.
