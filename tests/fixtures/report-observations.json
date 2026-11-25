@@ -1038,6 +1038,255 @@
           }
         }
       ]
+    },
+    {
+      "benchmark": "lexbench-webfetch",
+      "version": "v2.0.0",
+      "taskCount": 430,
+      "url": "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
+      "rows": [
+        {
+          "id": "moli-1-1-17",
+          "scores": {
+            "requestRate": 96.3,
+            "passRate": 89.3,
+            "totalMean": 14174,
+            "totalP50": 9868,
+            "totalP95": 40656
+          },
+          "categoryPassed": {
+            "static": 97,
+            "dynamic": 89,
+            "popular": 90,
+            "antibot": 88,
+            "document": 1,
+            "embeddedMedia": 16,
+            "directMedia": 3
+          },
+          "passed": 384
+        },
+        {
+          "id": "moli-1-1-15",
+          "scores": {
+            "requestRate": 97.4,
+            "passRate": 85.1,
+            "totalMean": 12666,
+            "totalP50": 9159,
+            "totalP95": 40608
+          },
+          "categoryPassed": {
+            "static": 96,
+            "dynamic": 84,
+            "popular": 84,
+            "antibot": 84,
+            "document": 1,
+            "embeddedMedia": 14,
+            "directMedia": 3
+          },
+          "passed": 366
+        },
+        {
+          "id": "chromium",
+          "scores": {
+            "requestRate": 96.7,
+            "passRate": 54.2,
+            "totalMean": 8211,
+            "totalP50": 4367,
+            "totalP95": 25054
+          },
+          "categoryPassed": {
+            "static": 99,
+            "dynamic": 57,
+            "popular": 58,
+            "antibot": 5,
+            "document": 1,
+            "embeddedMedia": 12,
+            "directMedia": 1
+          },
+          "passed": 233
+        },
+        {
+          "id": "lightpanda",
+          "scores": {
+            "requestRate": 87.4,
+            "passRate": 52.8,
+            "totalMean": 6477,
+            "totalP50": 6722,
+            "totalP95": 8131
+          },
+          "categoryPassed": {
+            "static": 92,
+            "dynamic": 44,
+            "popular": 37,
+            "antibot": 37,
+            "document": 1,
+            "embeddedMedia": 13,
+            "directMedia": 3
+          },
+          "passed": 227
+        },
+        {
+          "id": "obscura",
+          "scores": {
+            "requestRate": 89.3,
+            "passRate": 51.6,
+            "totalMean": 13873,
+            "totalP50": 9599,
+            "totalP95": 36418
+          },
+          "categoryPassed": {
+            "static": 94,
+            "dynamic": 42,
+            "popular": 53,
+            "antibot": 16,
+            "document": 1,
+            "embeddedMedia": 13,
+            "directMedia": 3
+          },
+          "passed": 222
+        },
+        {
+          "id": "kitesurf",
+          "scores": {
+            "requestRate": 84.2,
+            "passRate": 45.1,
+            "totalMean": 13408,
+            "totalP50": 6004,
+            "totalP95": 77304
+          },
+          "categoryPassed": {
+            "static": 90,
+            "dynamic": 44,
+            "popular": 40,
+            "antibot": 10,
+            "document": 1,
+            "embeddedMedia": 9,
+            "directMedia": 0
+          },
+          "passed": 194
+        }
+      ],
+      "samples": {
+        "totalMean": 430,
+        "totalP50": 430,
+        "totalP95": 430
+      }
+    },
+    {
+      "benchmark": "webmainbench",
+      "version": "v2.0.0",
+      "taskCount": 545,
+      "url": "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
+      "rows": [
+        {
+          "id": "moli",
+          "scores": {
+            "overall": 36.41,
+            "fullText": 41.45,
+            "code": 90.87,
+            "formula": 20.29,
+            "tableContent": 17.31,
+            "tableStructure": 12.12,
+            "meanTime": 513,
+            "p50Time": 323,
+            "p95Time": 1837
+          }
+        },
+        {
+          "id": "lightpanda",
+          "scores": {
+            "overall": 35,
+            "fullText": 41.52,
+            "code": 84.71,
+            "formula": 12.97,
+            "tableContent": 21.81,
+            "tableStructure": 14,
+            "meanTime": 736,
+            "p50Time": 333,
+            "p95Time": 5199
+          }
+        },
+        {
+          "id": "obscura",
+          "scores": {
+            "overall": 31.03,
+            "fullText": 41.88,
+            "code": 81.82,
+            "formula": 31.39,
+            "tableContent": 0.03,
+            "tableStructure": 0,
+            "meanTime": 785,
+            "p50Time": 419,
+            "p95Time": 1315
+          }
+        },
+        {
+          "id": "chromium",
+          "scores": {
+            "overall": 27.02,
+            "fullText": 39.4,
+            "code": 35.86,
+            "formula": 21.12,
+            "tableContent": 25.01,
+            "tableStructure": 13.73,
+            "meanTime": 791,
+            "p50Time": 750,
+            "p95Time": 893
+          }
+        },
+        {
+          "id": "kitesurf",
+          "scores": {
+            "overall": 33.43,
+            "fullText": 36.99,
+            "code": 80.7,
+            "formula": 19.32,
+            "tableContent": 18.25,
+            "tableStructure": 11.87,
+            "meanTime": 3445,
+            "p50Time": 2729,
+            "p95Time": 5391
+          }
+        },
+        {
+          "id": "moli-pr785-fixed",
+          "scores": {
+            "overall": 36.53,
+            "fullText": 41.72,
+            "code": 90.8,
+            "formula": 20.25,
+            "tableContent": 17.75,
+            "tableStructure": 12.11,
+            "meanTime": 539,
+            "p50Time": 377,
+            "p95Time": 1912
+          }
+        },
+        {
+          "id": "moli-content-fixed",
+          "scores": {
+            "overall": 39.27,
+            "fullText": 40.73,
+            "code": 91.06,
+            "formula": 28.2,
+            "tableContent": 22.62,
+            "tableStructure": 13.75,
+            "meanTime": 274,
+            "p50Time": 179,
+            "p95Time": 696
+          }
+        }
+      ],
+      "samples": {
+        "fullText": 545,
+        "code": 110,
+        "formula": 257,
+        "tableContent": 179,
+        "tableStructure": 179,
+        "meanTime": 545,
+        "p50Time": 545,
+        "p95Time": 545
+      }
     }
   ]
 }
