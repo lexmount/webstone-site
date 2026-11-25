@@ -29,6 +29,18 @@ const factualSearch: ResultCopy = {
 const sharedTiming: Copy = ["Mean latency covers 980 calls across both question sets.", "平均耗时按两套题库合计 980 次调用计算。"];
 
 const historicalCopy: Record<string, ResultCopy> = {
+  "lexbench-webfetch-v1.1.0": {
+    scope: ["This historical summary covers five browsers on 430 tasks. The reviewed six-configuration results and disclosed timing populations are in v2.0.0.",
+      "这份历史摘要包含五款浏览器的 430 题结果。六种配置的复核结果和计时范围见 v2.0.0。"],
+    notes: [["Summary scores are retained as published. Use v2.0.0 for the reviewed judgments.",
+      "摘要分数按原发布值保留。评分复核后的结果请查看 v2.0.0。"]],
+  },
+  "webmainbench-v1.1.0": {
+    scope: ["This historical summary shows five methods on 545 frozen HTML pages. Edition v2.0.0 identifies all seven measured configurations and their timing populations.",
+      "这份历史摘要展示五种方法在 545 份冻结 HTML 上的结果。v2.0.0 列明七种实测配置及其计时范围。"],
+    notes: [["Moli configurations are identified separately in v2.0.0, including the PR919 run behind the 39.27 overall score.",
+      "v2.0.0 分别标明 Moli 的各个配置，其中综合分 39.27 对应 PR919 的实测运行。"]],
+  },
   "lexbench-webfetch-v1": {
     scope: ["This evaluation used the earlier 430-task edition listed on the dataset page. The current edition has 550 tasks. The report gives no individual task list.",
       "本轮使用数据集页面列出的早期 430 题版。当前数据集有 550 题，原报告未附逐题清单。"],
@@ -84,8 +96,8 @@ const historicalCopy: Record<string, ResultCopy> = {
     scope: ["Ten methods processed 800 archived pages. The linked dataset provides inputs only. The report gives no page IDs or hashes to verify an exact match.",
       "十种方案各处理 800 份归档网页。所链接数据集仅提供输入，报告未列出页面编号或哈希，无法逐页核对。"],
     notes: [
-      ["Timing covers all 800 pages. Full-page exact match uses 740 pages with complete references. Null handling uses 25 pages.",
-        "耗时统计覆盖全部 800 页。整页全对率按参考答案完整的 740 页计算，空值处理另测 25 页。"],
+      ["Timing covers all 800 pages. Full-page exact match uses 740 pages with complete references. Null handling uses 25 empty reference fields across 24 pages.",
+        "耗时统计覆盖全部 800 页。整页全对率按参考答案完整的 740 页计算，空值处理使用 24 页中的 25 个空参考字段。"],
       ["The report gives no detailed matching rules, run date or official pricing links.", "报告未说明详细匹配规则和测试日期，也未附官方报价链接。"],
     ],
   },
@@ -93,8 +105,8 @@ const historicalCopy: Record<string, ResultCopy> = {
     scope: ["All methods processed 140 product pages. The reported label counts match the original labels in the linked dataset. The report gives no page IDs, hashes or exact dataset revision.",
       "各方案均处理 140 个商品页。报告中的标注数量与所链接数据集的原始标注一致，未附页面编号、哈希或数据集版本。"],
     notes: [
-      ["Timing and full-page exact match use all 140 pages. Null handling uses six. The linked dataset also has a separate annotation set checked against source pages.",
-        "耗时和整页全对率按全部 140 页计算。空值处理另测 6 页。所链接数据集还有一套经原网页核对的独立标注。"],
+      ["Timing and full-page exact match use all 140 pages. Null handling uses six empty reference fields across six pages. The linked dataset also has a separate annotation set checked against source pages.",
+        "耗时和整页全对率按全部 140 页计算。空值处理使用 6 页中的 6 个空参考字段。所链接数据集还有一套经原网页核对的独立标注。"],
       ["The report gives no detailed matching rules or model costs for the open-source methods.",
         "报告未说明详细匹配规则，也未公布开源方案的模型费用。"],
     ],
