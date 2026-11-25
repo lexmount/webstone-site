@@ -613,8 +613,10 @@ test("pricing details keep official links usable by keyboard and close with Esca
     await React.act(async()=>root.render(React.createElement(Tooltip,{label:'Cloudflare · Billing basis',description:'Browser usage and model inference.',sources:[{label:'Browser Run',url:'https://developers.cloudflare.com/browser-run/pricing/'},{label:'Workers AI',url:'https://developers.cloudflare.com/workers-ai/platform/pricing/'}]})));
     const trigger=container.querySelector('button');
     await React.act(async()=>trigger.focus());
+    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
     const panel=win.document.querySelector('[role="dialog"]');assert.ok(panel);
     const links=[...panel.querySelectorAll('a')];assert.equal(links.length,2);
+    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
     assert.equal(links[0].href,'https://developers.cloudflare.com/browser-run/pricing/');
     assert.equal(links[1].href,'https://developers.cloudflare.com/workers-ai/platform/pricing/');
     assert.ok(links.every(link=>link.target==='_blank'&&link.rel.includes('noopener')));
@@ -624,4 +626,21 @@ test("pricing details keep official links usable by keyboard and close with Esca
     assert.equal(win.document.querySelector('[role="dialog"]'),null);
     assert.equal(win.document.activeElement,trigger);
   } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
+});
+
+test("method details retain raw numerators and denominators alongside compact rates", async () => {
+  const Details=require('../web/components/method-details.tsx').default;
+  const win=new Window();
+  try {
+    for(const id of ['lexbench-swde','lexbench-zyte-product-extraction']) {
+      const {benchmark}=load(id,'v1.0.1');
+      for(const provider of benchmark.providers) {
+        win.document.body.innerHTML=renderToStaticMarkup(React.createElement(Details,{benchmark,provider,t:text=>text,onClose:()=>{}}));
+        const details=win.document.querySelector('.method-metrics').textContent;
+        for(const [metric,counts]of Object.entries(provider.counts??{})) {
+          if(provider.scores[metric]!=null)assert.ok(details.includes(`${counts.count} / ${counts.total}`),`${id} ${provider.id} ${metric}`);
+        }
+      }
+    }
+  } finally {await win.happyDOM.close();}
 });

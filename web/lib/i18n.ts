@@ -26,6 +26,7 @@ const chinese: Record<string, string> = {
   "Already have measured results? The webstone-site submission skill checks the format and prepares a result PR for the leaderboard.": "已有实测结果？用 webstone-site 的提交 Skill 检查格式，准备结果 PR，提交到排行榜。",
   "Install and use the Webstone evaluation skill at {skill} to evaluate [the tools or models I want to compare].": "请安装并使用 {skill} 里的 Webstone 评测 Skill，帮我评测［想比较的工具或模型］。",
   "The table retains the evaluation report’s quoted price. Official rates may change.": "表格保留评测报告中的报价，官方费率可能变化。",
+  "Count / total": "计数 / 总数",
   "Official pricing": "官方定价",
   "Displayed as a percentage; source scores use a 0–1 scale.": "以百分比展示；原始分数采用 0–1 标度。",
   "Reports": "评测报告",

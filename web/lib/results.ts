@@ -136,8 +136,12 @@ export function formatMetric(value: number | null | undefined, unit: string, dec
   const sign = signed && value > 0 ? "+" : "";
   if (unit === "count" && counts) return `${counts.count} / ${counts.total}`;
   if (unit === "ratio") return `${sign}${(value * 100).toFixed(Math.max(0, decimals - 2))}%`;
-  if (unit === "ms" || unit === "seconds") return `${sign}${(unit === "ms" ? value / 1000 : value).toFixed(unit === "ms" ? Math.min(6, decimals + 3) : Math.max(3, decimals))} s`;
-  const suffix = unit === "percent" ? "%" : unit === "mib" ? " MiB" : unit === "points" ? " pp" : "";
+  if (unit === "ms" || unit === "seconds") {
+    const seconds = unit === "ms" ? value / 1000 : value;
+    const precision = unit === "ms" ? Math.min(6, decimals + 3) : Math.max(3, decimals);
+    return `${sign}${seconds.toFixed(precision)} s`;
+  }
+  const suffix = ({ percent: "%", mib: " MiB", points: " pp" } as Record<string, string>)[unit] ?? "";
   return `${sign}${unit === "usd" ? "$" : ""}${value.toFixed(decimals)}${suffix}`;
 }
 

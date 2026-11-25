@@ -9,6 +9,7 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const focusSources = useRef(false);
   const [position, setPosition] = useState<{ left: number; top: number; width: number; above: boolean } | null>(null);
 
   function show() {
@@ -25,6 +26,7 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
 
   useEffect(() => {
     if (!position) return;
+    if (focusSources.current) { panel.current?.querySelector<HTMLAnchorElement>("a")?.focus(); focusSources.current = false; }
     const hide = () => { clearTimeout(timer.current); setPosition(null); };
     const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") { button.current?.focus(); hide(); } };
     const outside = (event: PointerEvent) => {
@@ -45,7 +47,14 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
 
   return <>
     <button ref={button} type="button" className="info-trigger" aria-label={`${label} ${detailsLabel}`} aria-describedby={position && sources.length === 0 ? id : undefined} aria-controls={position && sources.length > 0 ? id : undefined} aria-haspopup={sources.length > 0 ? "dialog" : undefined} aria-expanded={sources.length > 0 ? position !== null : undefined}
-      onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={event => { if (!panel.current?.contains(event.relatedTarget as Node)) hideSoon(); }} onClick={show}>
+      onKeyDown={event => {
+        if (sources.length === 0) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault(); focusSources.current = true; show();
+        } else if (event.key === "Tab" && !event.shiftKey && position) {
+          event.preventDefault(); panel.current?.querySelector<HTMLAnchorElement>("a")?.focus();
+        }
+      }} onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={event => { if (!panel.current?.contains(event.relatedTarget as Node)) hideSoon(); }} onClick={show}>
       <CircleHelp size={13} strokeWidth={1.5} aria-hidden="true" />
     </button>
     {position && createPortal(<div ref={panel} id={id} role={sources.length > 0 ? "dialog" : "tooltip"} aria-label={sources.length > 0 ? `${label} ${detailsLabel}` : undefined} className="info-tooltip"
