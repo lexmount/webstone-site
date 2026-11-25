@@ -23,5 +23,21 @@ export const providerColors: Record<string, string> = {
   "headless-1-1-9-off": "#16876b",
   "headless-1-1-9-on": "#16876b",
   "headless-1-1-9-fixed-off": "#16876b",
-  "headless-1-1-9-fixed-on": "#16876b"
+  "headless-1-1-9-fixed-on": "#16876b",
+  "lexmount-browser-agent": "#16876b",
+  "cook-browser-desktop": "#4978c8",
+  "aside-gpt-5-5-high": "#674bc1",
+  "browsercode-claude-opus-4-8": "#d29b32",
+  "browser-use-oss-claude-fable-5": "#dc825e",
+  "browser-use-cloud": "#d29b32",
+  "dassi-gemini-3-8-flash": "#247a9c",
+  "microsoft-cuawright-gpt-5-5": "#9b83b0",
+  "browser-control-claude-fable-5": "#4978c8",
+  "alumnium-sonnet-4-6-gpt-5-nano": "#674bc1",
+  "h-company-surfer-2": "#d29b32",
+  "google-gemini-2-5-computer-use": "#dc825e",
+  "ouroboros-claude-opus-5": "#4978c8",
+  "ouroboros-claude-sonnet-4-6": "#674bc1",
+  "intelligence-indeed-agent": "#d29b32",
+  "claude-computer-use-fable-5": "#dc825e"
 };

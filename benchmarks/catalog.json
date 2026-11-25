@@ -68,14 +68,7 @@
     {
       "id": "browser-automation",
       "name": "Browser Automation",
-      "description": "Browser tasks performed by agents.",
-      "upcoming": [
-        {
-          "id": "browser-use",
-          "name": "Browser Use",
-          "description": "Browser agents"
-        }
-      ]
+      "description": "Browser tasks performed by agents."
     }
   ],
   "tracks": [
@@ -109,6 +102,12 @@
       "description": "Browser infrastructure benchmarks",
       "url": "https://browserarena.ai/",
       "groupId": "browsers"
+    },
+    {
+      "id": "browser-use",
+      "name": "Browser Use",
+      "description": "Browser agents",
+      "groupId": "browser-automation"
     }
   ],
   "benchmarks": [
@@ -1793,6 +1792,142 @@
         "output": "{\n  \"price\": [\n    \"87.11\"\n  ],\n  \"sku\": [\n    \"B01GOH7PKA\"\n  ],\n  \"availability\": [\n    \"InStock\"\n  ]\n}",
         "check": "Full-page exact match requires every evaluated field to match. The price is historical reference data, not a current offer."
       }
+    },
+    {
+      "id": "bu-bench-v1",
+      "name": "BU Bench v1",
+      "datasetName": "benchmark",
+      "datasetUrl": "https://github.com/browser-use/benchmark",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
+      "trackId": "browser-use",
+      "description": "Evaluate browser agents on multi-site research, cross-checking and interactive web controls.",
+      "providerLabel": "Agent",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "successRate",
+          "metrics": [
+            {
+              "id": "successRate",
+              "label": "Success rate",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+            },
+            {
+              "id": "costPerTask",
+              "label": "Cost / task",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Reported model cost per task in USD. Lower is better."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "online-mind2web",
+      "name": "Online-Mind2Web",
+      "datasetName": "Online-Mind2Web",
+      "datasetUrl": "https://huggingface.co/datasets/osunlp/Online-Mind2Web",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
+      "trackId": "browser-use",
+      "description": "Evaluate browser agents on end-to-end tasks across live websites.",
+      "providerLabel": "Agent",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "successRate",
+          "metrics": [
+            {
+              "id": "successRate",
+              "label": "Success rate",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+            },
+            {
+              "id": "costPerTask",
+              "label": "Cost / task",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Reported model cost per task in USD. Lower is better."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "webvoyager",
+      "name": "WebVoyager",
+      "datasetName": "WebVoyager",
+      "datasetUrl": "https://github.com/MinorJerry/WebVoyager",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
+      "trackId": "browser-use",
+      "description": "Evaluate browser agents across 13 major live websites.",
+      "providerLabel": "Agent",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "successRate",
+          "metrics": [
+            {
+              "id": "successRate",
+              "label": "Success rate",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+            },
+            {
+              "id": "costPerTask",
+              "label": "Cost / task",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Reported model cost per task in USD. Lower is better."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "osworld",
+      "name": "OSWorld",
+      "datasetName": "OSWorld",
+      "datasetUrl": "https://github.com/xlang-ai/OSWorld",
+      "reportUrl": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
+      "trackId": "browser-use",
+      "description": "Evaluate browser and local-file workflows on 75 OSWorld tasks.",
+      "providerLabel": "Agent",
+      "definitions": [
+        {
+          "id": "standard",
+          "primaryMetric": "scoreRate",
+          "metrics": [
+            {
+              "id": "scoreRate",
+              "label": "Score rate",
+              "unit": "percent",
+              "direction": "desc",
+              "decimals": 2,
+              "description": "Average score across the 75 OSWorld tasks focused on browser and file handling. Higher is better."
+            },
+            {
+              "id": "costPerTask",
+              "label": "Cost / task",
+              "unit": "usd",
+              "direction": "asc",
+              "decimals": 2,
+              "description": "Reported model cost per task in USD. Lower is better."
+            }
+          ]
+        }
+      ]
     }
   ],
   "translations": {
@@ -2058,7 +2193,24 @@
       "View evaluation report": "查看评测报告",
       "Key metrics": "关键指标",
       "Different test conditions": "测试条件不同",
-      "Collection dates and retry policies differ.": "采集日期和重试规则不同。"
+      "Collection dates and retry policies differ.": "采集日期和重试规则不同。",
+      "Six live-page configurations and seven frozen-HTML methods, with separate task populations and scoring rules.": "六种在线网页配置与七种冻结 HTML 方案，分别说明任务范围和评分规则。",
+      "BU Bench v1": "BU Bench v1",
+      "Online-Mind2Web": "Online-Mind2Web",
+      "WebVoyager": "WebVoyager",
+      "OSWorld": "OSWorld",
+      "Evaluate browser agents on multi-site research, cross-checking and interactive web controls.": "评测浏览器智能体在跨站调研、信息核验和网页控件操作上的表现。",
+      "Evaluate browser agents on end-to-end tasks across live websites.": "评测浏览器智能体在真实在线网站上完成端到端任务的表现。",
+      "Evaluate browser agents across 13 major live websites.": "评测浏览器智能体在 13 个主流真实网站上的操作表现。",
+      "Evaluate browser and local-file workflows on 75 OSWorld tasks.": "在 75 道浏览器和文件处理相关的 OSWorld 任务上评测跨应用操作表现。",
+      "Success rate": "成功率",
+      "Score rate": "得分率",
+      "Cost / task": "每题成本",
+      "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better.": "可评价任务上的成功率（排除了遭到网站拒绝访问类的任务），越高越好。",
+      "Average score across the 75 OSWorld tasks focused on browser and file handling. Higher is better.": "75 道浏览器和文件处理相关 OSWorld 任务的平均得分率，越高越好。",
+      "Reported model cost per task in USD. Lower is better.": "公开披露的每题模型费用（美元），越低越好。",
+      "Lexmount Browser Agent: four-benchmark evaluation and cost comparison": "Lexmount Browser Agent：四项国际基准评测与成本对比",
+      "Success rates, per-task model costs and peer results across BU Bench v1, Online-Mind2Web, WebVoyager and 75 OSWorld tasks.": "BU Bench v1、Online-Mind2Web、WebVoyager 与 75 道 OSWorld 任务上的成功率、每题成本及同行对比。"
     },
     "en": {
       "全程关闭": "Layout off throughout",

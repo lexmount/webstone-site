@@ -4,7 +4,7 @@
 
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-webstone.lexmount.io-527e68)](https://webstone.lexmount.io) [![Datasets](https://img.shields.io/badge/%F0%9F%A4%97-Datasets-ffd21e)](https://huggingface.co/Lexmount)
 
-The website for [Webstone](https://github.com/lexmount/webstone), the touchstone for your agent’s web browsing. Use the [leaderboard](https://webstone.lexmount.io) to compare methods and read published evaluation reports. It covers twelve benchmark views across four Tracks and links to the independently hosted BrowserArena.
+The website for [Webstone](https://github.com/lexmount/webstone), the touchstone for your agent’s web browsing. Use the [leaderboard](https://webstone.lexmount.io) to compare methods and read published evaluation reports. It covers sixteen benchmark views across five Tracks and links to the independently hosted BrowserArena.
 
 Run evaluations with [Webstone](https://github.com/lexmount/webstone); submit measured results and public evidence to this repository.
 
@@ -84,6 +84,17 @@ The Web Extract Track also compares twelve methods on 140 archived product pages
 The supplied reference distributions are 134 nonempty prices / 6 empty, 135 nonempty SKUs / 5 empty, and 131 in-stock / 9 out-of-stock pages. These version-specific populations appear in the metric explanations via `metricSamples.note`; the reusable metric definitions stay in the catalog. Full-page exact match uses all 140 pages, while null handling uses 6. All twelve methods have 140 timing records and no missing timings.
 
 The supplied distributions match the Dataset's original-reference counts, rather than its separately provided source-qualified annotation view. The exact evaluated revision and page hashes remain unverified. Prices and billing conditions are transcribed from the supplied table, with unknown model costs retained as unknown. This benchmark reuses the SWDE table without another renderer or dependency.
+
+### Browser Use
+
+The Browser Use Track under Browser Automation compares browser agents on four benchmarks:
+
+- **BU Bench v1** ([browser-use/benchmark](https://github.com/browser-use/benchmark)): multi-site research, cross-checking and interactive web controls.
+- **Online-Mind2Web** ([osunlp/Online-Mind2Web](https://huggingface.co/datasets/osunlp/Online-Mind2Web)): end-to-end tasks across live websites.
+- **WebVoyager** ([MinorJerry/WebVoyager](https://github.com/MinorJerry/WebVoyager)): tasks across 13 major live websites.
+- **OSWorld** ([xlang-ai/OSWorld](https://github.com/xlang-ai/OSWorld)): 75 tasks focused on browser and local-file handling.
+
+BU Bench v1, Online-Mind2Web and WebVoyager report success rates on evaluable tasks, excluding tasks blocked by website access denials. Peer results are taken from each project's official public report, and per-task model costs remain undisclosed where not published.
 
 ### Dataset alignment
 

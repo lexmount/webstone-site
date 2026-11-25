@@ -421,6 +421,9 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .radar-legend label:has(input:not(:checked)) { color: #566961 !important; }
 .radar-series:hover .radar-shape, .radar-series:focus-visible .radar-shape { fill-opacity: .14; stroke-width: 3; }
 .radar-dot { fill: currentColor; }
+.radar-dot.is-undisclosed { fill: #fff; stroke: currentColor; stroke-width: 2.2; }
+.radar-divider { stroke: #c9d8cd; stroke-dasharray: 4 3; }
+.comparison-value { fill: #2b4536; font-size: 11px; font-variant-numeric: tabular-nums; }
 .radar-edge, .radar-range { stroke: currentColor; stroke-width: 1.8; }
 .radar-range { stroke-width: 3; stroke-dasharray: 3 2; }
 
@@ -456,6 +459,7 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 [data-track="websearch"].track-card, .article-card[data-track="websearch"] { --track-ink: #365b93; --track-wash: #ebf1fa; }
 [data-track="trajectory-replay"].track-card, .article-card[data-track="trajectory-replay"] { --track-ink: #765619; --track-wash: #f8f0de; }
 [data-track="webextract"].track-card, .article-card[data-track="webextract"] { --track-ink: #6d4b85; --track-wash: #f3edf8; }
+[data-track="browser-use"].track-card, .article-card[data-track="browser-use"] { --track-ink: #1e6274; --track-wash: #e6f2f5; }
 .track-card h3, .article-card h3 { margin: 0; font-weight: 650; line-height: 1.35; }
 .track-card h3 a { display: flex; align-items: center; gap: 8px; min-height: 29px; color: var(--track-ink); }
 .track-card h3 a svg { flex-shrink: 0; }

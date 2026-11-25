@@ -30,7 +30,8 @@ test("result records are versioned files without a hand-maintained index or form
 test("report directories are discovered and their declared provenance is validated", async () => {
   const summary = await prepareData({ write: false });
   assert.equal(summary.files, files.length);
-  assert.equal(summary.benchmarks, catalog.benchmarks.length);
+  assert.equal(summary.benchmarks, new Set(files.flatMap(item => item.report.benchmarks.map(benchmark => benchmark.id))).size);
+  assert.ok(summary.benchmarks <= catalog.benchmarks.length);
 });
 
 test("external tracks use safe HTTPS links and cannot own local benchmark tables", () => {
@@ -326,6 +327,7 @@ test("benchmarks in each published Track share its summary blog", () => {
     webfetch: "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
     websearch: "https://yours.lexmount.cn/artifact-site/s/-FtUMQm-NmQa",
     webextract: "https://yours.lexmount.cn/artifact-site/s/-eNSiFI3n7XX",
+    "browser-use": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
   };
   for (const [trackId, url] of Object.entries(reports)) {
     const benchmarks = catalog.benchmarks.filter(item => item.trackId === trackId);

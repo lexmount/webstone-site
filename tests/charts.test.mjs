@@ -842,3 +842,30 @@ test("capability profiles do not turn non-comparable timing into an efficiency a
   const single = load('simpleqa-verified-excerpts', 'v2.0.0').benchmark;
   assert.equal(render(single), '', 'One quality dimension does not need a radar assembled from incomparable timings');
 });
+
+test("two-metric quality and cost benchmarks plot disclosed costs and preserve undisclosed methods", () => {
+  const sample = resolveBenchmark(catalog, {
+    id: "bu-bench-v1",
+    definitionId: "standard",
+    taskCount: 100,
+    notes: [],
+    reportUrl: null,
+    providers: [
+      { id: "cook-browser-desktop", name: "Cook Browser Desktop", description: "Cook", mode: "Reported", passed: null, scores: { successRate: 94.0, costPerTask: null } },
+      { id: "lexmount-browser-agent", name: "Lexmount Browser Agent", description: "Lexmount", mode: "Code agent", passed: null, scores: { successRate: 93.41, costPerTask: 0.1 } },
+      { id: "browser-use-oss-claude-fable-5", name: "Browser Use OSS + Claude Fable 5", description: "BU OSS", mode: "Reported", passed: null, scores: { successRate: 80.0, costPerTask: 5.81 } },
+    ],
+  });
+  const en = render(sample);
+  assert.match(en, /aria-label="Capability profile"/);
+  assert.match(en, /Undisclosed/);
+  assert.equal((en.match(/class="radar-series"/g) ?? []).length, 3);
+  assert.equal((en.match(/is-undisclosed/g) ?? []).length, 1);
+  assert.doesNotMatch(en, /NaN|Infinity|at least three/);
+  const zh = render(sample, translator("zh", catalog));
+  assert.match(zh, /未公布/);
+  assert.match(zh, /每题成本/);
+  assert.match(zh, /成功率/);
+  const singleCost = { ...sample, providers: sample.providers.filter(p => p.id !== "browser-use-oss-claude-fable-5") };
+  assert.doesNotMatch(render(singleCost), /NaN|Infinity/);
+});
