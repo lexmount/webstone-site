@@ -273,8 +273,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 1,
-              "description": "Share of evaluated cases that meet their task-specific pass criteria. The published percentages are retained as supplied. Higher is better.",
-              "highlightBest": false
+              "description": "Share of evaluated cases that meet their task-specific pass criteria. The published percentages are retained as supplied. Higher is better."
             },
             {
               "id": "requestRate",
@@ -282,8 +281,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 1,
-              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better.",
-              "highlightBest": false
+              "description": "Share of requests that returned a response. A response does not guarantee that the content meets the task requirements. Higher is better."
             },
             {
               "id": "totalMean",
@@ -291,8 +289,7 @@
               "unit": "ms",
               "direction": "asc",
               "decimals": 0,
-              "description": "Mean total elapsed time reported in the supplied table, in milliseconds. Lower is better.",
-              "highlightBest": false
+              "description": "Mean total elapsed time reported in the supplied table, in milliseconds. Lower is better."
             },
             {
               "id": "totalP50",
@@ -300,8 +297,7 @@
               "unit": "ms",
               "direction": "asc",
               "decimals": 0,
-              "description": "Median total elapsed time (50th percentile), in milliseconds. Lower is better.",
-              "highlightBest": false
+              "description": "Median total elapsed time (50th percentile), in milliseconds. Lower is better."
             },
             {
               "id": "totalP95",
@@ -309,8 +305,7 @@
               "unit": "ms",
               "direction": "asc",
               "decimals": 0,
-              "description": "95th percentile of total elapsed time, in milliseconds. Lower is better.",
-              "highlightBest": false
+              "description": "95th percentile of total elapsed time, in milliseconds. Lower is better."
             }
           ],
           "leadingMetricIds": [
