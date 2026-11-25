@@ -140,6 +140,7 @@ const chinese: Record<string, string> = {
   "Higher quality plots higher; lower cost plots farther left. Methods without disclosed cost appear on the right.": "得分越高越靠上，成本越低越靠左；未公开成本的方案列在右侧。",
   "Quoted prices and ranges are not realized total costs. Software-only prices exclude model usage.": "报价及区间不代表实际总成本；纯软件价格不含模型费用。",
   "Select a method to show its results.": "请选择要对比的方案。",
+  "Selected methods do not disclose the primary quality metric.": "所选方案未公布主质量指标。",
   "Submit results": "提交结果",
   "Latency comes from separate runs with different concurrency.": "各服务分批测试，并发数不同。",
   "L1 · Search results": "L1 搜索结果",

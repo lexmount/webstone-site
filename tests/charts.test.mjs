@@ -300,6 +300,8 @@ test("every published benchmark edition shares table and radar controls in both 
       try {
         await React.act(async () => root.render(React.createElement(Dashboard)));
         const table = container.querySelector("table");
+        const definition = resolveBenchmark(catalog, report.benchmarks[0]);
+        const isPair = definition.categories.length === 0 && definition.metrics.length === 2;
         assert.equal(table.className, "wide-table", report.id);
         const hasProfile = radarAxes(resolveBenchmark(catalog, report.benchmarks[0])).filter(axis => axis.defaultSelected).length >= 3;
         assert.equal(container.querySelectorAll(".metric-selector").length, Number(hasProfile), report.id);
@@ -868,4 +870,38 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   assert.match(zh, /成功率/);
   const singleCost = { ...sample, providers: sample.providers.filter(p => p.id !== "browser-use-oss-claude-fable-5") };
   assert.doesNotMatch(render(singleCost), /NaN|Infinity/);
+
+  const allCostsNull = {
+    ...sample,
+    providers: sample.providers.map(provider => ({ ...provider, scores: { ...provider.scores, costPerTask: null } })),
+  };
+  const undisclosedOnly = render(allCostsNull);
+  assert.equal((undisclosedOnly.match(/class="radar-series"/g) ?? []).length, 3);
+  assert.equal((undisclosedOnly.match(/is-undisclosed/g) ?? []).length, 3);
+  assert.doesNotMatch(undisclosedOnly, /at least three|NaN|Infinity/);
+
+  const withMissingPrimary = {
+    ...sample,
+    providers: [
+      ...sample.providers.slice(0, 1),
+      { id: "cost-only-agent", name: "Cost Only Agent", description: "Cost only", mode: "Reported", passed: null, scores: { successRate: null, costPerTask: 0.25 } },
+    ],
+  };
+  const mixed = render(withMissingPrimary);
+  assert.equal((mixed.match(/class="radar-series"/g) ?? []).length, 2);
+  assert.equal((mixed.match(/<circle /g) ?? []).length, 1);
+  assert.match(mixed, /Cost Only Agent · Success rate: — · Cost \/ task: \$0\.25/);
+  assert.doesNotMatch(mixed, /Selected methods do not disclose the primary quality metric|NaN|Infinity/);
+
+  const onlyMissingPrimary = {
+    ...sample,
+    providers: [
+      { id: "cost-only-agent", name: "Cost Only Agent", description: "Cost only", mode: "Reported", passed: null, scores: { successRate: null, costPerTask: 0.25 } },
+    ],
+  };
+  const emptyPrimary = render(onlyMissingPrimary);
+  assert.equal((emptyPrimary.match(/class="radar-series"/g) ?? []).length, 1);
+  assert.equal((emptyPrimary.match(/<circle /g) ?? []).length, 0);
+  assert.match(emptyPrimary, /Selected methods do not disclose the primary quality metric\./);
+  assert.match(render(onlyMissingPrimary, translator("zh", catalog)), /所选方案未公布主质量指标。/);
 });

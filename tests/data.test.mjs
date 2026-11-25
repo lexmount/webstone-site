@@ -323,11 +323,14 @@ test("version-specific sample notes must be nonempty English", () => {
 
 
 test("benchmarks in each published Track share its summary blog", () => {
+  const reportMetadata = JSON.parse(readFileSync(new URL("../reports/metadata.json", import.meta.url), "utf8"));
+  const browserUseReport = reportMetadata.reports["bu-bench-v1-v1.0.0"];
+  const browserUseUrl = browserUseReport.urls[browserUseReport.originalLanguage ?? "zh"];
   const reports = {
     webfetch: "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
     websearch: "https://yours.lexmount.cn/artifact-site/s/-FtUMQm-NmQa",
     webextract: "https://yours.lexmount.cn/artifact-site/s/-eNSiFI3n7XX",
-    "browser-use": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
+    "browser-use": browserUseUrl,
   };
   for (const [trackId, url] of Object.entries(reports)) {
     const benchmarks = catalog.benchmarks.filter(item => item.trackId === trackId);
