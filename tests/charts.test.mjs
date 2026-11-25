@@ -632,9 +632,17 @@ test("pricing details keep official links usable by keyboard and close with Esca
     assert.ok(win.document.activeElement===next);
     assert.equal(win.document.querySelector('[role="dialog"]'),null);
     await React.act(async()=>trigger.focus());
+    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
     await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
     assert.equal(win.document.querySelector('[role="dialog"]'),null);
     assert.ok(win.document.activeElement===trigger);
+    await React.act(async()=>{next.focus();trigger.dispatchEvent(new win.MouseEvent('mouseover',{bubbles:true,relatedTarget:next}));});
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    assert.equal(win.document.querySelector('[role="dialog"]'),null);
+    assert.ok(win.document.activeElement===next);
   } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
 });
 

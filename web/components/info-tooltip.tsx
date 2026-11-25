@@ -32,7 +32,11 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
     if (!position) return;
     if (focusSources.current) { panel.current?.querySelector<HTMLAnchorElement>("a")?.focus(); focusSources.current = false; }
     const hide = () => { clearTimeout(timer.current); setPosition(null); };
-    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") { button.current?.focus(); hide(); } };
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (panel.current?.contains(document.activeElement)) button.current?.focus();
+      hide();
+    };
     const outside = (event: PointerEvent) => {
       if (!button.current?.contains(event.target as Node) && !panel.current?.contains(event.target as Node)) hide();
     };
