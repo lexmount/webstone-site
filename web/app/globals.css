@@ -420,6 +420,8 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .radar-legend label { min-height: 34px; padding: 7px 9px; align-items: baseline; }
 .radar-legend label:has(input:not(:checked)) { color: #566961 !important; }
 .radar-series:hover .radar-shape, .radar-series:focus-visible .radar-shape { fill-opacity: .14; stroke-width: 3; }
+.radar-series:hover .radar-dot, .radar-series:focus-visible .radar-dot { stroke: currentColor; stroke-width: 3; }
+.radar-series:hover .comparison-value, .radar-series:focus-visible .comparison-value { fill: #102a20; font-weight: 700; }
 .radar-dot { fill: currentColor; }
 .radar-dot.is-undisclosed { fill: #fff; stroke: currentColor; stroke-width: 2.2; }
 .radar-divider { stroke: #c9d8cd; stroke-dasharray: 4 3; }

@@ -858,18 +858,82 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
       { id: "browser-use-oss-claude-fable-5", name: "Browser Use OSS + Claude Fable 5", description: "BU OSS", mode: "Reported", passed: null, scores: { successRate: 80.0, costPerTask: 5.81 } },
     ],
   });
+  const parseSeries = html => [...html.matchAll(/<g class="radar-series"[^>]*aria-label="([^"]+)"[^>]*>([\s\S]*?)<\/g>/g)].map(match => {
+    const circle = /<circle[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"/.exec(match[2]);
+    const text = /<text[^>]*x="([^"]+)"[^>]*y="([^"]+)"[^>]*text-anchor="([^"]+)"[^>]*class="comparison-value"/.exec(match[2]);
+    return {
+      label: match[1],
+      cx: circle ? Number(circle[1]) : null,
+      cy: circle ? Number(circle[2]) : null,
+      lx: text ? Number(text[1]) : null,
+      ly: text ? Number(text[2]) : null,
+      anchor: text ? text[3] : null,
+    };
+  });
+
   const en = render(sample);
   assert.match(en, /aria-label="Capability profile"/);
   assert.match(en, /Undisclosed/);
   assert.equal((en.match(/class="radar-series"/g) ?? []).length, 3);
   assert.equal((en.match(/is-undisclosed/g) ?? []).length, 1);
   assert.doesNotMatch(en, /NaN|Infinity|at least three/);
+  const logSeries = parseSeries(en);
+  const lexPoint = logSeries.find(item => item.label.startsWith("Lexmount Browser Agent"));
+  const buPoint = logSeries.find(item => item.label.startsWith("Browser Use OSS"));
+  assert.ok(lexPoint.cx > 68 && lexPoint.cx < 432 && buPoint.cx > 68 && buPoint.cx < 432);
+  assert.ok(lexPoint.cy >= 28 && lexPoint.cy <= 272 && buPoint.cy >= 28 && buPoint.cy <= 272);
+  assert.ok(lexPoint.cx < buPoint.cx, "$0.10 point must plot left of $5.81 point");
+  assert.ok(lexPoint.cy < buPoint.cy, "higher success rate must plot above lower success rate");
+
   const zh = render(sample, translator("zh", catalog));
   assert.match(zh, /未公布/);
   assert.match(zh, /每题成本/);
   assert.match(zh, /成功率/);
   const singleCost = { ...sample, providers: sample.providers.filter(p => p.id !== "browser-use-oss-claude-fable-5") };
   assert.doesNotMatch(render(singleCost), /NaN|Infinity/);
+
+  const zeroCostSample = {
+    ...sample,
+    providers: [
+      { id: "free-agent", name: "Free Agent", description: "Free", mode: "Reported", passed: null, scores: { successRate: 95.0, costPerTask: 0 } },
+      { id: "paid-agent", name: "Paid Agent", description: "Paid", mode: "Reported", passed: null, scores: { successRate: 85.0, costPerTask: 0.5 } },
+    ],
+  };
+  const linearHtml = render(zeroCostSample);
+  assert.doesNotMatch(linearHtml, /NaN|Infinity/);
+  const linearSeries = parseSeries(linearHtml);
+  const freePoint = linearSeries.find(item => item.label.startsWith("Free Agent"));
+  const paidPoint = linearSeries.find(item => item.label.startsWith("Paid Agent"));
+  assert.ok(freePoint.cx > 68 && freePoint.cx < 432 && paidPoint.cx > 68 && paidPoint.cx < 432);
+  assert.ok(freePoint.cx < paidPoint.cx, "$0.00 point must plot left of $0.50 point under linear scaling");
+  assert.ok(freePoint.cy < paidPoint.cy, "95% must plot above 85%");
+
+  const clusteredDisclosed = {
+    ...sample,
+    providers: [
+      { id: "tied-a", name: "Tied A", description: "A", mode: "Reported", passed: null, scores: { successRate: 90.0, costPerTask: 1.0 } },
+      { id: "tied-b", name: "Tied B", description: "B", mode: "Reported", passed: null, scores: { successRate: 90.0, costPerTask: 1.0 } },
+      { id: "nearby-c", name: "Nearby C", description: "C", mode: "Reported", passed: null, scores: { successRate: 90.1, costPerTask: 1.0 } },
+    ],
+  };
+  const clusteredSeries = parseSeries(render(clusteredDisclosed));
+  assert.equal(clusteredSeries.length, 3);
+  const clusteredCoords = clusteredSeries.map(item => `${item.cx},${item.cy}`);
+  assert.equal(new Set(clusteredCoords).size, 3, "clustered disclosed markers must have distinct coordinates");
+  const labelRects = clusteredSeries.map(item => {
+    const w = 90;
+    let left = item.lx - w / 2;
+    if (item.anchor === "start") left = item.lx;
+    else if (item.anchor === "end") left = item.lx - w;
+    return { left, right: left + w, top: item.ly - 11, bottom: item.ly + 3 };
+  });
+  for (let i = 0; i < labelRects.length; i++) {
+    assert.ok(clusteredSeries[i].cx > 68 && clusteredSeries[i].cx < 432, `disclosed cx ${clusteredSeries[i].cx} stays inside plot area`);
+    for (let j = i + 1; j < labelRects.length; j++) {
+      const a = labelRects[i], b = labelRects[j];
+      assert.equal(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top, false, "clustered disclosed labels must not overlap");
+    }
+  }
 
   const allCostsNull = {
     ...sample,
