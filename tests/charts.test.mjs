@@ -301,7 +301,8 @@ test("every published benchmark edition shares table and radar controls in both 
         await React.act(async () => root.render(React.createElement(Dashboard)));
         const table = container.querySelector("table");
         const definition = resolveBenchmark(catalog, report.benchmarks[0]);
-        const isPair = definition.categories.length === 0 && definition.metrics.length === 2;
+        const { twoAxisComparison } = require("../web/components/insights.tsx");
+        const isPair = Boolean(twoAxisComparison(definition, radarAxes(definition)));
         assert.equal(table.className, "wide-table", report.id);
         const hasProfile = radarAxes(resolveBenchmark(catalog, report.benchmarks[0])).filter(axis => axis.defaultSelected).length >= 3;
         assert.equal(container.querySelectorAll(".metric-selector").length, Number(hasProfile), report.id);
@@ -954,6 +955,62 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
     }
   }
 
+  const extraUnreportedMetric = {
+    ...sample,
+    metrics: [
+      ...sample.metrics,
+      { id: "meanTime", label: "Mean time", unit: "seconds", direction: "asc", decimals: 1, description: "Optional latency." },
+    ],
+    providers: sample.providers.map(provider => ({
+      ...provider,
+      scores: { ...provider.scores, meanTime: null },
+    })),
+  };
+  const extraMetricHtml = render(extraUnreportedMetric);
+  assert.doesNotMatch(extraMetricHtml, /at least three|NaN|Infinity/);
+  assert.equal((extraMetricHtml.match(/class="radar-series"/g) ?? []).length, 3);
+  assert.equal((extraMetricHtml.match(/is-undisclosed/g) ?? []).length, 1);
+
+  const denseTopCluster = {
+    ...sample,
+    providers: Array.from({ length: 8 }, (_, index) => ({
+      id: `top-tied-${index + 1}`,
+      name: `Top Tied ${index + 1}`,
+      description: `Top Tied ${index + 1}`,
+      mode: "Reported",
+      passed: null,
+      scores: { successRate: 100.0, costPerTask: 1.0 },
+    })),
+  };
+  const denseSeries = parseSeries(render(denseTopCluster));
+  assert.equal(denseSeries.length, 8, "all 8 tied top-edge providers remain accessible series");
+  const densePlaced = denseSeries.filter(item => item.lx !== null && item.ly !== null);
+  assert.ok(densePlaced.length >= 3, "places multiple non-overlapping labels around dense top cluster");
+  const denseRects = densePlaced.map(item => {
+    assert.ok(Number.isFinite(item.lx) && Number.isFinite(item.ly) && ["start", "middle", "end"].includes(item.anchor));
+    const w = 96;
+    let left = item.lx - w / 2;
+    if (item.anchor === "start") left = item.lx;
+    else if (item.anchor === "end") left = item.lx - w;
+    assert.ok(left >= 62 && left + w <= 438, "rendered label stays inside disclosed plot width");
+    assert.ok(item.ly - 11 >= 22 && item.ly + 3 <= 280, "rendered label stays inside disclosed plot height");
+    return { left, right: left + w, top: item.ly - 11, bottom: item.ly + 3 };
+  });
+  for (let i = 0; i < denseRects.length; i++) {
+    for (let j = i + 1; j < denseRects.length; j++) {
+      const a = denseRects[i], b = denseRects[j];
+      assert.equal(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top, false, "dense top-edge labels must never overlap");
+    }
+  }
+
+  const extremeStability = {
+    ...sample,
+    providers: [
+      { id: "free-extreme", name: "Free Extreme", description: "Free", mode: "Reported", passed: null, scores: { successRate: 98.0, costPerTask: 0 } },
+      { id: "mid-agent", name: "Mid Agent", description: "Mid", mode: "Reported", passed: null, scores: { successRate: 90.0, costPerTask: 0.1 } },
+      { id: "expensive-low", name: "Expensive Low", description: "Expensive", mode: "Reported", passed: null, scores: { successRate: 72.0, costPerTask: 5.0 } },
+    ],
+  };
   const win = new Window();
   const previousDom = [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT];
   [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
@@ -961,19 +1018,25 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   win.document.body.append(host);
   const root = require("react-dom/client").createRoot(host);
   try {
-    await React.act(async () => root.render(React.createElement(Insights, { benchmark: clusteredDisclosed, t: text => text })));
+    await React.act(async () => root.render(React.createElement(Insights, { benchmark: extremeStability, t: text => text })));
     const coordsByName = () => Object.fromEntries([...host.querySelectorAll("g.radar-series")].map(group => {
       const circle = group.querySelector("circle");
       return [group.getAttribute("aria-label").split(" · ")[0], `${circle.getAttribute("cx")},${circle.getAttribute("cy")}`];
     }));
+    const toggleFor = name => [...host.querySelectorAll(".radar-legend label")].find(label => label.textContent === name).querySelector("input");
     const before = coordsByName();
-    assert.equal(before["Tied A"], before["Tied B"]);
-    const toggleA = [...host.querySelectorAll(".radar-legend label")].find(label => label.textContent === "Tied A").querySelector("input");
-    await React.act(async () => toggleA.click());
-    const after = coordsByName();
-    assert.equal(after["Tied A"], undefined);
-    assert.equal(after["Tied B"], before["Tied B"], "hiding one provider must not move remaining disclosed markers");
-    assert.equal(after["Nearby C"], before["Nearby C"], "hiding one provider must not move nearby disclosed markers");
+    await React.act(async () => toggleFor("Free Extreme").click());
+    const withoutZero = coordsByName();
+    assert.equal(withoutZero["Free Extreme"], undefined);
+    assert.equal(withoutZero["Mid Agent"], before["Mid Agent"], "hiding sole zero-cost provider must not trigger linear-to-log rescale");
+    assert.equal(withoutZero["Expensive Low"], before["Expensive Low"], "hiding sole zero-cost provider must preserve coordinates");
+
+    await React.act(async () => toggleFor("Free Extreme").click());
+    await React.act(async () => toggleFor("Expensive Low").click());
+    const withoutExtreme = coordsByName();
+    assert.equal(withoutExtreme["Expensive Low"], undefined);
+    assert.equal(withoutExtreme["Free Extreme"], before["Free Extreme"], "hiding unique max-cost/min-quality extreme must preserve coordinates");
+    assert.equal(withoutExtreme["Mid Agent"], before["Mid Agent"], "hiding unique extreme must not rescale remaining markers");
   } finally {
     await React.act(async () => root.unmount());
     await win.happyDOM.close();

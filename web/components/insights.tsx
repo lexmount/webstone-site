@@ -11,12 +11,29 @@ const radius = 123;
 const colors = ["#007d64", "#5163a8", "#ad5229", "#925c95", "#247a9c", "#926b18",
   "#ac4e67", "#507d35", "#674bc1", "#4d7373", "#aa4944", "#4e5c70"];
 
-function twoAxisComparison(benchmark: Benchmark): { quality: Metric; resource: Metric } | null {
-  if (benchmark.categories.length > 0 || benchmark.metrics.length !== 2) return null;
+const RESOURCE_UNITS = ["usd", "ms", "seconds", "mib"];
+
+export function twoAxisComparison(
+  benchmark: Benchmark,
+  availableAxes: ReturnType<typeof radarAxes> = radarAxes(benchmark),
+): { quality: Metric; resource: Metric } | null {
+  if (availableAxes.length >= 3) return null;
   const quality = benchmark.metrics.find(metric => metric.id === benchmark.primaryMetric);
-  const resource = benchmark.metrics.find(metric => metric.id !== benchmark.primaryMetric
-    && ["usd", "ms", "seconds", "mib"].includes(metric.unit));
-  return quality && resource ? { quality, resource } : null;
+  if (!quality) return null;
+  const availableIds = new Set(availableAxes.map(axis => axis.id));
+  const availableResource = benchmark.metrics.find(metric => metric.id !== quality.id
+    && RESOURCE_UNITS.includes(metric.unit)
+    && availableIds.has(metric.id));
+  if (availableResource && availableAxes.length === 2 && availableIds.has(quality.id)) {
+    return { quality, resource: availableResource };
+  }
+  if (availableAxes.length <= 1 && !availableAxes.some(axis => axis.id.startsWith("category:"))) {
+    const definedResources = benchmark.metrics.filter(metric => metric.id !== quality.id && RESOURCE_UNITS.includes(metric.unit));
+    if (definedResources.length === 1) {
+      return { quality, resource: definedResources[0] };
+    }
+  }
+  return null;
 }
 
 function axisStep(span: number): number {
@@ -59,16 +76,18 @@ function allocateDisclosedLabels(
         { lx: point.x - 10, ly: point.y + 4, anchor: "end" },
         { lx: point.x + 10, ly: point.y + 4, anchor: "start" },
       ];
-    const verticalCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = [];
-    for (const dy of [-14, 18, -28, 32, -42, 46, -56, 60, -70, 74]) {
-      const ly = Math.max(bounds.top + 10, Math.min(bounds.bottom + 2, point.y + dy));
-      const clampedMiddleX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.x));
-      verticalCandidates.push({ lx: clampedMiddleX, ly, anchor: "middle" });
+    const gridCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = [];
+    const xOffsets = [0, -(width + 12), width + 12];
+    for (const dy of [-14, 18, -28, 32, -42, 46, -56, 60, -70, 74, -84, 88, -98, 102]) {
+      const ly = point.y + dy;
+      for (const dx of xOffsets) {
+        const clampedX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.x + dx));
+        gridCandidates.push({ lx: clampedX, ly, anchor: "middle" });
+      }
     }
-    const candidates = [...sideCandidates, ...verticalCandidates];
-    let chosen = candidates[0];
-    let chosenBox = labelBox(chosen.lx, chosen.ly, chosen.anchor, width);
-    let foundClear = false;
+    const candidates = [...sideCandidates, ...gridCandidates];
+    let chosen: { lx: number; ly: number; anchor: "start" | "middle" | "end" } | null = null;
+    let chosenBox: Box | null = null;
     for (const candidate of candidates) {
       const box = labelBox(candidate.lx, candidate.ly, candidate.anchor, width);
       const inside = box.left >= bounds.left - 6 && box.right <= bounds.right + 6 && box.top >= bounds.top - 8 && box.bottom <= bounds.bottom + 8;
@@ -77,25 +96,15 @@ function allocateDisclosedLabels(
       if (markerBoxes.some(marker => boxesOverlap(box, marker))) continue;
       chosen = candidate;
       chosenBox = box;
-      foundClear = true;
       break;
     }
-    if (!foundClear) {
-      for (const candidate of candidates) {
-        const box = labelBox(candidate.lx, candidate.ly, candidate.anchor, width);
-        if (!occupiedLabels.some(existing => boxesOverlap(box, existing))) {
-          chosen = candidate;
-          chosenBox = box;
-          break;
-        }
-      }
-    }
+    if (!chosen || !chosenBox) continue;
     occupiedLabels.push(chosenBox);
     result.set(point.id, {
       lx: Number(chosen.lx.toFixed(2)),
       ly: Number(chosen.ly.toFixed(2)),
       anchor: chosen.anchor,
-      leader: Math.abs(chosen.ly - (point.y + 4)) > 6,
+      leader: Math.abs(chosen.ly - (point.y + 4)) > 6 || Math.abs(chosen.lx - point.x) > width / 2 + 12,
     });
   }
   return result;
@@ -290,7 +299,7 @@ export default function Insights({ benchmark, t }: Props) {
   if (!primary || !benchmark.providers.length || defaultIds.length < 3) return null;
 
   const sortedProviders = sortProviders(benchmark.providers, primary.id, primary.direction);
-  const pair = twoAxisComparison(benchmark);
+  const pair = twoAxisComparison(benchmark, availableAxes);
   const providers = sortedProviders.map(provider => ({ provider, values: axes.map(axis => axis.value(provider)) }));
 
   function point(index: number, distance: number) {
