@@ -477,3 +477,10 @@ test("shared presentation uses percentages and seconds without changing stored v
   assert.equal(formatMetric(null, "ratio", 3), "—");
   assert.equal(formatMetric(-0.15, "ms", 2, true), "-0.00015 s");
 });
+
+
+test("source detail formatting retains native units and the original ratio scale", () => {
+  assert.equal(formatMetric(14174, "ms", 0, false, undefined, "source"), "14174 ms");
+  assert.equal(formatMetric(.827, "ratio", 3, false, undefined, "source"), "0.827");
+  assert.equal(formatMetric(-.15, "ms", 2, true, undefined, "source"), "-0.15 ms");
+});

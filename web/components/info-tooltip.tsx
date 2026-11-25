@@ -21,7 +21,11 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
   }
 
   function hideSoon() {
-    timer.current = setTimeout(() => setPosition(null), 120);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (button.current?.contains(document.activeElement) || panel.current?.contains(document.activeElement)) return;
+      setPosition(null);
+    }, 120);
   }
 
   useEffect(() => {
@@ -59,7 +63,20 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
     </button>
     {position && createPortal(<div ref={panel} id={id} role={sources.length > 0 ? "dialog" : "tooltip"} aria-label={sources.length > 0 ? `${label} ${detailsLabel}` : undefined} className="info-tooltip"
       style={{ left: position.left, top: position.top, width: position.width, transform: position.above ? "translateY(-100%)" : undefined }}
-      onMouseEnter={() => clearTimeout(timer.current)} onMouseLeave={hideSoon} onFocus={() => clearTimeout(timer.current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) hideSoon(); }}>
+      onKeyDown={event => {
+        if (event.key !== "Tab") return;
+        const links = [...(panel.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [])];
+        if (event.shiftKey && event.target === links[0]) {
+          event.preventDefault(); button.current?.focus();
+        } else if (!event.shiftKey && event.target === links.at(-1)) {
+          event.preventDefault();
+          const controls = [...document.querySelectorAll<HTMLElement>('a[href],button,input,select,textarea,summary,[tabindex]')]
+            .filter(element => element.tabIndex >= 0 && !element.matches(":disabled") && element.getClientRects().length > 0 && !panel.current?.contains(element));
+          const next = controls[controls.indexOf(button.current!) + 1];
+          (next ?? button.current)?.focus();
+          setPosition(null);
+        }
+      }} onMouseEnter={() => clearTimeout(timer.current)} onMouseLeave={hideSoon} onFocus={() => clearTimeout(timer.current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) hideSoon(); }}>
       <strong>{label}</strong><span>{description}</span>
       {sources.length > 0 && <div className="tooltip-sources"><strong>{sourcesLabel}</strong>{sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>)}</div>}
     </div>, document.body)}
