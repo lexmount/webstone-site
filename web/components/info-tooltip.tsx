@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CircleHelp } from "lucide-react";
 
-export default function InfoTooltip({ label, description, detailsLabel = "details" }: { label: string; description: string; detailsLabel?: string }) {
+export default function InfoTooltip({ label, description, detailsLabel = "details", sources = [], sourcesLabel = "Official pricing" }: { label: string; description: string; detailsLabel?: string; sources?: { label: string; url: string }[]; sourcesLabel?: string }) {
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -26,7 +26,7 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
   useEffect(() => {
     if (!position) return;
     const hide = () => { clearTimeout(timer.current); setPosition(null); };
-    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") hide(); };
+    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") { button.current?.focus(); hide(); } };
     const outside = (event: PointerEvent) => {
       if (!button.current?.contains(event.target as Node) && !panel.current?.contains(event.target as Node)) hide();
     };
@@ -44,14 +44,15 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
   }, [position]);
 
   return <>
-    <button ref={button} type="button" className="info-trigger" aria-label={`${label} ${detailsLabel}`} aria-describedby={position ? id : undefined}
-      onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={() => setPosition(null)} onClick={show}>
+    <button ref={button} type="button" className="info-trigger" aria-label={`${label} ${detailsLabel}`} aria-describedby={position && sources.length === 0 ? id : undefined} aria-controls={position && sources.length > 0 ? id : undefined} aria-haspopup={sources.length > 0 ? "dialog" : undefined} aria-expanded={sources.length > 0 ? position !== null : undefined}
+      onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={event => { if (!panel.current?.contains(event.relatedTarget as Node)) hideSoon(); }} onClick={show}>
       <CircleHelp size={13} strokeWidth={1.5} aria-hidden="true" />
     </button>
-    {position && createPortal(<div ref={panel} id={id} role="tooltip" className="info-tooltip"
+    {position && createPortal(<div ref={panel} id={id} role={sources.length > 0 ? "dialog" : "tooltip"} aria-label={sources.length > 0 ? `${label} ${detailsLabel}` : undefined} className="info-tooltip"
       style={{ left: position.left, top: position.top, width: position.width, transform: position.above ? "translateY(-100%)" : undefined }}
-      onMouseEnter={() => clearTimeout(timer.current)} onMouseLeave={hideSoon}>
+      onMouseEnter={() => clearTimeout(timer.current)} onMouseLeave={hideSoon} onFocus={() => clearTimeout(timer.current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) hideSoon(); }}>
       <strong>{label}</strong><span>{description}</span>
+      {sources.length > 0 && <div className="tooltip-sources"><strong>{sourcesLabel}</strong>{sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>)}</div>}
     </div>, document.body)}
   </>;
 }

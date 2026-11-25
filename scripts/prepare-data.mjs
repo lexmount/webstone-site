@@ -51,6 +51,9 @@ export function validateCatalog(catalog) {
   validateTranslations(catalog.translations);
   if (catalog.schemaVersion !== 1) throw new Error("Invalid benchmark catalog");
   if (!catalog.providerUrls || typeof catalog.providerUrls !== "object" || Array.isArray(catalog.providerUrls) || !Object.keys(catalog.providerUrls).length || !Object.values(catalog.providerUrls).every(httpsUrl)) throw new Error("Missing or invalid provider project URL");
+  if (catalog.pricingSources !== undefined && (!record(catalog.pricingSources) || Object.entries(catalog.pricingSources).some(([id, sources]) =>
+    !Object.hasOwn(catalog.providerUrls, id) || !Array.isArray(sources) || sources.length === 0 || sources.some(source =>
+      !record(source) || typeof source.label !== "string" || !source.label.trim() || !publicEvidenceUrl(source.url))))) throw new Error("Invalid official pricing sources");
   uniqueIds(catalog.tracks, "track");
   uniqueIds(catalog.benchmarks, "benchmark");
   if (catalog.navigationGroups !== undefined) {

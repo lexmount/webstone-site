@@ -435,3 +435,23 @@ test("static brand changes update the release while generated delivery files do 
     assert.equal(await releaseFingerprint([], folder), second);
   } finally { await rm(folder, { recursive: true, force: true }); }
 });
+
+test("official pricing links reject executable URLs, credentials, internal hosts and unknown methods", () => {
+  for (const url of ["javascript:alert(1)", "http://example.com/pricing", "https://user:secret@example.com/pricing", "https://pricing.internal/", "https://127.0.0.1/pricing"]) {
+    const invalid=structuredClone(catalog);
+    invalid.pricingSources={"zyte-custom":[{label:"Pricing",url}]};
+    assert.throws(()=>validateCatalog(invalid),/pricing sources/);
+  }
+  const invalid=structuredClone(catalog);
+  invalid.pricingSources={unknown:[{label:"Pricing",url:"https://example.com/pricing"}]};
+  assert.throws(()=>validateCatalog(invalid),/pricing sources/);
+});
+
+test("browser and touch icons are square at their declared sizes", () => {
+  for (const size of [32,64,180,192]) {
+    const png=readFileSync(new URL(`../web/public/brand/icon-${size}.png`,import.meta.url));
+    assert.equal(png.subarray(1,4).toString(),'PNG');
+    assert.equal(png.readUInt32BE(16),size);
+    assert.equal(png.readUInt32BE(20),size);
+  }
+});

@@ -53,7 +53,7 @@ export function radarAxes(benchmark: Benchmark): Axis[] {
     value: provider => point(categoryRate(provider, category.id, category.total)),
     display: provider => {
       const passed = provider.categoryPassed?.[category.id];
-      return typeof passed === "number" ? `${passed} / ${category.total}` : "—";
+      return typeof passed === "number" ? `${(passed / category.total * 100).toFixed(1)}%` : "—";
     },
   }));
 

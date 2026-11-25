@@ -109,3 +109,9 @@ Serve a build with `python3 -m http.server 5173 --directory web/out`; never `nex
 
 - A definition with `rankable: false` is diagnostic: show values and allow inspection, but render no ranks or best-value highlights, including category and passed-count cells.
 - Optional `reports/source-notes.json` is repository-only uploader reference information. Do not bundle it, display its restricted links, treat it as public evidence, or check its link accessibility.
+
+## PR titles and merge commits
+
+Use Conventional Commit titles: `type(scope): English summary`, with an optional scope. Allowed types are `fix`, `feat`, `docs`, `refactor`, `test`, `perf`, `build`, `ci` and `chore`. Prefer 72 characters, keep the title within 100, omit a final period, and use `!` for breaking changes. Run `node scripts/check-pr-title.mjs "fix(ui): align cards"` locally. The required PR title check validates new and edited titles before merge; squash merges use the PR title.
+
+- Presentation uses percentages for percent and 0–1 ratio metrics, seconds for durations, and the original units for counts, scores, MiB and percentage-point deltas. Preserve stored units, precision, numerators and denominators in downloadable results. Keep fractions in cell details instead of repeating them beside every percentage. Official pricing links are catalog resources, not evidence that historical quoted prices equal current rates.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, BookOpenText, Bot, Clipboard, FileJson2, Globe2, Layers3, Search, Star } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpenText, Bot, CircleDashed, Clipboard, FileJson2, Globe2, Layers3, Search, Star } from "lucide-react";
 import { benchmarkHref, evaluationReports, DATASETS_URL, EVALUATION_URL, EVALUATION_SKILL, SUBMISSION_SKILL, SUBMISSION_URL, WEBSTONE_REPOSITORY_URL, navigationGroups, trackOverview } from "../lib/overview";
 import type { Language } from "../lib/i18n";
 import type { BenchmarkInfo, Catalog, Snapshot } from "../lib/results";
@@ -21,7 +21,7 @@ export function EvaluationReports({ catalog, snapshots, t, current, language = "
       const Icon = TRACK_ICONS[article.track.id] ?? BookOpenText;
       return <article key={article.source} className="article-card" data-track={article.track.id}>
         <div className="article-topic"><Icon size={18} aria-hidden="true" /><span>{t(article.track.name)}</span></div>
-        <h3><a href={article.href} hrefLang={article.language} target="_blank" rel="noreferrer">{t(article.title)} <ArrowUpRight size={15} aria-hidden="true" /><span className="sr-only"> ({t("opens in a new tab")})</span></a></h3>
+        <h3><a href={article.href} hrefLang={article.language} target="_blank" rel="noreferrer">{t(article.title)}{"\u00a0"}<ArrowUpRight size={15} aria-hidden="true" /><span className="sr-only"> ({t("opens in a new tab")})</span></a></h3>
         <p>{t(article.summary)}</p>
         <div className="article-date">{t("Published")} <time dateTime={article.publishedAt}>{article.date}</time></div>
         <div className="article-related"><span>{t("Track")}</span><a href={benchmarkHref(article.trackLanding.id)}>{t(article.track.name)} <ArrowRight size={12} aria-hidden="true" /></a></div>
@@ -99,8 +99,9 @@ export default function Home({ catalog, snapshots, t, language = "en" }: Props) 
           <p className="track-volume-label">{track.benchmarks.length} {t("benchmarks")}</p>
           <ul>{track.benchmarks.map(benchmark => <li key={benchmark.id}><a href={benchmarkHref(benchmark.id)}>{t(benchmark.name)}</a></li>)}</ul>
         </div>;
-      })}</div>
-      {navigationGroups(catalog).filter(group => group.upcoming.length > 0).map(group => <div key={group.id} className="upcoming-overview"><strong>{t(group.name)}</strong><span>{group.upcoming.map(item => t(item.name)).join(" · ")}</span><span className="upcoming-badge">{t("Coming soon")}</span><p>{t("Benchmarks are in development. Stay tuned.")}</p></div>)}
+      })}
+      {navigationGroups(catalog).filter(group => group.upcoming.length > 0).map(group => <div key={group.id} className="track-card upcoming-track"><span className="track-group-label">{t(group.name)}</span><h3><CircleDashed size={18} aria-hidden="true" />{group.upcoming.map(item => t(item.name)).join(" · ")}</h3><span className="upcoming-badge">{t("Coming soon")}</span><p>{t("Benchmarks are in development. Stay tuned.")}</p></div>)}
+      </div>
     </section>
     <EvaluationReports catalog={catalog} snapshots={snapshots} t={t} language={language} />
   </div>;

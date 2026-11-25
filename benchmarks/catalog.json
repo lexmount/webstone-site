@@ -1730,7 +1730,8 @@
       "Browser tasks performed by agents.": "由智能体完成浏览器任务。",
       "Web Fetch and WebMainBench: browser results, timing and scoring": "Web Fetch 与 WebMainBench：浏览器结果、耗时和评分",
       "Six live-page configurations and seven frozen-HTML methods, with separate task populations and scoring rules.": "六种在线网页配置与七种冻结 HTML 方案，分别说明任务范围和评分规则。",
-      "Final logical-call duration over all 545 pages, including failures. Methods were collected in different batches; these timings are not a controlled same-window speed comparison.": "全部 545 页的最终逻辑调用耗时，保留失败。各方案在不同批次运行，不能作为同一时间窗口内的受控速度比较。"
+      "Final logical-call duration over all 545 pages, including failures. Methods were collected in different batches; these timings are not a controlled same-window speed comparison.": "全部 545 页的最终逻辑调用耗时，保留失败。各方案在不同批次运行，不能作为同一时间窗口内的受控速度比较。",
+      "Moli reaches an 89.3% pass rate on Web Fetch": "Moli 在 Web Fetch 中取得 89.3% 通过率"
     },
     "en": {
       "全程关闭": "Layout off throughout",
@@ -1764,5 +1765,125 @@
       "Macro-average page-hit F1 as published in the supplied evaluation. Values remain on a 0–1 scale; the detailed matching and aggregation protocol was not supplied.": "Page-hit macro F1 on a 0–1 scale. The report gives no detailed matching or averaging rules.",
       "Value-level micro-average F1 as published in the supplied evaluation, on a 0–1 scale. The detailed normalization and matching protocol was not supplied.": "Field-value micro F1 on a 0–1 scale. The report gives no detailed normalization or matching rules."
     }
+  },
+  "pricingSources": {
+    "zyte-custom": [
+      {
+        "label": "Zyte API",
+        "url": "https://docs.zyte.com/zyte-api/pricing.html"
+      }
+    ],
+    "zyte-product": [
+      {
+        "label": "Zyte API",
+        "url": "https://docs.zyte.com/zyte-api/pricing.html"
+      }
+    ],
+    "firecrawl-json": [
+      {
+        "label": "Firecrawl",
+        "url": "https://www.firecrawl.dev/pricing"
+      }
+    ],
+    "firecrawl-parse-json": [
+      {
+        "label": "Firecrawl",
+        "url": "https://www.firecrawl.dev/pricing"
+      }
+    ],
+    "scrapegraph-extract": [
+      {
+        "label": "ScrapeGraphAI",
+        "url": "https://scrapegraphai.com/pricing"
+      }
+    ],
+    "oxylabs-json": [
+      {
+        "label": "Oxylabs",
+        "url": "https://oxylabs.io/products/web-api/scrape/pricing"
+      }
+    ],
+    "cloudflare-json": [
+      {
+        "label": "Browser Run",
+        "url": "https://developers.cloudflare.com/browser-run/pricing/"
+      },
+      {
+        "label": "Workers AI",
+        "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+      }
+    ],
+    "browserbase-json": [
+      {
+        "label": "Browserbase",
+        "url": "https://www.browserbase.com/pricing"
+      }
+    ],
+    "scrapfly-product": [
+      {
+        "label": "Scrapfly",
+        "url": "https://scrapfly.io/pricing"
+      }
+    ],
+    "diffbot-product": [
+      {
+        "label": "Diffbot",
+        "url": "https://www.diffbot.com/pricing"
+      }
+    ],
+    "crawl4ai-deepseek": [
+      {
+        "label": "DeepSeek model usage",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/"
+      }
+    ],
+    "scrapegraphai-deepseek": [
+      {
+        "label": "DeepSeek model usage",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/"
+      }
+    ],
+    "stagehand-deepseek": [
+      {
+        "label": "DeepSeek model usage",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/"
+      }
+    ],
+    "firecrawl-deepseek": [
+      {
+        "label": "DeepSeek model usage",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/"
+      }
+    ],
+    "serper": [
+      {
+        "label": "Serper",
+        "url": "https://serper.dev/#pricing"
+      }
+    ],
+    "brightdata": [
+      {
+        "label": "Bright Data SERP API",
+        "url": "https://brightdata.com/pricing/serp"
+      }
+    ],
+    "yuanbao-standard": [
+      {
+        "label": "Tencent Yuanbao Search",
+        "url": "https://cloud.tencent.com/product/wsa"
+      }
+    ],
+    "yuanbao-lite": [
+      {
+        "label": "Tencent Yuanbao Search",
+        "url": "https://cloud.tencent.com/product/wsa"
+      }
+    ],
+    "browserbase": [
+      {
+        "label": "Browserbase",
+        "url": "https://www.browserbase.com/pricing"
+      }
+    ]
   }
 }

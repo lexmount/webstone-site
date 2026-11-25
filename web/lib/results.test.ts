@@ -133,10 +133,10 @@ test("SWDE keeps eligible denominators, precision and independent quality/latenc
   assert.equal(sortProviders(benchmark.providers, "pageMacroF1", "desc")[0].id, "stagehand-deepseek");
   assert.equal(sortProviders(benchmark.providers, "pageExact", "desc")[0].id, "oxylabs-json");
   assert.equal(sortProviders(benchmark.providers, "meanTime", "asc")[0].id, "browserbase-json");
-  assert.equal(formatMetric(.807, "ratio", 3), "0.807");
+  assert.equal(formatMetric(.807, "ratio", 3), "80.7%");
   assert.equal(formatMetric(800, "count", 0, false, { count: 800, total: 800 }), "800 / 800");
-  assert.equal(formatMetric(30.54, "percent", 2, false, { count: 226, total: 740 }), "226 / 740 (30.54%)");
-  assert.equal(formatMetric(0, "percent", 2, false, { count: 0, total: 25 }), "0 / 25 (0.00%)");
+  assert.equal(formatMetric(30.54, "percent", 2, false, { count: 226, total: 740 }), "30.54%");
+  assert.equal(formatMetric(0, "percent", 2, false, { count: 0, total: 25 }), "0.00%");
   assert.equal(formatMetric(4.87, "seconds", 3), "4.870 s");
   assert.equal(formatPricing(benchmark.providers[0].pricing!), "≈ $1.502–5.069");
   assert.equal(formatPricing(benchmark.providers[5].pricing!), "$4");
@@ -249,7 +249,7 @@ test("the v1 WebFetch table preserves every supplied result", () => {
   assert.deepEqual(benchmark.providers.map(item => item.passed), [385, 367, 233, 227, 222, 194]);
   assert.equal(benchmark.providers.find(item => item.id === "kitesurf")?.name, "Kitesurf Beta");
   assert.equal(benchmark.providers.find(item => item.id === "kitesurf")?.description, "Kitesurf Beta");
-  assert.equal(formatMetric(14174, "ms", 0), "14174 ms");
+  assert.equal(formatMetric(14174, "ms", 0), "14.174 s");
   assert.equal(sortProviders(benchmark.providers, "totalP95", "asc")[0].id, "lightpanda");
 });
 
@@ -305,9 +305,9 @@ test("seed totals and percentages match the report, without invented cells", () 
 });
 
 test("search measurements retain seconds, dollar pricing and MRR precision", () => {
-  assert.equal(formatMetric(1.46, "seconds"), "1.46 s");
+  assert.equal(formatMetric(1.46, "seconds"), "1.460 s");
   assert.equal(formatMetric(0.75, "usd"), "$0.75");
-  assert.equal(formatMetric(0.720, "ratio", 3), "0.720");
+  assert.equal(formatMetric(0.720, "ratio", 3), "72.0%");
 });
 
 test("category pass counts are published per provider against a 430-case split", () => {
@@ -323,7 +323,7 @@ test("signed deltas and memory or millisecond units format with direction", () =
   assert.equal(formatMetric(-0.15, "percent", 2, true), "-0.15%");
   assert.equal(formatMetric(0, "points", 2, true), "0.00 pp");
   assert.equal(formatMetric(80.54, "mib", 2), "80.54 MiB");
-  assert.equal(formatMetric(21.41, "ms", 2), "21.41 ms");
+  assert.equal(formatMetric(21.41, "ms", 2), "0.02141 s");
   assert.equal(formatMetric(1, "percent"), "1.0%");
 });
 
@@ -463,4 +463,17 @@ test("semantic versions sort numerically and historical links identify the same 
   assert.deepEqual(releaseDate({ source: { importedAt: "2026-11-10T08:00:00Z" } }), { date: "2026-11-10", kind: "imported" });
   assert.deepEqual(releaseDate({ source: {} }), { date: null, kind: "unknown" });
   assert.deepEqual(releaseDate({ release: { date: "2026-11-16" } }), { date: "2026-11-16", kind: "released" });
+});
+
+test("shared presentation uses percentages and seconds without changing stored values", () => {
+  for (const [value, unit, decimals, expected] of [
+    [0.827, "ratio", 3, "82.7%"], [77.86, "percent", 2, "77.86%"],
+    [14745, "ms", 0, "14.745 s"], [14.745, "seconds", 3, "14.745 s"],
+    [0, "ratio", 3, "0.0%"], [1, "ratio", 3, "100.0%"],
+  ] as const) assert.equal(formatMetric(value, unit, decimals), expected);
+  const count = { count: 109, total: 140 };
+  assert.equal(formatMetric(77.86, "percent", 2, false, count), "77.86%");
+  assert.deepEqual(count, { count: 109, total: 140 });
+  assert.equal(formatMetric(null, "ratio", 3), "—");
+  assert.equal(formatMetric(-0.15, "ms", 2, true), "-0.00015 s");
 });

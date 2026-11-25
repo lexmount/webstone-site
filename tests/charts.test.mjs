@@ -174,16 +174,16 @@ test("report pagination keeps a growing archive to six cards and exposes every r
     const titles = () => [...container.querySelectorAll("h3")].map(el => el.textContent);
     assert.equal(titles().length, 6);
     assert.ok(buttons()[0].disabled);
-    assert.match(titles()[0], /Report 1 /);
+    assert.match(titles()[0], /Report 1\s/);
     await React.act(async () => buttons()[1].click());
     assert.equal(titles().length, 6);
-    assert.match(titles()[0], /Report 7 /);
+    assert.match(titles()[0], /Report 7\s/);
     await React.act(async () => buttons()[1].click());
     assert.equal(titles().length, 3);
-    assert.match(titles()[2], /Report 15 /);
+    assert.match(titles()[2], /Report 15\s/);
     assert.ok(buttons()[1].disabled);
     await React.act(async () => buttons()[0].click());
-    assert.match(titles()[0], /Report 7 /);
+    assert.match(titles()[0], /Report 7\s/);
   } finally {
     await React.act(async () => root.unmount());
     await win.happyDOM.close();
@@ -495,9 +495,10 @@ test("the homepage offers the evaluation repository star and translates the deve
     assert.equal(star.href,'https://github.com/lexmount/webstone');
     assert.match(star.textContent,/Star/);
     assert.match(win.document.querySelector('.overview-star-note').textContent,/觉得 Webstone 有用/);
-    assert.match([...win.document.querySelectorAll('.upcoming-overview')].map(item=>item.textContent).join(' '),/Browser Automation/);
-    assert.match(win.document.querySelector('.upcoming-overview').textContent,/开发中/);
-    assert.equal(win.document.querySelectorAll('.track-card').length,4);
+    assert.match([...win.document.querySelectorAll('.upcoming-track')].map(item=>item.textContent).join(' '),/Browser Automation/);
+    assert.match(win.document.querySelector('.upcoming-track').textContent,/开发中/);
+    assert.equal(win.document.querySelectorAll('.track-card[data-track]').length,4);
+    assert.equal(win.document.querySelectorAll('.track-overview-grid > .track-card.upcoming-track').length,2);
   } finally {await win.happyDOM.close();}
 });
 
@@ -599,4 +600,28 @@ test("diagnostic comparisons never imply a rank or best value in either language
     await React.act(async()=>root.unmount());await win.happyDOM.close();
     [globalThis.window,globalThis.document,globalThis.fetch,globalThis.IS_REACT_ACT_ENVIRONMENT]=prior;
   }
+});
+
+test("pricing details keep official links usable by keyboard and close with Escape", async () => {
+  const Tooltip=require('../web/components/info-tooltip.tsx').default;
+  const win=new Window();
+  const previous=[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=[win,win.document,true];
+  const container=win.document.createElement('div');win.document.body.append(container);
+  const root=require('react-dom/client').createRoot(container);
+  try {
+    await React.act(async()=>root.render(React.createElement(Tooltip,{label:'Cloudflare · Billing basis',description:'Browser usage and model inference.',sources:[{label:'Browser Run',url:'https://developers.cloudflare.com/browser-run/pricing/'},{label:'Workers AI',url:'https://developers.cloudflare.com/workers-ai/platform/pricing/'}]})));
+    const trigger=container.querySelector('button');
+    await React.act(async()=>trigger.focus());
+    const panel=win.document.querySelector('[role="dialog"]');assert.ok(panel);
+    const links=[...panel.querySelectorAll('a')];assert.equal(links.length,2);
+    assert.equal(links[0].href,'https://developers.cloudflare.com/browser-run/pricing/');
+    assert.equal(links[1].href,'https://developers.cloudflare.com/workers-ai/platform/pricing/');
+    assert.ok(links.every(link=>link.target==='_blank'&&link.rel.includes('noopener')));
+    await React.act(async()=>{links[0].focus();await new Promise(resolve=>setTimeout(resolve,150));});
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    assert.equal(win.document.querySelector('[role="dialog"]'),null);
+    assert.equal(win.document.activeElement,trigger);
+  } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
 });
