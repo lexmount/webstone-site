@@ -845,7 +845,7 @@ test("capability profiles do not turn non-comparable timing into an efficiency a
   assert.equal(render(single), '', 'One quality dimension does not need a radar assembled from incomparable timings');
 });
 
-test("two-metric quality and cost benchmarks plot disclosed costs and preserve undisclosed methods", () => {
+test("two-metric quality and cost benchmarks plot disclosed costs and preserve undisclosed methods", async () => {
   const sample = resolveBenchmark(catalog, {
     id: "bu-bench-v1",
     definitionId: "standard",
@@ -880,6 +880,10 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   const logSeries = parseSeries(en);
   const lexPoint = logSeries.find(item => item.label.startsWith("Lexmount Browser Agent"));
   const buPoint = logSeries.find(item => item.label.startsWith("Browser Use OSS"));
+  for (const item of [lexPoint, buPoint]) {
+    assert.ok(item && Number.isFinite(item.cx) && Number.isFinite(item.cy));
+    assert.ok(Number.isFinite(item.lx) && Number.isFinite(item.ly));
+  }
   assert.ok(lexPoint.cx > 68 && lexPoint.cx < 432 && buPoint.cx > 68 && buPoint.cx < 432);
   assert.ok(lexPoint.cy >= 28 && lexPoint.cy <= 272 && buPoint.cy >= 28 && buPoint.cy <= 272);
   assert.ok(lexPoint.cx < buPoint.cx, "$0.10 point must plot left of $5.81 point");
@@ -904,6 +908,10 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   const linearSeries = parseSeries(linearHtml);
   const freePoint = linearSeries.find(item => item.label.startsWith("Free Agent"));
   const paidPoint = linearSeries.find(item => item.label.startsWith("Paid Agent"));
+  for (const item of [freePoint, paidPoint]) {
+    assert.ok(item && Number.isFinite(item.cx) && Number.isFinite(item.cy));
+    assert.ok(Number.isFinite(item.lx) && Number.isFinite(item.ly));
+  }
   assert.ok(freePoint.cx > 68 && freePoint.cx < 432 && paidPoint.cx > 68 && paidPoint.cx < 432);
   assert.ok(freePoint.cx < paidPoint.cx, "$0.00 point must plot left of $0.50 point under linear scaling");
   assert.ok(freePoint.cy < paidPoint.cy, "95% must plot above 85%");
@@ -918,8 +926,20 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   };
   const clusteredSeries = parseSeries(render(clusteredDisclosed));
   assert.equal(clusteredSeries.length, 3);
-  const clusteredCoords = clusteredSeries.map(item => `${item.cx},${item.cy}`);
-  assert.equal(new Set(clusteredCoords).size, 3, "clustered disclosed markers must have distinct coordinates");
+  const tiedA = clusteredSeries.find(item => item.label.startsWith("Tied A"));
+  const tiedB = clusteredSeries.find(item => item.label.startsWith("Tied B"));
+  const nearbyC = clusteredSeries.find(item => item.label.startsWith("Nearby C"));
+  for (const item of [tiedA, tiedB, nearbyC]) {
+    assert.ok(item, "every clustered disclosed series must be present");
+    assert.ok(Number.isFinite(item.cx) && Number.isFinite(item.cy), "marker coordinates must be finite");
+    assert.ok(Number.isFinite(item.lx) && Number.isFinite(item.ly), "label coordinates must be finite");
+    assert.ok(["start", "middle", "end"].includes(item.anchor), "label anchor must be set");
+    assert.ok(item.cx > 68 && item.cx < 432, `disclosed cx ${item.cx} stays inside plot area`);
+  }
+  assert.equal(tiedA.cx, tiedB.cx, "equal-cost providers must align on the same x coordinate");
+  assert.equal(tiedB.cx, nearbyC.cx, "all equal-cost providers must align on the same x coordinate");
+  assert.ok(nearbyC.cy < tiedA.cy, "higher score must plot above lower score even when cost is tied");
+
   const labelRects = clusteredSeries.map(item => {
     const w = 90;
     let left = item.lx - w / 2;
@@ -928,11 +948,36 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
     return { left, right: left + w, top: item.ly - 11, bottom: item.ly + 3 };
   });
   for (let i = 0; i < labelRects.length; i++) {
-    assert.ok(clusteredSeries[i].cx > 68 && clusteredSeries[i].cx < 432, `disclosed cx ${clusteredSeries[i].cx} stays inside plot area`);
     for (let j = i + 1; j < labelRects.length; j++) {
       const a = labelRects[i], b = labelRects[j];
       assert.equal(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top, false, "clustered disclosed labels must not overlap");
     }
+  }
+
+  const win = new Window();
+  const previousDom = [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+  const host = win.document.createElement("div");
+  win.document.body.append(host);
+  const root = require("react-dom/client").createRoot(host);
+  try {
+    await React.act(async () => root.render(React.createElement(Insights, { benchmark: clusteredDisclosed, t: text => text })));
+    const coordsByName = () => Object.fromEntries([...host.querySelectorAll("g.radar-series")].map(group => {
+      const circle = group.querySelector("circle");
+      return [group.getAttribute("aria-label").split(" · ")[0], `${circle.getAttribute("cx")},${circle.getAttribute("cy")}`];
+    }));
+    const before = coordsByName();
+    assert.equal(before["Tied A"], before["Tied B"]);
+    const toggleA = [...host.querySelectorAll(".radar-legend label")].find(label => label.textContent === "Tied A").querySelector("input");
+    await React.act(async () => toggleA.click());
+    const after = coordsByName();
+    assert.equal(after["Tied A"], undefined);
+    assert.equal(after["Tied B"], before["Tied B"], "hiding one provider must not move remaining disclosed markers");
+    assert.equal(after["Nearby C"], before["Nearby C"], "hiding one provider must not move nearby disclosed markers");
+  } finally {
+    await React.act(async () => root.unmount());
+    await win.happyDOM.close();
+    [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = previousDom;
   }
 
   const allCostsNull = {

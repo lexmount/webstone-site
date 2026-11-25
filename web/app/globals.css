@@ -425,6 +425,8 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .radar-dot { fill: currentColor; }
 .radar-dot.is-undisclosed { fill: #fff; stroke: currentColor; stroke-width: 2.2; }
 .radar-divider { stroke: #c9d8cd; stroke-dasharray: 4 3; }
+.radar-leader { stroke: currentColor; stroke-opacity: .45; stroke-width: 1; }
+.radar-series:hover .radar-leader, .radar-series:focus-visible .radar-leader { stroke-opacity: .9; stroke-width: 1.6; }
 .comparison-value { fill: #2b4536; font-size: 11px; font-variant-numeric: tabular-nums; }
 .radar-edge, .radar-range { stroke: currentColor; stroke-width: 1.8; }
 .radar-range { stroke-width: 3; stroke-dasharray: 3 2; }

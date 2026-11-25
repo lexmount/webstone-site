@@ -37,75 +37,32 @@ function labelBox(x: number, y: number, anchor: "start" | "middle" | "end", widt
   return { left: x - width / 2 - 2, right: x + width / 2 + 2, top: y - 11, bottom: y + 3 };
 }
 
-function allocateDisclosedLayout(
+function allocateDisclosedLabels(
   entries: Array<{ id: string; x: number; y: number; text: string }>,
   bounds: { left: number; right: number; top: number; bottom: number },
-): Map<string, { cx: number; cy: number; lx: number; ly: number; anchor: "start" | "middle" | "end" }> {
-  const placedPoints = new Map<string, { cx: number; cy: number; text: string }>();
-  const remaining = [...entries].sort((a, b) => a.x - b.x || a.y - b.y);
-  const visited = new Set<string>();
-  const clusters: Array<Array<{ id: string; x: number; y: number; text: string }>> = [];
-
-  for (const item of remaining) {
-    if (visited.has(item.id)) continue;
-    const cluster = [item];
-    visited.add(item.id);
-    for (let index = 0; index < cluster.length; index++) {
-      const current = cluster[index];
-      for (const candidate of remaining) {
-        if (visited.has(candidate.id)) continue;
-        if (Math.hypot(candidate.x - current.x, candidate.y - current.y) < 12) {
-          visited.add(candidate.id);
-          cluster.push(candidate);
-        }
-      }
-    }
-    clusters.push(cluster);
-  }
-
-  for (const cluster of clusters) {
-    if (cluster.length === 1) {
-      const item = cluster[0];
-      placedPoints.set(item.id, { cx: Number(item.x.toFixed(2)), cy: Number(item.y.toFixed(2)), text: item.text });
-      continue;
-    }
-    const meanX = cluster.reduce((sum, item) => sum + item.x, 0) / cluster.length;
-    const step = Math.min(14, (bounds.right - bounds.left) / (cluster.length - 1));
-    const span = step * (cluster.length - 1);
-    let start = meanX - span / 2;
-    if (start < bounds.left) start = bounds.left;
-    if (start + span > bounds.right) start = bounds.right - span;
-    cluster.forEach((item, index) => {
-      placedPoints.set(item.id, {
-        cx: Number((start + index * step).toFixed(2)),
-        cy: Number(item.y.toFixed(2)),
-        text: item.text,
-      });
-    });
-  }
-
-  const markerBoxes: Box[] = [...placedPoints.values()].map(point => ({
-    left: point.cx - 7, right: point.cx + 7, top: point.cy - 7, bottom: point.cy + 7,
+): Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }> {
+  const markerBoxes: Box[] = entries.map(point => ({
+    left: point.x - 7, right: point.x + 7, top: point.y - 7, bottom: point.y + 7,
   }));
   const occupiedLabels: Box[] = [];
-  const result = new Map<string, { cx: number; cy: number; lx: number; ly: number; anchor: "start" | "middle" | "end" }>();
+  const result = new Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }>();
 
-  for (const [id, point] of placedPoints.entries()) {
+  for (const point of entries) {
     const width = Math.max(48, point.text.length * 6.5);
-    const preferRight = point.cx < bounds.right - width - 10;
+    const preferRight = point.x < bounds.right - width - 10;
     const sideCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = preferRight
       ? [
-        { lx: point.cx + 10, ly: point.cy + 4, anchor: "start" },
-        { lx: point.cx - 10, ly: point.cy + 4, anchor: "end" },
+        { lx: point.x + 10, ly: point.y + 4, anchor: "start" },
+        { lx: point.x - 10, ly: point.y + 4, anchor: "end" },
       ]
       : [
-        { lx: point.cx - 10, ly: point.cy + 4, anchor: "end" },
-        { lx: point.cx + 10, ly: point.cy + 4, anchor: "start" },
+        { lx: point.x - 10, ly: point.y + 4, anchor: "end" },
+        { lx: point.x + 10, ly: point.y + 4, anchor: "start" },
       ];
     const verticalCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = [];
-    for (const dy of [-12, 18, -26, 32, -40, 46, -54, 60]) {
-      const ly = Math.max(bounds.top + 8, Math.min(bounds.bottom + 2, point.cy + dy));
-      const clampedMiddleX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.cx));
+    for (const dy of [-14, 18, -28, 32, -42, 46, -56, 60, -70, 74]) {
+      const ly = Math.max(bounds.top + 10, Math.min(bounds.bottom + 2, point.y + dy));
+      const clampedMiddleX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.x));
       verticalCandidates.push({ lx: clampedMiddleX, ly, anchor: "middle" });
     }
     const candidates = [...sideCandidates, ...verticalCandidates];
@@ -134,12 +91,11 @@ function allocateDisclosedLayout(
       }
     }
     occupiedLabels.push(chosenBox);
-    result.set(id, {
-      cx: point.cx,
-      cy: point.cy,
+    result.set(point.id, {
       lx: Number(chosen.lx.toFixed(2)),
       ly: Number(chosen.ly.toFixed(2)),
       anchor: chosen.anchor,
+      leader: Math.abs(chosen.ly - (point.y + 4)) > 6,
     });
   }
   return result;
@@ -247,9 +203,9 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
     if (typeof score !== "number" || typeof cost !== "number") return [];
     const scoreText = formatMetric(score, quality.unit, quality.decimals);
     const costText = formatMetric(cost, resource.unit, resource.decimals);
-    return [{ id: provider.id, x: xPos(cost), y: yPos(score), text: `${scoreText} · ${costText}` }];
+    return [{ id: provider.id, x: Number(xPos(cost).toFixed(2)), y: Number(yPos(score).toFixed(2)), text: `${scoreText} · ${costText}` }];
   });
-  const disclosedLayout = allocateDisclosedLayout(disclosedScored, {
+  const disclosedLabels = allocateDisclosedLabels(disclosedScored, {
     left: plotLeft + 8, right: plotRight - 8, top: plotTop + 8, bottom: plotBottom - 8,
   });
 
@@ -299,17 +255,22 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
           {tickX !== null && <line x1={tickX} y1={plotBottom - 5} x2={tickX} y2={plotBottom + 5} stroke="currentColor" strokeWidth="2.5" />}
         </g>;
       }
-      const layout = disclosed ? disclosedLayout.get(provider.id) : null;
-      const cx = layout ? layout.cx : (undisclosedX.get(provider.id) ?? railCenter);
-      const cy = layout ? layout.cy : yPos(score);
+      const cx = disclosed ? Number(xPos(cost).toFixed(2)) : (undisclosedX.get(provider.id) ?? railCenter);
+      const cy = Number(yPos(score).toFixed(2));
+      const labelPlacement = disclosed ? disclosedLabels.get(provider.id) : null;
       const scoreText = formatMetric(score, quality.unit, quality.decimals);
       const costText = disclosed ? formatMetric(cost, resource.unit, resource.decimals) : null;
       const dotClass = disclosed ? "radar-dot" : "radar-dot is-undisclosed";
+      let leaderY = cy;
+      if (labelPlacement) {
+        leaderY = labelPlacement.ly > cy ? labelPlacement.ly - 10 : labelPlacement.ly + 3;
+      }
       return <g key={provider.id} className="radar-series" style={{ color: seriesColor }}
         tabIndex={0} aria-label={label}>
         <title>{label}</title>
+        {labelPlacement?.leader && <line className="radar-leader" x1={cx} y1={cy} x2={labelPlacement.lx} y2={leaderY} />}
         <circle className={dotClass} cx={cx} cy={cy} r="5.5" />
-        {layout && <text x={layout.lx} y={layout.ly} textAnchor={layout.anchor} className="comparison-value">
+        {labelPlacement && <text x={labelPlacement.lx} y={labelPlacement.ly} textAnchor={labelPlacement.anchor} className="comparison-value">
           {`${scoreText} · ${costText}`}
         </text>}
       </g>;
