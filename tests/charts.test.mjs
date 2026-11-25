@@ -904,4 +904,24 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   assert.equal((emptyPrimary.match(/<circle /g) ?? []).length, 0);
   assert.match(emptyPrimary, /Selected methods do not disclose the primary quality metric\./);
   assert.match(render(onlyMissingPrimary, translator("zh", catalog)), /所选方案未公布主质量指标。/);
+
+  const tiedUndisclosed = {
+    ...sample,
+    providers: ["alpha", "beta", "gamma", "delta"].map(name => ({
+      id: `tied-${name}`,
+      name: `Tied ${name}`,
+      description: `Tied ${name}`,
+      mode: "Reported",
+      passed: null,
+      scores: { successRate: 90.0, costPerTask: null },
+    })),
+  };
+  const tiedSvg = render(tiedUndisclosed);
+  const circlePositions = [...tiedSvg.matchAll(/<circle[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"/g)].map(match => `${match[1]},${match[2]}`);
+  assert.equal(circlePositions.length, 4);
+  assert.equal(new Set(circlePositions).size, 4);
+  for (const pair of circlePositions) {
+    const cx = Number(pair.split(",")[0]);
+    assert.ok(cx >= 468 && cx <= 580, `undisclosed cx ${cx} stays inside rail`);
+  }
 });

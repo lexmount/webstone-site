@@ -25,10 +25,35 @@ function axisStep(span: number): number {
   return Math.ceil(span / 4);
 }
 
-function nextStagger(current: number): number {
-  if (current === 0) return 1;
-  if (current === 1) return -1;
-  return 0;
+function allocateUndisclosedX(
+  entries: Array<{ id: string; y: number }>,
+  railLeft: number,
+  railRight: number,
+): Map<string, number> {
+  const positions = new Map<string, number>();
+  const center = (railLeft + railRight) / 2;
+  const maxWidth = railRight - railLeft;
+  const clusters: Array<Array<{ id: string; y: number }>> = [];
+  for (const item of entries) {
+    const current = clusters.at(-1);
+    if (current && Math.abs(item.y - current.at(-1)!.y) < 14) {
+      current.push(item);
+    } else {
+      clusters.push([item]);
+    }
+  }
+  for (const cluster of clusters) {
+    if (cluster.length === 1) {
+      positions.set(cluster[0].id, center);
+      continue;
+    }
+    const step = Math.min(18, maxWidth / (cluster.length - 1));
+    const start = center - (step * (cluster.length - 1)) / 2;
+    cluster.forEach((item, index) => {
+      positions.set(item.id, Number((start + index * step).toFixed(2)));
+    });
+  }
+  return positions;
 }
 
 function PairChart({ providers, hidden, quality, resource, descriptionId, methodName, t }: {
@@ -88,19 +113,14 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
 
   const visibleEntries = providers.map((provider, index) => ({ provider, index }))
     .filter(({ provider }) => !hidden.includes(provider.id));
-  const missingEntries = visibleEntries.filter(({ provider }) => typeof provider.scores[resource.id] !== "number")
-    .sort((a, b) => (b.provider.scores[quality.id] ?? 0) - (a.provider.scores[quality.id] ?? 0));
-  const missingOffsets = new Map<string, number>();
-  let lastY = -Infinity;
-  let stagger = 0;
-  for (const { provider } of missingEntries) {
-    const score = provider.scores[quality.id];
-    if (typeof score !== "number") continue;
-    const y = yPos(score);
-    stagger = Math.abs(y - lastY) < 16 ? nextStagger(stagger) : 0;
-    missingOffsets.set(provider.id, stagger * 18);
-    lastY = y;
-  }
+  const undisclosedScored = visibleEntries
+    .flatMap(({ provider }) => {
+      const score = provider.scores[quality.id];
+      if (typeof score !== "number" || typeof provider.scores[resource.id] === "number") return [];
+      return [{ id: provider.id, y: yPos(score) }];
+    })
+    .sort((a, b) => a.y - b.y);
+  const undisclosedX = allocateUndisclosedX(undisclosedScored, dividerX + 20, 572);
 
   const labelFor = (provider: Provider) =>
     `${methodName(provider)} · ${t(quality.label)}: ${formatMetric(provider.scores[quality.id], quality.unit, quality.decimals)} · ${t(resource.label)}: ${formatMetric(provider.scores[resource.id], resource.unit, resource.decimals)}`;
@@ -148,7 +168,7 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
           {tickX !== null && <line x1={tickX} y1={plotBottom - 5} x2={tickX} y2={plotBottom + 5} stroke="currentColor" strokeWidth="2.5" />}
         </g>;
       }
-      const cx = disclosed ? xPos(cost) : railCenter + (missingOffsets.get(provider.id) ?? 0);
+      const cx = disclosed ? xPos(cost) : (undisclosedX.get(provider.id) ?? railCenter);
       const cy = yPos(score);
       const scoreText = formatMetric(score, quality.unit, quality.decimals);
       const costText = disclosed ? formatMetric(cost, resource.unit, resource.decimals) : null;
