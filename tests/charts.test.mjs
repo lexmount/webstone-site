@@ -643,6 +643,13 @@ test("pricing details keep official links usable by keyboard and close with Esca
     await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
     assert.equal(win.document.querySelector('[role="dialog"]'),null);
     assert.ok(win.document.activeElement===next);
+    for(const eventType of ['scroll','resize']) {
+      await React.act(async()=>{trigger.focus();trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));});
+      assert.ok(win.document.querySelector('[role="dialog"]').contains(win.document.activeElement));
+      await React.act(async()=>win.dispatchEvent(new win.Event(eventType)));
+      assert.equal(win.document.querySelector('[role="dialog"]'),null);
+      assert.ok(win.document.activeElement===trigger);
+    }
   } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
 });
 

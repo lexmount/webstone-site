@@ -30,11 +30,14 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
 
   useEffect(() => {
     if (!position) return;
-    if (focusSources.current) { panel.current?.querySelector<HTMLAnchorElement>("a")?.focus(); focusSources.current = false; }
-    const hide = () => { clearTimeout(timer.current); setPosition(null); };
+    if (focusSources.current) { panel.current?.querySelector<HTMLAnchorElement>("a")?.focus({ preventScroll: true }); focusSources.current = false; }
+    const hide = () => {
+      clearTimeout(timer.current);
+      if (panel.current?.contains(document.activeElement)) button.current?.focus({ preventScroll: true });
+      setPosition(null);
+    };
     const keydown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (panel.current?.contains(document.activeElement)) button.current?.focus();
       hide();
     };
     const outside = (event: PointerEvent) => {
@@ -60,7 +63,7 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault(); focusSources.current = true; show();
         } else if (event.key === "Tab" && !event.shiftKey && position) {
-          event.preventDefault(); panel.current?.querySelector<HTMLAnchorElement>("a")?.focus();
+          event.preventDefault(); panel.current?.querySelector<HTMLAnchorElement>("a")?.focus({ preventScroll: true });
         }
       }} onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={event => { if (!panel.current?.contains(event.relatedTarget as Node)) hideSoon(); }} onClick={show}>
       <CircleHelp size={13} strokeWidth={1.5} aria-hidden="true" />
@@ -71,7 +74,7 @@ export default function InfoTooltip({ label, description, detailsLabel = "detail
         if (event.key !== "Tab") return;
         const links = [...(panel.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [])];
         if (event.shiftKey && event.target === links[0]) {
-          event.preventDefault(); button.current?.focus();
+          event.preventDefault(); button.current?.focus({ preventScroll: true });
         } else if (!event.shiftKey && event.target === links.at(-1)) {
           event.preventDefault();
           const controls = [...document.querySelectorAll<HTMLElement>('a[href],button,input,select,textarea,summary,[tabindex]')]
