@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 export function validateTitle(title) {
-  if (typeof title !== "string" || title.length > 100 || !/^(fix|feat|docs|refactor|test|perf|build|ci|chore)(\([a-z0-9][a-z0-9._/-]*\))?!?: [a-z](?:[\x20-\x7e]*[^.\s])?$/.test(title)) {
+  if (typeof title !== "string" || title.length > 100 || /[^\x20-\x7e]/.test(title) || /[. ]$/.test(title) ||
+      !/^(fix|feat|docs|refactor|test|perf|build|ci|chore)(\([a-z0-9][a-z0-9._/-]*\))?!?: [A-Za-z][\x20-\x7e]*$/.test(title)) {
     throw new Error("Use type(scope): English summary, with an optional scope, at most 100 characters and no final period. Types: fix, feat, docs, refactor, test, perf, build, ci, chore.");
   }
 }

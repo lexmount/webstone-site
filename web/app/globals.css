@@ -584,9 +584,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .overview-actions .overview-star { display: inline-flex; align-items: center; gap: 7px; padding: 11px 13px; border: 1px solid #87ab98; border-radius: 7px; color: #edf8ef; font-size: 13px; }
 .overview-hero .overview-star-note { font-size: 12px; line-height: 1.5; margin: 13px 0 0; color: #cfdfd4; }
 .track-group-label { display: block; margin-bottom: 11px; color: #64746a; font-size: 10px; letter-spacing: .04em; }
-.upcoming-overview { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 15px; padding: 18px 20px; margin-top: 14px; border: 1px dashed #cbd9ce; border-radius: 10px; color: #536d5b; font-size: 13px; }
-.upcoming-overview strong { color: #315a41; }
-.upcoming-overview p { flex-basis: 100%; margin: 0; font-size: 12px; }
 
 /* Share row sizing so long report titles keep dates and related links aligned. */
 @supports (grid-template-rows: subgrid) {

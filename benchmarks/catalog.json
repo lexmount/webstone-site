@@ -561,7 +561,7 @@
           "metrics": [
             {
               "id": "ndcg5",
-              "label": "nDCG@5 × 100",
+              "label": "nDCG@5",
               "unit": "score",
               "direction": "desc",
               "decimals": 1,
@@ -785,7 +785,7 @@
           "metrics": [
             {
               "id": "ndcg5",
-              "label": "nDCG@5 × 100",
+              "label": "nDCG@5",
               "unit": "score",
               "direction": "desc",
               "decimals": 1,
