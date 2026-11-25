@@ -301,8 +301,7 @@ test("every published benchmark edition shares table and radar controls in both 
         await React.act(async () => root.render(React.createElement(Dashboard)));
         const table = container.querySelector("table");
         const definition = resolveBenchmark(catalog, report.benchmarks[0]);
-        const { twoAxisComparison } = require("../web/components/insights.tsx");
-        const isPair = Boolean(twoAxisComparison(definition, radarAxes(definition)));
+        const isPair = definition.trackId === "browser-use";
         assert.equal(table.className, "wide-table", report.id);
         const hasProfile = radarAxes(resolveBenchmark(catalog, report.benchmarks[0])).filter(axis => axis.defaultSelected).length >= 3;
         assert.equal(container.querySelectorAll(".metric-selector").length, Number(hasProfile), report.id);
@@ -968,8 +967,81 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   };
   const extraMetricHtml = render(extraUnreportedMetric);
   assert.doesNotMatch(extraMetricHtml, /at least three|NaN|Infinity/);
+  assert.match(extraMetricHtml, /class="radar-divider"/);
   assert.equal((extraMetricHtml.match(/class="radar-series"/g) ?? []).length, 3);
   assert.equal((extraMetricHtml.match(/is-undisclosed/g) ?? []).length, 1);
+
+  const threeReportedMetrics = {
+    ...extraUnreportedMetric,
+    providers: extraUnreportedMetric.providers.map((provider, index) => ({
+      ...provider,
+      scores: { ...provider.scores, meanTime: 10 + index * 5 },
+    })),
+  };
+  const radarHtml = render(threeReportedMetrics);
+  assert.match(radarHtml, /class="metric-selector"/, "three reported metrics must keep the radar selector");
+  assert.doesNotMatch(radarHtml, /class="radar-divider"/, "three reported metrics must stay on the radar chart");
+  assert.equal((radarHtml.match(/class="radar-axis"/g) ?? []).length, 3);
+
+  const ascendingPrimary = {
+    ...sample,
+    primaryMetric: "errorRate",
+    metrics: [
+      { id: "errorRate", label: "Error rate", unit: "percent", direction: "asc", decimals: 1, description: "Lower is better." },
+      { id: "meanTime", label: "Mean time", unit: "seconds", direction: "asc", decimals: 1, description: "Lower is better." },
+    ],
+    providers: [
+      { id: "a", name: "Agent A", description: "A", mode: "Reported", passed: null, scores: { errorRate: 5, meanTime: 12 } },
+      { id: "b", name: "Agent B", description: "B", mode: "Reported", passed: null, scores: { errorRate: 10, meanTime: 8 } },
+    ],
+  };
+  const ascendingPrimaryHtml = render(ascendingPrimary);
+  assert.doesNotMatch(ascendingPrimaryHtml, /class="radar-divider"/, "ascending non-quality primary must not route to PairChart");
+  assert.match(ascendingPrimaryHtml, /at least three/);
+
+  const excludedUsdMetric = {
+    ...sample,
+    metrics: [
+      sample.metrics[0],
+      { id: "pricePerThousand", label: "Price / 1K", unit: "usd", direction: "asc", decimals: 2, description: "Quoted price." },
+    ],
+    providers: [
+      { id: "a", name: "Agent A", description: "A", mode: "Reported", passed: null, scores: { successRate: 90, pricePerThousand: 1.5 } },
+      { id: "b", name: "Agent B", description: "B", mode: "Reported", passed: null, scores: { successRate: 85, pricePerThousand: 2.0 } },
+    ],
+  };
+  const excludedUsdHtml = render(excludedUsdMetric);
+  assert.doesNotMatch(excludedUsdHtml, /class="radar-divider"/, "pricePerThousand must not route to PairChart");
+  assert.match(excludedUsdHtml, /at least three/);
+
+  const nonRankedUsdMetric = {
+    ...sample,
+    metrics: [
+      sample.metrics[0],
+      { id: "quotedCost", label: "Quoted cost", unit: "usd", direction: "asc", decimals: 2, highlightBest: false, description: "Non-ranked price." },
+    ],
+    providers: [
+      { id: "a", name: "Agent A", description: "A", mode: "Reported", passed: null, scores: { successRate: 90, quotedCost: null } },
+      { id: "b", name: "Agent B", description: "B", mode: "Reported", passed: null, scores: { successRate: 85, quotedCost: null } },
+    ],
+  };
+  assert.doesNotMatch(render(nonRankedUsdMetric), /class="radar-divider"/, "highlightBest: false USD metric must not route to PairChart");
+
+  const latencyPair = {
+    ...sample,
+    metrics: [
+      sample.metrics[0],
+      { id: "meanTime", label: "Mean latency", unit: "seconds", direction: "asc", decimals: 1, description: "Lower is better." },
+    ],
+    providers: [
+      { id: "fast", name: "Fast Agent", description: "Fast", mode: "Reported", passed: null, scores: { successRate: 92, meanTime: 4.5 } },
+      { id: "slow", name: "Slow Agent", description: "Slow", mode: "Reported", passed: null, scores: { successRate: 88, meanTime: 12.0 } },
+    ],
+  };
+  const latencyHtml = render(latencyPair);
+  assert.match(latencyHtml, /class="radar-divider"/);
+  assert.match(latencyHtml, /lower Mean latency plots farther left/);
+  assert.doesNotMatch(latencyHtml, /lower cost plots farther left|disclosed cost/);
 
   const denseTopCluster = {
     ...sample,

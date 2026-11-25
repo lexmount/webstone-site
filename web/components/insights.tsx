@@ -2,8 +2,8 @@
 
 import { useId, useState } from "react";
 import MetricSelector from "./metric-selector";
-import { qualityScale } from "../lib/comparisons";
-import { radarAxes } from "../lib/radar";
+import { qualityMetrics, qualityScale } from "../lib/comparisons";
+import { isEligibleResourceMetric, radarAxes } from "../lib/radar";
 import { formatMetric, sortProviders, type Benchmark, type Metric, type Provider } from "../lib/results";
 
 type Props = { benchmark: Benchmark; t: (text: string) => string };
@@ -11,26 +11,22 @@ const radius = 123;
 const colors = ["#007d64", "#5163a8", "#ad5229", "#925c95", "#247a9c", "#926b18",
   "#ac4e67", "#507d35", "#674bc1", "#4d7373", "#aa4944", "#4e5c70"];
 
-const RESOURCE_UNITS = ["usd", "ms", "seconds", "mib"];
-
-export function twoAxisComparison(
+function twoAxisComparison(
   benchmark: Benchmark,
-  availableAxes: ReturnType<typeof radarAxes> = radarAxes(benchmark),
+  availableAxes: ReturnType<typeof radarAxes>,
 ): { quality: Metric; resource: Metric } | null {
   if (availableAxes.length >= 3) return null;
-  const quality = benchmark.metrics.find(metric => metric.id === benchmark.primaryMetric);
+  const quality = qualityMetrics(benchmark).find(metric => metric.id === benchmark.primaryMetric);
   if (!quality) return null;
+  const eligibleResources = benchmark.metrics.filter(metric => metric.id !== quality.id && isEligibleResourceMetric(metric));
   const availableIds = new Set(availableAxes.map(axis => axis.id));
-  const availableResource = benchmark.metrics.find(metric => metric.id !== quality.id
-    && RESOURCE_UNITS.includes(metric.unit)
-    && availableIds.has(metric.id));
+  const availableResource = eligibleResources.find(metric => availableIds.has(metric.id));
   if (availableResource && availableAxes.length === 2 && availableIds.has(quality.id)) {
     return { quality, resource: availableResource };
   }
   if (availableAxes.length <= 1 && !availableAxes.some(axis => axis.id.startsWith("category:"))) {
-    const definedResources = benchmark.metrics.filter(metric => metric.id !== quality.id && RESOURCE_UNITS.includes(metric.unit));
-    if (definedResources.length === 1) {
-      return { quality, resource: definedResources[0] };
+    if (eligibleResources.length === 1) {
+      return { quality, resource: eligibleResources[0] };
     }
   }
   return null;
@@ -395,9 +391,11 @@ export default function Insights({ benchmark, t }: Props) {
       {visible.length === 0 && <p role="status">{t("Select a method to show its results.")}</p>}
       {missingPrimaryOnly && <p role="status">{t("Selected methods do not disclose the primary quality metric.")}</p>}
       <figcaption>
-        {t(pair
-          ? "Higher quality plots higher; lower cost plots farther left. Methods without disclosed cost appear on the right."
-          : "Quality and category axes show a share of the maximum. Lower latency, memory and measured cost plot farther out when reported.")}
+        {pair
+          ? t("Higher {quality} plots higher; lower {resource} plots farther left. Methods without a disclosed value appear on the right.")
+            .replaceAll("{quality}", t(pair.quality.label))
+            .replaceAll("{resource}", t(pair.resource.label))
+          : t("Quality and category axes show a share of the maximum. Lower latency, memory and measured cost plot farther out when reported.")}
       </figcaption>
     </figure>
     </div>
