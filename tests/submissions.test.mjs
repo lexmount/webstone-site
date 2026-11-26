@@ -245,7 +245,7 @@ test("unchanged historical cohorts still allow metadata-only corrections", () =>
 });
 
 test("GitHub repository URL aliases cannot publish duplicate browser builds", () => {
-  for (const url of ['https://github.com/lexmount/moli.git', 'https://github.com/LEXMOUNT/Moli/', 'https://www.github.com/lexmount/moli/tree/main', 'https://github.com/lexmount/%6doli']) {
+  for (const url of ['https://github.com/lexmount/moli.git', 'https://github.com/LEXMOUNT/Moli/', 'https://www.github.com/lexmount/moli/tree/main', 'https://github.com/lexmount/%6doli', 'https://github.com./lexmount/moli', 'https://www.github.com./lexmount/moli']) {
     const updatedCatalog = structuredClone(catalog);
     updatedCatalog.providerUrls['another-moli-build'] = url;
     const candidate = report(2);

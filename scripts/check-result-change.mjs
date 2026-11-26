@@ -94,6 +94,7 @@ export function validateBrowserCohort(catalog, benchmark) {
   const projects = new Set();
   for (const provider of benchmark.providers) {
     const url = new URL(catalog.providerUrls[provider.id]);
+    url.hostname = url.hostname.replace(/\.$/, "");
     let project = url.origin + url.pathname.replace(/\/+$/, "");
     // A GitHub repository has one identity across case, clone URLs and subpaths.
     const parts = url.pathname.split("/").filter(Boolean).map(part => decodeURIComponent(part));
