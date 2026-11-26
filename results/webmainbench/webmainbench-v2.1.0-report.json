@@ -1,0 +1,232 @@
+{
+  "id": "webmainbench-v2.1.0",
+  "version": "v2.1.0",
+  "datasetDifference": "The same 545 frozen HTML pages and official reference content. Source dataset SHA-256 0efaa4b49a45e320a27fe6e5a0b6aad5b57259fc3321ac3448519cacc74c537e; scorer commit 9d991bdc00c57b57521499494d96be85c31317ba. Each dimension uses its own reference population.",
+  "source": {
+    "kind": "report-page",
+    "url": "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
+    "title": "Web Fetch and WebMainBench: source-backed measurements",
+    "importedAt": "2026-11-25T10:09:15.603Z",
+    "method": "Checked against pinned original report snapshots and their structured measurements; the public report reproduces the aggregate evidence.",
+    "scope": "score-summaries and 3,815 logical-call records: seven methods × 545 pages, official per-dimension reference counts and nearest-rank timing quantiles.",
+    "sha256": "afcd4979c321c5161d63edb2db3f822f95933af7ffdcfe1c7fb6cd7b0af7c9d6"
+  },
+  "benchmarks": [
+    {
+      "id": "webmainbench",
+      "definitionId": "frozen-html-timed",
+      "taskCount": 545,
+      "metricSamples": {
+        "fullText": {
+          "sampleCount": 545,
+          "note": "Fixed reference population shared by all seven methods."
+        },
+        "code": {
+          "sampleCount": 110,
+          "note": "Fixed reference population shared by all seven methods."
+        },
+        "formula": {
+          "sampleCount": 257,
+          "note": "Fixed reference population shared by all seven methods."
+        },
+        "tableContent": {
+          "sampleCount": 179,
+          "note": "Fixed reference population shared by all seven methods."
+        },
+        "tableStructure": {
+          "sampleCount": 179,
+          "note": "Fixed reference population shared by all seven methods."
+        },
+        "meanTime": {
+          "sampleCount": 545,
+          "note": "All final logical calls, including failures. P50 and P95 use nearest-rank quantiles; displayed values are rounded to milliseconds."
+        },
+        "p50Time": {
+          "sampleCount": 545,
+          "note": "All final logical calls, including failures. P50 and P95 use nearest-rank quantiles; displayed values are rounded to milliseconds."
+        },
+        "p95Time": {
+          "sampleCount": 545,
+          "note": "All final logical calls, including failures. P50 and P95 use nearest-rank quantiles; displayed values are rounded to milliseconds."
+        }
+      },
+      "notes": [
+        "Full text uses 545 pages; code 110; formulas 257; table content and structure 179 each. Overall is the equally weighted mean of the five aggregate dimension scores.",
+        "Moli 1.1.11 was measured at commit 721bd2e32.",
+        "All-page latency includes failures and uses the final logical call. Total retry-inclusive time and successful-output-only time are different populations and are not substituted here. Methods ran in separate batches; no timing winner is declared."
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "lightpanda",
+          "name": "Lightpanda 0.4.1",
+          "description": "Lightpanda 0.4.1",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 35,
+            "fullText": 41.52,
+            "code": 84.71,
+            "formula": 12.97,
+            "tableContent": 21.81,
+            "tableStructure": 14,
+            "meanTime": 736,
+            "p50Time": 333,
+            "p95Time": 5199
+          }
+        },
+        {
+          "id": "obscura",
+          "name": "Obscura 0.2.2",
+          "description": "Obscura 0.2.2",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 31.03,
+            "fullText": 41.88,
+            "code": 81.82,
+            "formula": 31.39,
+            "tableContent": 0.03,
+            "tableStructure": 0,
+            "meanTime": 785,
+            "p50Time": 419,
+            "p95Time": 1315
+          }
+        },
+        {
+          "id": "chromium",
+          "name": "Chromium 154.0.8037.57",
+          "description": "Chromium 154.0.8037.57",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 27.02,
+            "fullText": 39.4,
+            "code": 35.86,
+            "formula": 21.12,
+            "tableContent": 25.01,
+            "tableStructure": 13.73,
+            "meanTime": 791,
+            "p50Time": 750,
+            "p95Time": 893
+          }
+        },
+        {
+          "id": "kitesurf",
+          "name": "Kitesurf · hosted backend version not disclosed",
+          "description": "Kitesurf · hosted backend version not disclosed",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 33.43,
+            "fullText": 36.99,
+            "code": 80.7,
+            "formula": 19.32,
+            "tableContent": 18.25,
+            "tableStructure": 11.87,
+            "meanTime": 3445,
+            "p50Time": 2729,
+            "p95Time": 5391
+          }
+        },
+        {
+          "id": "moli-content-fixed",
+          "name": "Moli 1.1.11",
+          "description": "Moli 1.1.11",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 39.27,
+            "fullText": 40.73,
+            "code": 91.06,
+            "formula": 28.2,
+            "tableContent": 22.62,
+            "tableStructure": 13.75,
+            "meanTime": 274,
+            "p50Time": 179,
+            "p95Time": 696
+          }
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "lead",
+      "section": "结果总览",
+      "text": "Moli 在真实网站上的任务通过率是 89.8%，正文提取的综合分是 39.27，两项都排第一。"
+    },
+    {
+      "id": "runnerup",
+      "section": "首屏与第 5.1 节",
+      "text": "lexbench-webfetch 第二名 54.4%；WebMainBench 第二名 35.00。Chromium 的请求成功率为 96.7%，任务通过率为 54.4%。"
+    },
+    {
+      "id": "counts",
+      "section": "第 5.2、5.5 节",
+      "text": "Moli 比第二名 Chromium 多通过了 152 个用例。430 个用例里，Moli 有 44 个未通过，其中 16 个请求失败。"
+    },
+    {
+      "id": "categories",
+      "section": "第 5.2、5.5 节",
+      "text": "Moli 的风控、热门和动态网站分别通过 88、91、90 个；其他浏览器在这三类上的最高值分别为 37、58、58。未通过分类数为 12、10、9、9、3、1。"
+    },
+    {
+      "id": "quality",
+      "section": "第 4 节",
+      "text": "Moli 综合分 39.27，比 Lightpanda 高 4.27 分；Moli 代码得分 91.06，Chromium 代码得分 35.86。"
+    },
+    {
+      "id": "webmainbench-dimension-chart",
+      "section": "用户提供的 WebMainBench 图表",
+      "text": "全文、代码、公式、表格内容、表格结构五个维度，五款浏览器共 25 个数值。按原图一位小数显示；保留已有正文中的更高精度代码得分，不据此推算缺失综合分。"
+    },
+    {
+      "id": "category-pass-counts",
+      "section": "用户逐类提供的分类通过数",
+      "text": "五款浏览器的静态、动态、热门、风控、内嵌文档、媒体六类通过数由用户逐类提供，媒体 20 含 3 个直链用例。内嵌文档分母取 10：六类用例合计 430 与任务总数一致，且 Moli 各类未通过数 3、10、9、12、9、1 合计 44，与正文未通过数吻合。五款浏览器的分类合计与正文通过数、通过率一致。"
+    },
+    {
+      "id": "benchmark-ranking-chart",
+      "section": "用户提供的两套评测排名图",
+      "text": "补齐五款浏览器的任务成功率及 WebMainBench 综合分，按图中给出的数值记录，不通过其他分数或成功率反推。请求成功率按原文记录；图中未披露的通过数按六类分类通过数合计补齐。"
+    }
+  ],
+  "supplementalSources": [
+    {
+      "id": "webmainbench-dimension-chart",
+      "kind": "user-provided-image",
+      "title": "WebMainBench 各维度得分",
+      "receivedOn": "2026-11-10",
+      "sha256": "14417ce55f20d6d4f44101ea2a2836b5eeaa250e14ad8faa197aad54e318ae36",
+      "displayDecimals": 1
+    },
+    {
+      "id": "benchmark-ranking-chart",
+      "kind": "user-provided-image",
+      "title": "两套评测的排名",
+      "receivedOn": "2026-11-10",
+      "sha256": "e37bd9a52531af66c351ab496a1ecb05d21e79e471ff39c9ae8dae989fada544",
+      "taskRateDecimals": 1,
+      "overallScoreDecimals": 2
+    }
+  ],
+  "translations": {
+    "zh": {
+      "Identify all seven measured methods, retain the corrected official scores and add all-page logical-call durations.": "列明七种实测配置，保留修正后的官方评分，并补充全部页面的逻辑调用耗时。",
+      "The same 545 frozen HTML pages and official reference content. Source dataset SHA-256 0efaa4b49a45e320a27fe6e5a0b6aad5b57259fc3321ac3448519cacc74c537e; scorer commit 9d991bdc00c57b57521499494d96be85c31317ba. Each dimension uses its own reference population.": "使用同一组 545 份冻结 HTML 和官方参考正文。数据快照 SHA-256 0efaa4b49a45e320a27fe6e5a0b6aad5b57259fc3321ac3448519cacc74c537e；评分器提交 9d991bdc00c57b57521499494d96be85c31317ba。各维度分别使用自己的参考样本总体。",
+      "Full text uses 545 pages; code 110; formulas 257; table content and structure 179 each. Overall is the equally weighted mean of the five aggregate dimension scores.": "全文为 545 页，代码 110 页，公式 257 页，表格内容和结构各 179 页。综合分是五项汇总维度分的等权平均。",
+      "Moli PR785 and PR919 are separate full-cohort runs. PR919 refers to measured commit 721bd2e32 and Moli 1.1.11; later rebased commits are not represented as tested.": "Moli PR785 与 PR919 是分别完成的全量运行。PR919 对应实测提交 721bd2e32 和 Moli 1.1.11，不把后续变基提交当成已测试结果。",
+      "All-page latency includes failures and uses the final logical call. Total retry-inclusive time and successful-output-only time are different populations and are not substituted here. Methods ran in separate batches; no timing winner is declared.": "全部页面耗时保留失败，统计最终逻辑调用。含重试总耗时和仅正文成功页面的耗时属于其他总体，未在此替换。各方案在不同批次运行，不标出速度最优值。",
+      "Publish one measured configuration per browser.": "每款浏览器使用一个实测配置。",
+      "Moli 1.1.11 was measured at commit 721bd2e32.": "Moli 1.1.11 的实测提交为 721bd2e32。",
+      "Five browser configurations execute the same 812 WebArena-Verified tasks.": "五款浏览器使用同一组 812 个 WebArena-Verified 任务。"
+    }
+  },
+  "release": {
+    "date": "2026-11-26",
+    "kind": "results",
+    "previous": "v2.0.0",
+    "summary": "Publish one measured configuration per browser."
+  }
+}

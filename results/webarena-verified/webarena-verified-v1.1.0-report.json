@@ -1,0 +1,183 @@
+{
+  "id": "webarena-verified-v1.1.0",
+  "version": "v1.1.0",
+  "datasetDifference": "Evaluates the full 812-task population matching the linked full-812-v1 edition. The source does not state whether portable trajectories or direct action records were replayed, so edition-level identity with the pinned dataset revision is not verified.",
+  "source": {
+    "kind": "user-provided-text",
+    "url": "https://github.com/ServiceNow/webarena-verified",
+    "linkLabel": "评测集",
+    "title": "WebArena-Verified 评测结果",
+    "importedAt": "2026-11-10T09:12:00Z",
+    "method": "user-provided-table transcription",
+    "scope": "用户在会话中提供的 WebArena-Verified 汇总表：六种执行方案的通过数、任务成功率、全体任务端到端耗时与单次动作耗时的均值、P50、P95，以及各自样本数。未提供逐题结果与原始日志。",
+    "dateNote": "日期为数据接收日期，表内未注明执行日期。"
+  },
+  "benchmarks": [
+    {
+      "id": "webarena-verified",
+      "definitionId": "standard",
+      "taskCount": 812,
+      "notes": [
+        "Five browser configurations execute the same 812 WebArena-Verified tasks.",
+        "任务成功率为通过数除以 812；端到端耗时按任务统计，每个方案 812 个样本，缺失 0。",
+        "动作耗时为单次动作耗时，样本数为该方案执行的动作次数，因此各方案样本数不同。",
+        "均值为算术平均，P50、P95 为分位数；耗时类指标越低越好。"
+      ],
+      "reportUrl": null,
+      "providers": [
+        {
+          "id": "chromium-153",
+          "name": "Chromium 153",
+          "description": "Chromium 自动化",
+          "mode": "本地",
+          "passed": 812,
+          "scores": {
+            "successRate": 100,
+            "taskMean": 10.8,
+            "taskP50": 8.1,
+            "taskP95": 23.4,
+            "actionMean": 1.7,
+            "actionP50": 0.7,
+            "actionP95": 4.2
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 3190
+          },
+          "passedDerivation": "812 / 812 tasks passed"
+        },
+        {
+          "id": "moli-v1-1-11",
+          "name": "Moli 1.1.11",
+          "description": "Rust 内核 · 正式版本",
+          "mode": "本地",
+          "passed": 624,
+          "scores": {
+            "successRate": 76.8,
+            "taskMean": 33.6,
+            "taskP50": 10.7,
+            "taskP95": 73.7,
+            "actionMean": 10.3,
+            "actionP50": 1.4,
+            "actionP95": 60
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 2077
+          },
+          "passedDerivation": "624 / 812 tasks passed"
+        },
+        {
+          "id": "lightpanda-nightly-9813",
+          "name": "Lightpanda nightly 9813",
+          "description": "Zig 无头浏览器",
+          "mode": "本地",
+          "passed": 330,
+          "scores": {
+            "successRate": 40.6,
+            "taskMean": 27.9,
+            "taskP50": 12.7,
+            "taskP95": 65.8,
+            "actionMean": 3.6,
+            "actionP50": 0.9,
+            "actionP95": 10.4
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 1756
+          },
+          "passedDerivation": "330 / 812 tasks passed"
+        },
+        {
+          "id": "obscura-0-2-3",
+          "name": "Obscura 0.2.3",
+          "description": "Rust / V8 浏览器",
+          "mode": "本地",
+          "passed": 386,
+          "scores": {
+            "successRate": 47.5,
+            "taskMean": 17.9,
+            "taskP50": 11.1,
+            "taskP95": 67,
+            "actionMean": 4.5,
+            "actionP50": 1.6,
+            "actionP95": 9
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 1929
+          },
+          "passedDerivation": "386 / 812 tasks passed"
+        },
+        {
+          "id": "kitesurf-cloudflare",
+          "name": "Kitesurf · Cloudflare Browser Run",
+          "description": "Cloudflare 远程浏览器",
+          "mode": "远程",
+          "passed": 441,
+          "scores": {
+            "successRate": 54.3,
+            "taskMean": 40.7,
+            "taskP50": 31.4,
+            "taskP95": 95.7,
+            "actionMean": 7.5,
+            "actionP50": 5,
+            "actionP95": 30.5
+          },
+          "samples": {
+            "task": 812,
+            "taskMissing": 0,
+            "action": 2166
+          },
+          "passedDerivation": "441 / 812 tasks passed"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "webarena-verified-table",
+      "section": "用户提供的 WebArena-Verified 汇总表",
+      "text": "六种执行方案的通过数、任务成功率、端到端耗时与动作耗时均由用户逐格提供；未披露的项不外推。原表用“优”标注的最低动作耗时未在页面保留标记，改由排序体现。"
+    }
+  ],
+  "translations": {
+    "zh": {
+      "Evaluates the full 812-task population matching the linked full-812-v1 edition. The source does not state whether portable trajectories or direct action records were replayed, so edition-level identity with the pinned dataset revision is not verified.": "评测与 full-812-v1 版本数量一致的全部 812 道题。来源未说明回放的是可移植轨迹还是直接动作记录，因此无法确认与固定数据集修订版完全一致。",
+      "812 个 WebArena-Verified 任务，六种执行方案面对同一任务集。": "812 个 WebArena-Verified 任务，六种执行方案使用同一任务集。",
+      "任务成功率为通过数除以 812；端到端耗时按任务统计，每个方案 812 个样本，缺失 0。": "任务成功率为通过数除以 812；端到端耗时按任务统计，各方案 812 个样本，无缺失。",
+      "动作耗时为单次动作耗时，样本数为该方案执行的动作次数，因此各方案样本数不同。": "动作耗时按单次动作统计，样本量取各方案执行的动作数，因此方案间样本量不同。",
+      "均值为算术平均，P50、P95 为分位数；耗时类指标越低越好。": "均值为算术平均，P50、P95 为分位数；耗时越低越好。",
+      "812 / 812 tasks passed": "七类已公布通过数之和：",
+      "624 / 812 tasks passed": "七类已公布通过数之和：",
+      "330 / 812 tasks passed": "七类已公布通过数之和：",
+      "386 / 812 tasks passed": "七类已公布通过数之和：",
+      "441 / 812 tasks passed": "七类已公布通过数之和：",
+      "Publish one measured configuration per browser.": "每款浏览器使用一个实测配置。",
+      "Moli 1.1.11 was measured at commit 721bd2e32.": "Moli 1.1.11 的实测提交为 721bd2e32。",
+      "Five browser configurations execute the same 812 WebArena-Verified tasks.": "五款浏览器使用同一组 812 个 WebArena-Verified 任务。"
+    },
+    "en": {
+      "812 个 WebArena-Verified 任务，六种执行方案面对同一任务集。": "Six execution configurations use the same 812 WebArena-Verified tasks.",
+      "任务成功率为通过数除以 812；端到端耗时按任务统计，每个方案 812 个样本，缺失 0。": "Task success divides passed tasks by 812. Each configuration has 812 task timing samples, with none missing.",
+      "动作耗时为单次动作耗时，样本数为该方案执行的动作次数，因此各方案样本数不同。": "Action timing sample counts depend on the number of actions executed by each configuration.",
+      "均值为算术平均，P50、P95 为分位数；耗时类指标越低越好。": "Means are arithmetic means; P50 and P95 are percentiles. Lower latency is better.",
+      "Chromium 自动化": "Chromium automation",
+      "Rust 内核 · 两个 PR 合并版": "Rust core · two merged pull requests",
+      "Rust 内核 · 正式版本": "Rust core · release build",
+      "Zig 无头浏览器": "Zig headless browser",
+      "Rust / V8 浏览器": "Rust / V8 browser",
+      "Cloudflare 远程浏览器": "Cloudflare remote browser"
+    }
+  },
+  "release": {
+    "date": "2026-11-26",
+    "kind": "results",
+    "previous": "v1",
+    "summary": "Publish one measured configuration per browser."
+  }
+}
