@@ -23,7 +23,7 @@ Page titles use natural English (`Web Fetch`, `Web Search`). Internal IDs stay l
 - `scripts/prepare-data.mjs` — scans Benchmark directories, validates filenames/references/values/versions, copies the catalog into `web/public/benchmarks/` and reports into `web/public/results/`, and generates `web/public/results/reports.json` as the page's data bundle.
 - `web/` — Next.js app (App Router, Turbopack, static export).
 - `Dockerfile`, `.dockerignore`, `deploy/nginx.conf` — direct GitHub-to-Rainbond Dockerfile deployment: build from the repository root with Node.js 22, then serve the static export with Nginx on HTTP port 8080. No Gitea or external image registry is required for this path.
-- `web/components/dashboard.tsx` — the single-page dashboard: four Tracks, twelve Bench views, version picker, one results table.
+- `web/components/dashboard.tsx` — the single-page dashboard: five local Tracks, sixteen Bench views, version picker, one results table.
 - `web/lib/results.ts` — types, version selection/comparison, sorting, best-value calculation, metric formatting, category helpers.
 - `web/lib/presentation.ts` — provider colors; Track icons and table layout remain in the website code.
 - `web/app/globals.css` — all styling; there is no component library.
@@ -102,7 +102,7 @@ Serve a build with `python3 -m http.server 5173 --directory web/out`; never `nex
 
 ## Benchmark presentation
 
-- Match Benchmark names to the official Hugging Face Dataset Card. Modified third-party datasets retain the LexBench prefix; untouched mirrors retain the upstream name. LexBench Zyte Product Extraction includes a separate source-qualified annotation layer, so retains its prefix; do not claim existing scores use that layer without report evidence.
+- Match Benchmark names to the official upstream Dataset Card or benchmark repository. Modified third-party datasets retain the LexBench prefix; untouched mirrors retain the upstream name. LexBench Zyte Product Extraction includes a separate source-qualified annotation layer, so retains its prefix; do not claim existing scores use that layer without report evidence.
 - Name the selected Benchmark once in the main content. Avoid repeating titles, primary metrics, counts or generic sorting instructions in large summary blocks. Put protocol, population and provenance detail in Evaluation notes, with important comparability warnings visible.
 - Comparison charts must add information beyond ranking: multidimensional profiles, or quality against comparable latency/resource use. Allow readers to select methods; label scales and preserve missing values. Do not invent composite scores or treat unmatched execution conditions as controlled comparisons.
 
