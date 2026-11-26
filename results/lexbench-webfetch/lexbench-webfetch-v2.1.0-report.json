@@ -181,7 +181,6 @@
       "The reviewed snapshot changes 53 of 2,580 judgments. It rescored 199 outputs from redacted copies and eight from hash-restored outputs; it did not add browser calls.": "复核快照更改了 2,580 条判定中的 53 条，重算中，199 条使用脱敏副本重算，8 条使用按哈希恢复的输出，没有新增浏览器调用。",
       "Calls span different dates and batches. Timeout is 45 seconds; retry policy differs across retained batches. These timings are not a controlled same-window speed comparison.": "调用分布在不同日期和批次，超时为 45 秒，保留批次的重试规则存在差异。这些耗时不是同一时间窗口内的受控速度比较。",
       "Publish one measured configuration per browser.": "每款浏览器使用一个实测配置。",
-      "Moli 1.1.11 was measured at commit 721bd2e32.": "Moli 1.1.11 的实测提交为 721bd2e32。",
       "Five browser configurations execute the same 812 WebArena-Verified tasks.": "五款浏览器使用同一组 812 个 WebArena-Verified 任务。"
     }
   },

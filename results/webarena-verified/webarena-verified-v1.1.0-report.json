@@ -158,7 +158,6 @@
       "386 / 812 tasks passed": "七类已公布通过数之和：",
       "441 / 812 tasks passed": "七类已公布通过数之和：",
       "Publish one measured configuration per browser.": "每款浏览器使用一个实测配置。",
-      "Moli 1.1.11 was measured at commit 721bd2e32.": "Moli 1.1.11 的实测提交为 721bd2e32。",
       "Five browser configurations execute the same 812 WebArena-Verified tasks.": "五款浏览器使用同一组 812 个 WebArena-Verified 任务。"
     },
     "en": {
