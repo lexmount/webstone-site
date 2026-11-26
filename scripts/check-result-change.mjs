@@ -62,7 +62,7 @@ export function checkResultChange(baseCatalog, catalog, changes, publishedPaths,
     rejectCredentials(report);
     if (!publicEvidenceUrl(report.source?.url)) throw new Error("New submissions require a public HTTPS source URL with a DNS hostname and no credentials.");
     validateSnapshot(report, entry, catalog);
-    validateBrowserCohort(catalog, report.benchmarks[0]);
+    if (report.release.kind !== "metadata") validateBrowserCohort(catalog, report.benchmarks[0]);
     return { entry, report };
   }).sort((a, b) => a.entry.benchmarkId.localeCompare(b.entry.benchmarkId) || compareVersions(a.entry.version, b.entry.version));
   const participants = new Set(reports.flatMap(({ report }) => report.benchmarks[0].providers.map(provider => provider.id)));
@@ -94,7 +94,12 @@ export function validateBrowserCohort(catalog, benchmark) {
   const projects = new Set();
   for (const provider of benchmark.providers) {
     const url = new URL(catalog.providerUrls[provider.id]);
-    const project = url.origin + url.pathname.replace(/\/+$/, "");
+    let project = url.origin + url.pathname.replace(/\/+$/, "");
+    // A GitHub repository has one identity across case, clone URLs and subpaths.
+    const parts = url.pathname.split("/").filter(Boolean).map(part => decodeURIComponent(part));
+    if (url.hostname.replace(/^www\./, "") === "github.com" && parts.length >= 2) {
+      project = `github:${parts[0].toLowerCase()}/${parts[1].replace(/\.git$/i, "").toLowerCase()}`;
+    }
     if (projects.has(project)) throw new Error("Public comparisons allow one configuration per browser.");
     projects.add(project);
   }

@@ -230,3 +230,27 @@ test("cohort policy keeps real service tiers and explicit Headless build compari
     assert.doesNotThrow(() => validateBrowserCohort(catalog, snapshot.benchmarks[0]));
   }
 });
+
+test("unchanged historical cohorts still allow metadata-only corrections", () => {
+  const legacy = JSON.parse(readFileSync(new URL('../results/lexbench-webfetch/lexbench-webfetch-v2.0.0-report.json', import.meta.url)));
+  assert.equal(legacy.benchmarks[0].providers.filter(provider => provider.name.startsWith('Moli')).length, 2);
+  const candidate = structuredClone(legacy);
+  candidate.id = 'lexbench-webfetch-v2.0.1';
+  candidate.version = 'v2.0.1';
+  candidate.release = { date: '2026-11-26', kind: 'metadata', previous: 'v2.0.0', summary: 'Clarify the existing task scope.' };
+  candidate.benchmarks[0].notes.push('Task populations remain unchanged.');
+  const change = { path: 'results/lexbench-webfetch/lexbench-webfetch-v2.0.1-report.json', status: 'A', mode: '100644', content: JSON.stringify(candidate) };
+  const paths = ['results/lexbench-webfetch/lexbench-webfetch-v2.0.0-report.json'];
+  assert.deepEqual(checkResultChange(catalog, catalog, [change], paths, new Map([[paths[0], legacy]])), { reports: 1 });
+});
+
+test("GitHub repository URL aliases cannot publish duplicate browser builds", () => {
+  for (const url of ['https://github.com/lexmount/moli.git', 'https://github.com/LEXMOUNT/Moli/', 'https://www.github.com/lexmount/moli/tree/main', 'https://github.com/lexmount/%6doli']) {
+    const updatedCatalog = structuredClone(catalog);
+    updatedCatalog.providerUrls['another-moli-build'] = url;
+    const candidate = report(2);
+    const first = candidate.benchmarks[0].providers.find(provider => provider.id === 'moli-1-1-17');
+    candidate.benchmarks[0].providers.push({ ...structuredClone(first), id: 'another-moli-build', name: 'Moli another build' });
+    assert.throws(() => checkResultChange(catalog, updatedCatalog, [{ ...addition(2), content: JSON.stringify(candidate) }], published), /one configuration per browser/i);
+  }
+});

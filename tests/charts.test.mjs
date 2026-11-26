@@ -696,7 +696,11 @@ test("all published versions highlight comparable column winners consistently, i
       const benchmark = resolveBenchmark(catalog, file.report.benchmarks[0]);
       const win = new Window({ url: `https://webstone.test/?benchmark=${benchmark.id}&version=${file.report.version}` });
       [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
-      globalThis.fetch = async input => new Response(JSON.stringify(String(input).includes('/benchmarks/') ? catalog : String(input).includes('/results/') ? [file] : { release: RELEASE }));
+      globalThis.fetch = async input => {
+        if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
+        if (String(input).includes('/results/')) return new Response(JSON.stringify([file]));
+        return new Response(JSON.stringify({ release: RELEASE }));
+      };
       const root = require('react-dom/client').createRoot(win.document.body);
       try {
         await React.act(async () => root.render(React.createElement(Dashboard)));
@@ -708,20 +712,32 @@ test("all published versions highlight comparable column winners consistently, i
           for (const metric of benchmark.metrics) {
             const index = headers.findIndex(header => header.querySelector('.sort-button')?.textContent === metric.label);
             if (index < 0) {
-              assert.ok(metric.id !== benchmark.primaryMetric && benchmark.providers.every(provider => provider.scores[metric.id] == null));
+              assert.ok(metric.id !== benchmark.primaryMetric && benchmark.providers.every(provider => (provider.scores[metric.id] === null || provider.scores[metric.id] === undefined)));
               continue;
             }
-            const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value != null);
+            const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value !== null && value !== undefined);
             const varied = new Set(values).size > 1;
             const best = metric.direction === 'asc' ? Math.min(...values) : Math.max(...values);
             const expected = benchmark.rankable === false || metric.highlightBest === false || !varied ? 0 : values.filter(value => value === best).length;
             assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${metric.id}`);
+            for (const provider of benchmark.providers) {
+              const row = rows.find(item => item.dataset.provider === provider.id);
+              assert.ok(row, `${file.file}: ${provider.id}`);
+              const wins = expected > 0 && provider.scores[metric.id] === best;
+              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${metric.id}`);
+            }
           }
           for (const category of benchmark.categories) {
             const index = headers.findIndex(header => header.classList.contains('category-head') && header.textContent === category.name);
-            const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value != null);
+            const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value !== null && value !== undefined);
             const expected = benchmark.rankable === false || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
             assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${category.id}`);
+            for (const provider of benchmark.providers) {
+              const row = rows.find(item => item.dataset.provider === provider.id);
+              assert.ok(row);
+              const wins = expected > 0 && provider.categoryPassed?.[category.id] === Math.max(...values);
+              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${category.id}`);
+            }
           }
         };
         check();
@@ -755,4 +771,27 @@ test("Track example selection changes the task, reference and output together", 
       }
     }
   } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});
+
+test("benchmark examples remain usable when a requested result version is missing", async () => {
+  const { prepareData } = await import('../scripts/prepare-data.mjs');
+  await prepareData();
+  const Dashboard = require('../web/components/dashboard.tsx').default;
+  const { RELEASE } = require('../web/lib/release.generated.ts');
+  const win = new Window({ url: 'https://webstone.test/?benchmark=lexbench-webfetch&version=v999.0.0' });
+  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+  globalThis.fetch = async input => {
+    if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
+    if (String(input).includes('/results/')) return new Response(JSON.stringify([]));
+    return new Response(JSON.stringify({ release: RELEASE }));
+  };
+  const root = require('react-dom/client').createRoot(win.document.body);
+  try {
+    await React.act(async () => root.render(React.createElement(Dashboard)));
+    assert.ok(win.document.querySelector('.empty-state'));
+    await React.act(async () => win.document.querySelector('.benchmark-links .example-open').click());
+    assert.equal(win.document.querySelectorAll('.example-dialog[open]').length, 1);
+    assert.ok(win.document.querySelector('.example-source').textContent.includes('article-030'));
+  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
 });

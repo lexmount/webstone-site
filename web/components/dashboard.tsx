@@ -296,7 +296,7 @@ export default function Dashboard() {
               <div key={`${selection.benchmark}:${selection.version}`} className="table-scroll" tabIndex={0} role="region" aria-label={t("Leaderboard")}>
                 <table className="wide-table" style={{ "--data-columns": categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) } as React.CSSProperties}>
                   <caption className="sr-only">{t(benchmark.name)} {t("Leaderboard")}</caption>
-                  <colgroup><col style={{ width: "var(--rank-width)" }} /><col style={{ width: "var(--provider-width)" }} />{Array.from({ length: categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) }, (_, index) => <col key={index} />)}</colgroup>
+                  <colgroup><col className="rank-column" /><col className="provider-column" />{Array.from({ length: categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) }, (_, index) => <col key={index} />)}</colgroup>
                   <thead><tr>
                     <th className="rank-cell" scope="col">#</th>
                     <th className="provider-heading" scope="col">{t("Method")}</th>
@@ -306,7 +306,7 @@ export default function Dashboard() {
                     {trailingMetrics.map(metricHeader)}
                     {showPassed && <th className="count-cell" scope="col"><div className="metric-heading"><span>{t("Passed / Total")}</span><InfoTooltip label={t("Passed / Total")} description={`${t("Passed / Total")}: ${benchmark.taskCount}. ${t("Not disclosed in the source")}: —.`} detailsLabel={t("details")} /></div></th>}
                   </tr></thead>
-                  <tbody>{providers.map((provider, i) => <tr key={provider.id}>
+                  <tbody>{providers.map((provider, i) => <tr key={provider.id} data-provider={provider.id}>
                     <td className="rank-cell">{benchmark.rankable === false || provider.scores[metric.id] == null ? "—" : i + 1}</td>
                     <td><div className="provider-cell"><a className="provider-name provider-link" href={catalog?.providerUrls[provider.id]} target="_blank" rel="noopener noreferrer" aria-label={`${provider.name} ${t("project")} (${t("opens in a new tab")})`}><span className={`provider-mark ${provider.id}`} style={{ "--provider-color": providerColors[provider.id] ?? "#64748b" } as React.CSSProperties} aria-hidden="true">{provider.name[0]}</span><span className="provider-label" title={provider.name}><strong>{provider.name.split(" · ")[0]}</strong>{provider.name.includes(" · ") && <small>{t(provider.name.split(" · ").slice(1).join(" · "))}</small>}</span><ArrowUpRight className="provider-external" size={12} aria-hidden="true" /></a><button className="method-open" aria-label={`${provider.name} · ${t("Method details")}`} aria-haspopup="dialog" onClick={() => setSelectedProvider(provider)}>···</button></div></td>
                     {leadingMetrics.map(item => metricCell(provider, item))}
@@ -325,12 +325,12 @@ export default function Dashboard() {
             <details className="highlight-rules"><summary>{t("How highlights work")}</summary><p>{t("Green marks the best comparable value in each column, including ties. Missing values and columns with no variation have no highlight.")}</p>
               {benchmark.rankable === false ? <p>{t("This diagnostic edition has no ranks or best-value highlights.")}</p> : benchmark.metrics.some(item => item.highlightBest === false) && <ul>{benchmark.metrics.filter(item => item.highlightBest === false).map(item => <li key={item.id}><strong>{t(item.label)}: </strong>{t(item.description ?? "")}</li>)}</ul>}
             </details>
-            {showExample && details && <ExampleDialog key={details.id} title={details.name} description={details.description} benchmarks={[details]} onClose={() => setShowExample(false)} t={t} />}
             <Insights key={`${benchmark.id}-${selection.version}`} benchmark={benchmark} t={t} />
             {details && <EvaluationReports key={selection.benchmark} catalog={catalog} snapshots={snapshots} current={details} t={t} language={language} />}
             <MethodDetails provider={selectedProvider} benchmark={benchmark} t={t} onClose={() => setSelectedProvider(null)} />
           </>}
         </>)}
+        {showExample && details && <ExampleDialog key={details.id} title={details.name} description={details.description} benchmarks={[details]} onClose={() => setShowExample(false)} t={t} />}
       </main>
     </div>
   </div>;
