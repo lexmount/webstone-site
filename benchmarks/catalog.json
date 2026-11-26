@@ -1865,7 +1865,8 @@
           "keyMetricIds": [
             "successRate",
             "costPerTask"
-          ]
+          ],
+          "rankable": false
         }
       ]
     },
@@ -2234,7 +2235,7 @@
       "View evaluation report": "查看评测报告",
       "Key metrics": "关键指标",
       "Different test conditions": "测试条件不同",
-      "Collection dates and retry policies differ.": "采集日期和重试规则不同。",
+      "Results use different evaluation conditions.": "各方案的评测条件不同。",
       "Reference answer": "参考答案",
       "Reference check": "参考判定",
       "BU Bench v1": "BU Bench v1",

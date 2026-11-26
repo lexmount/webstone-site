@@ -872,7 +872,7 @@ test("Browser Use reuses the shared radar only when real quality dimensions are 
     assert.deepEqual(benchmark.keyMetricIds, [quality, 'costPerTask']);
     assert.equal(render(benchmark), '', `${id}: a score and partly disclosed cost do not form a radar`);
     const expanded = {
-      ...benchmark,
+      ...benchmark, rankable: true,
       metrics: [...benchmark.metrics, {id: 'quality2', label: 'Second quality', unit: 'percent', direction: 'desc'}, {id: 'quality3', label: 'Third quality', unit: 'percent', direction: 'desc'}],
       keyMetricIds: [quality, 'quality2', 'quality3'],
       providers: benchmark.providers.map(p => ({...p, scores: {...p.scores, quality2: 80, quality3: 70}})),
@@ -921,4 +921,18 @@ test("an undisclosed task population renders scores without inventing a case or 
       } finally {await React.act(async () => root.unmount()); await win.happyDOM.close();}
     }
   } finally {[globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior;}
+});
+
+
+test("Online-Mind2Web retains reported scores without ranking different judging protocols", () => {
+  const benchmark = resolveBenchmark(catalog, {
+    id: 'online-mind2web', definitionId: 'standard', taskCount: 300, notes: [], reportUrl: null,
+    providers: [
+      {id: 'reported-a', name: 'Agent A', passed: null, scores: {successRate: 98.96, costPerTask: 0.1}},
+      {id: 'reported-b', name: 'Agent B', passed: null, scores: {successRate: 98, costPerTask: null}},
+    ],
+  });
+  assert.equal(benchmark.rankable, false);
+  assert.equal(benchmark.providers[1].scores.successRate, 98);
+  assert.equal(render(benchmark), '', 'Non-comparable reports do not imply a shared capability comparison');
 });
