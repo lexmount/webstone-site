@@ -293,8 +293,8 @@ export default function Dashboard() {
               <p className="sample-scope">{benchmark.metrics.filter(item => result?.metricSamples?.[item.id]?.sampleCount !== null && result?.metricSamples?.[item.id]?.sampleCount !== undefined && result.metricSamples[item.id].sampleCount !== benchmark.taskCount).map(item => `${t(item.label)}: ${result!.metricSamples![item.id].sampleCount} ${t("samples")}`).join(" · ")}</p>
               {benchmark.trackId === "websearch" && snapshot?.source.kind === "report-page" && <p className="sample-scope">{t("Latency comes from separate runs with different concurrency.")}</p>}
               {!showPricing && !hasNumericCost && <p className="cost-disclosure">{t("Cost was not disclosed in this report.")}</p>}
-              <div key={`${selection.benchmark}:${selection.version}`} className="table-scroll" tabIndex={0} role="region" aria-label={t("Leaderboard")}>
-                <table className="wide-table" style={{ "--data-columns": categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) } as React.CSSProperties}>
+              <div key={`${selection.benchmark}:${selection.version}`} className="table-scroll" style={{ "--data-columns": categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) } as React.CSSProperties} tabIndex={0} role="region" aria-label={t("Leaderboard")}>
+                <table className="wide-table">
                   <caption className="sr-only">{t(benchmark.name)} {t("Leaderboard")}</caption>
                   <colgroup><col className="rank-column" /><col className="provider-column" />{Array.from({ length: categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) }, (_, index) => <col key={index} />)}</colgroup>
                   <thead><tr>

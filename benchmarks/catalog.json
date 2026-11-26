@@ -662,12 +662,18 @@
         "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search/blob/3f7b9f2f52745dc5eba4328e432fe227caf4adba/data/scenarios-v2.jsonl",
         "input": "DeepSeek search fetch API pricing count need_content",
         "steps": [
-          "Send the same query to each search API.",
-          "Keep the returned ranking and judge the top five results for relevance."
+          "The recorded run sent this query to Lexmount and returned five results.",
+          "Compare the returned order with the labeled reference page."
         ],
-        "outputLabel": "Reference page",
-        "output": "https://api-docs.deepseek.com/guides/search/",
-        "check": "This is one annotated relevant source. nDCG@5 rewards relevant results appearing earlier."
+        "outputLabel": "Recorded results · Lexmount",
+        "output": "1. Search & Fetch | DeepSeek API Docs\nhttps://api-docs.deepseek.com/guides/search/\n\n2. DeepSeek Search and Fetch: What a Web Answer Costs Before… | NxCode\nhttps://www.nxcode.io/resources/news/deepseek-search-fetch-api-answer-costs-2026\n\n3. Models & Pricing | DeepSeek API Docs\nhttps://api-docs.deepseek.com/quick_start/pricing/?tool=deepseek\n\n4. Models & Pricing | DeepSeek API Docs\nhttps://api-docs.deepseek.com/quick_start/pricing/\n\n5. DeepSeek Search API pricing and Fetch API fees | NeoTeo\nhttps://www.neoteo.com/en/deepseek-search-and-fetch-each-cost-075-per-1000-successful-requests",
+        "check": "The first result is the labeled DeepSeek documentation page. The list preserves the order in the saved API response.",
+        "recording": {
+          "provider": "Lexmount",
+          "reportUrl": "https://yours.lexmount.cn/artifact-site/s/XEDGrWHPjAbu",
+          "file": "calls/ds-price-en-lexmount-r0-attempt-1.json",
+          "sha256": "23fed6edc9f33330a0f47c35f131fe5ebcde436b06e3a7b6a519d4b9de670f3c"
+        }
       }
     },
     {
@@ -1928,7 +1934,13 @@
       "This diagnostic edition has no ranks or best-value highlights.": "此诊断版本不显示名次或最佳值高亮。",
       "This is one annotated relevant source. nDCG@5 rewards relevant results appearing earlier.": "这是标注的相关来源之一。nDCG@5 会奖励排在前面的相关结果。",
       "Moli Ranks First in Web Fetch with an 89.8% Pass Rate": "Moli 以 89.8% 通过率拿下 Web Fetch 第一",
-      "Compare live-site retrieval with main-content extraction from frozen HTML.": "比较在线网页获取与冻结 HTML 的正文提取效果。"
+      "Compare live-site retrieval with main-content extraction from frozen HTML.": "比较在线网页获取与冻结 HTML 的正文提取效果。",
+      "Recorded results · Lexmount": "实际返回结果 · Lexmount",
+      "The recorded run sent this query to Lexmount and returned five results.": "这次实测将该查询发给 Lexmount，返回了五条结果。",
+      "Compare the returned order with the labeled reference page.": "将返回顺序与标注的参考网页对照。",
+      "The first result is the labeled DeepSeek documentation page. The list preserves the order in the saved API response.": "第一条结果就是标注的 DeepSeek 官方文档。以上保留了原始响应中的排序。",
+      "Recorded response excerpt.": "实测响应摘录。",
+      "View evaluation report": "查看评测报告"
     },
     "en": {
       "全程关闭": "Layout off throughout",

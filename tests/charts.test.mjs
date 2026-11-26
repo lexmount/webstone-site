@@ -795,3 +795,16 @@ test("benchmark examples remain usable when a requested result version is missin
     assert.ok(win.document.querySelector('.example-source').textContent.includes('article-030'));
   } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
 });
+
+test("example dialogs distinguish recorded provider responses from reference answers", () => {
+  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
+  const benchmark = structuredClone(catalog.benchmarks[0]);
+  benchmark.example.recording = { provider: 'Recorded provider', reportUrl: 'https://example.com/report', file: 'calls/response.json', sha256: 'a'.repeat(64) };
+  const html = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
+  assert.match(html, /Recorded provider/);
+  assert.match(html, /href="https:\/\/example.com\/report"/);
+  assert.doesNotMatch(html, /Reference values are not a measured result/);
+  delete benchmark.example.recording;
+  const reference = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
+  assert.match(reference, /Reference values are not a measured result/);
+});

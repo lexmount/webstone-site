@@ -468,3 +468,15 @@ test("example references must be public HTTPS and the task flow must be complete
     assert.throws(() => validateCatalog(invalid), /Invalid benchmark example/);
   }
 });
+
+test("recorded examples require a provider and safe, traceable response provenance", () => {
+  const recording = { provider: 'Search provider', reportUrl: 'https://example.com/evaluation', file: 'calls/response.json', sha256: 'a'.repeat(64) };
+  const valid = structuredClone(catalog);
+  valid.benchmarks[0].example.recording = recording;
+  assert.doesNotThrow(() => validateCatalog(valid));
+  for (const patch of [{provider: ''}, {reportUrl: 'javascript:alert(1)'}, {reportUrl: 'https://user:secret@example.com/'}, {file: '../credentials.json'}, {sha256: ''}]) {
+    const invalid = structuredClone(valid);
+    Object.assign(invalid.benchmarks[0].example.recording, patch);
+    assert.throws(() => validateCatalog(invalid), /Invalid recorded example provenance/);
+  }
+});

@@ -34,7 +34,7 @@ export default function ExampleDialog({ title, description, benchmarks, onClose,
         <section><h3><span>2</span>{t("Run")}</h3><ol>{example.steps.map(step => <li key={step}>{t(step)}</li>)}</ol></section>
         <section><h3><span>3</span>{t(example.outputLabel)}</h3><pre>{example.output}</pre><p>{t(example.check)}</p></section>
       </div>
-      <p className="example-note">{t("This dataset example explains the task. Reference values are not a measured result for the selected version.")}</p>
+      {example.recording ? <p className="example-note">{example.recording.provider} · {t("Recorded response excerpt.")} <a href={example.recording.reportUrl} target="_blank" rel="noopener noreferrer">{t("View evaluation report")} ↗</a></p> : <p className="example-note">{t("This dataset example explains the task. Reference values are not a measured result for the selected version.")}</p>}
     </>}
   </dialog>;
 }

@@ -19,7 +19,7 @@ export type Definition = {
   id: string; primaryMetric: string; metrics: Metric[]; rankable?: boolean;
   categories?: CategoryDefinition[]; leadingMetricIds?: string[];
 };
-export type BenchmarkExample = { taskId: string; sourceUrl: string; referenceUrl?: string; input: string; steps: string[]; outputLabel: string; output: string; check: string };
+export type BenchmarkExample = { recording?: { provider: string; reportUrl: string; file: string; sha256: string }; taskId: string; sourceUrl: string; referenceUrl?: string; input: string; steps: string[]; outputLabel: string; output: string; check: string };
 export type BenchmarkInfo = {
   example?: BenchmarkExample;
   id: string; trackId: string; name: string; datasetName: string; description: string;

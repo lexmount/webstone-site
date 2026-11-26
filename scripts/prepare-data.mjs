@@ -87,6 +87,11 @@ export function validateCatalog(catalog) {
       if (!record(example) || ![example.taskId, example.input, example.outputLabel, example.output, example.check].every(value => typeof value === "string" && value.trim())
         || !publicEvidenceUrl(example.sourceUrl) || (example.referenceUrl !== undefined && !publicEvidenceUrl(example.referenceUrl))
         || !Array.isArray(example.steps) || example.steps.length < 2 || example.steps.some(step => typeof step !== "string" || !step.trim())) throw new Error("Invalid benchmark example");
+      if (example.recording !== undefined && (!record(example.recording)
+        || typeof example.recording.provider !== "string" || !example.recording.provider.trim()
+        || !publicEvidenceUrl(example.recording.reportUrl)
+        || typeof example.recording.file !== "string" || !/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+\.json$/.test(example.recording.file)
+        || !/^[a-f0-9]{64}$/.test(example.recording.sha256))) throw new Error("Invalid recorded example provenance");
     }
     uniqueIds(benchmark.definitions, "definition");
     for (const definition of benchmark.definitions) {
