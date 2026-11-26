@@ -497,3 +497,31 @@ test("key metrics name existing columns once and keep the ranking metric first",
     assert.throws(() => validateCatalog(invalid), /Invalid key metric presentation/);
   }
 });
+
+
+test("reported percentages can omit an undisclosed task population without inventing counts", () => {
+  const report = structuredClone(snapshot);
+  const b = report.benchmarks[0];
+  const c = structuredClone(catalog);
+  b.taskCount = null;
+  b.categoryTotals = {};
+  const definition = c.benchmarks.find(item => item.id === b.id).definitions.find(item => item.id === b.definitionId);
+  definition.categories = [];
+  for (const provider of b.providers) {
+    provider.passed = null;
+    delete provider.categoryPassed;
+  }
+  assert.doesNotThrow(() => validateSnapshot(report, entry, c));
+  for (const count of [undefined, 0, -1, 2.5, "100"]) {
+    b.taskCount = count;
+    assert.throws(() => validateSnapshot(report, entry, c), /task count/);
+  }
+  b.taskCount = null;
+  for (const passed of [0, 1]) {
+    b.providers[0].passed = passed;
+    assert.throws(() => validateSnapshot(report, entry, c), /passed count/);
+  }
+  b.providers[0].passed = null;
+  b.providers[0].counts = {passRate: {count: 1, total: 2}};
+  assert.throws(() => validateSnapshot(report, entry, c), /count breakdown/);
+});

@@ -267,7 +267,7 @@ export default function Dashboard() {
           </div> : <>
             <section id="results" className="leaderboard" aria-label={`${t(benchmark.name)} ${t("Leaderboard")}`}>
               <h2 className="sr-only">{t("Leaderboard")}</h2>
-              <div className="table-toolbar"><span className="table-summary">{benchmark.providerCount} {t("methods")} · {benchmark.taskCount.toLocaleString()} {t("cases")}
+              <div className="table-toolbar"><span className="table-summary">{benchmark.providerCount} {t("methods")}{benchmark.taskCount == null ? "" : <> · {benchmark.taskCount.toLocaleString()} {t("cases")}</>}
                 <InfoTooltip label={t("Evaluation scope")} description={[historicalCopy?.scope ?? t(snapshot!.datasetDifference), !snapshot!.release && t("Publication date not listed"), ...evaluationNotes].filter(Boolean).join(" ")} detailsLabel={t("details")} />
                 {benchmark.rankable === false && <span className="comparison-status">{t("Different test conditions")}<InfoTooltip label={t("Different test conditions")} description={t("Collection dates and retry policies differ.")} detailsLabel={t("details")} /></span>}
               </span><div className="column-views table-controls" role="group" aria-label={t("Table columns")}>

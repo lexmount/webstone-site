@@ -883,3 +883,38 @@ test("Browser Use reuses the shared radar only when real quality dimensions are 
     assert.doesNotMatch(html, /radar-divider|overlapping methods|Undisclosed methods/);
   }
 });
+
+
+test("an undisclosed task population renders scores without inventing a case or pass count", async () => {
+  const {prepareData} = await import('../scripts/prepare-data.mjs');
+  await prepareData();
+  const {RELEASE} = require('../web/lib/release.generated.ts');
+  const Dashboard = require('../web/components/dashboard.tsx').default;
+  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  const report = {
+    id: 'bu-bench-v1-v1.0.0', version: 'v1.0.0',
+    datasetDifference: 'The source publishes percentages without an evaluated task count.',
+    release: {date: '2026-11-24', kind: 'results', previous: null, summary: 'Publish reported results.'},
+    source: {url: 'https://example.com/report'},
+    benchmarks: [{id: 'bu-bench-v1', definitionId: 'standard', taskCount: null, notes: [], reportUrl: null,
+      providers: [{id: 'fixture', name: 'Fixture agent', description: 'Reported configuration', mode: 'agent',
+        passed: null, scores: {successRate: 93.41, costPerTask: null}}]}],
+  };
+  try {
+    for (const language of ['en', 'zh']) {
+      const win = new Window({url: 'https://webstone.test/?benchmark=bu-bench-v1'});
+      win.localStorage.setItem('webstone-language', language);
+      [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+      globalThis.fetch = async input => new Response(JSON.stringify(String(input).includes('/benchmarks/') ? catalog : String(input).includes('/results/') ? [{file: 'bu-bench-v1/bu-bench-v1-v1.0.0-report.json', report}] : {release: RELEASE}));
+      const root = require('react-dom/client').createRoot(win.document.body);
+      try {
+        await React.act(async () => root.render(React.createElement(Dashboard)));
+        assert.match(win.document.querySelector('.table-summary').textContent, /1/);
+        assert.doesNotMatch(win.document.querySelector('.table-summary').textContent, /cases|题|NaN|null|undefined/);
+        assert.match(win.document.querySelector('tbody').textContent, /93.41%/);
+        assert.doesNotMatch(win.document.querySelector('thead').textContent, /Passed|通过数/);
+        assert.equal(win.document.querySelector('.count-cell'), null);
+      } finally {await React.act(async () => root.unmount()); await win.happyDOM.close();}
+    }
+  } finally {[globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior;}
+});

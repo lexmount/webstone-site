@@ -1813,7 +1813,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 2,
-              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+              "description": "Reported task success rate under the source evaluation protocol. Higher is better."
             },
             {
               "id": "costPerTask",
@@ -1851,7 +1851,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 2,
-              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+              "description": "Reported task success rate under the source evaluation protocol. Higher is better."
             },
             {
               "id": "costPerTask",
@@ -1889,7 +1889,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 2,
-              "description": "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better."
+              "description": "Reported task success rate under the source evaluation protocol. Higher is better."
             },
             {
               "id": "costPerTask",
@@ -2248,7 +2248,7 @@
       "Success rate": "成功率",
       "Score rate": "得分率",
       "Cost / task": "每题成本",
-      "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better.": "可评价任务上的成功率（排除了遭到网站拒绝访问类的任务），越高越好。",
+      "Reported task success rate under the source evaluation protocol. Higher is better.": "来源评测按其评测规则报告的任务成功率，越高越好。",
       "Average task score rate across the evaluated OSWorld tasks. Higher is better.": "评测集 OSWorld 任务的平均得分率，越高越好。",
       "Reported model cost per task in USD. Lower is better.": "公开披露的每题模型费用（美元），越低越好。",
       "Navigate the live Allrecipes website to search and filter matching vegetarian lasagna recipes.": "访问在线 Allrecipes 网站，搜索并筛选符合条件的素食千层面食谱。",

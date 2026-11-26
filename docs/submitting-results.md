@@ -26,7 +26,7 @@ Replace placeholders and stage only paths actually changed. Use `gh repo fork le
 
 Read [Result versioning](result-versioning.md) and the current catalog before preparing a report. Add the next semantic result version, with matching filename, `id`, `version`, `release.previous`, UTC `release.date`, `release.kind` and English `release.summary`. First release: v1.0.0; new measurements under the same protocol: MINOR; metadata-only: PATCH; changed population/scoring: MAJOR. A new definition requires a separate definition PR first. Do not copy old scores into a new edition as placeholders.
 
-Every new submission needs a public HTTPS `source.url`. Each file contains exactly one benchmark, an existing `definitionId`, actual `taskCount`, method configurations, scores and applicable sample/category counts. Missing metrics are `null`; genuine zeros stay zero. Keep units and independent denominators intact. `datasetDifference` explains the difference from the linked dataset in English. A result-specific `reportUrl` must describe that particular result. Preserve original evidence and quotations separately from display translations.
+Every new submission needs a public HTTPS `source.url`. Each file contains exactly one benchmark, an existing `definitionId`, `taskCount` (null if the source does not disclose the population), method configurations, scores and applicable sample/category counts. Missing metrics are `null`; genuine zeros stay zero. Keep units and independent denominators intact. `datasetDifference` explains the difference from the linked dataset in English. A result-specific `reportUrl` must describe that particular result. Preserve original evidence and quotations separately from display translations.
 
 ## Review and publication
 

@@ -37,7 +37,7 @@ export type Catalog = {
   benchmarks: BenchmarkInfo[];
 };
 export type BenchmarkResult = {
-  id: string; definitionId: string; taskCount: number; providers: Provider[];
+  id: string; definitionId: string; taskCount: number | null; providers: Provider[];
   categoryTotals?: Record<string, number>;
   metricSamples?: Record<string, { sampleCount?: number; scope?: string; note?: string }>;
   notes: string[]; reportUrl: string | null;

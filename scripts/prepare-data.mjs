@@ -154,7 +154,7 @@ export function validateSnapshot(snapshot, entry, catalog) {
     for (const field of ["categoryTotals", "metricSamples", "sourceMatches", "otherBest"]) {
       if (benchmark[field] !== undefined && !record(benchmark[field])) throw new Error(`Invalid ${field} mapping`);
     }
-    if (entry.benchmarkId !== benchmark.id || !Number.isInteger(benchmark.taskCount) || benchmark.taskCount < 1) {
+    if (entry.benchmarkId !== benchmark.id || (benchmark.taskCount !== null && (!Number.isInteger(benchmark.taskCount) || benchmark.taskCount < 1))) {
       throw new Error("Unexpected benchmark or task count");
     }
     const definition = catalog.benchmarks.find(item => item.id === benchmark.id)?.definitions.find(item => item.id === benchmark.definitionId);
@@ -193,13 +193,13 @@ export function validateSnapshot(snapshot, entry, catalog) {
         if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < minimum || value > maximum)) {
           throw new Error("Invalid or fabricated metric value");
         }
-        if (metric.unit === "count" && value !== null && (!Number.isInteger(value) || value > benchmark.taskCount)) throw new Error("Invalid metric count");
+        if (metric.unit === "count" && value !== null && (benchmark.taskCount === null || !Number.isInteger(value) || value > benchmark.taskCount)) throw new Error("Invalid metric count");
       }
       for (const [id, detail] of Object.entries(provider.counts ?? {})) {
         const metric = definition.metrics.find(item => item.id === id);
         if (!metric || !["percent", "count"].includes(metric.unit) || !detail ||
           !Number.isInteger(detail.count) || !Number.isInteger(detail.total) || detail.count < 0 ||
-          detail.total < 1 || detail.count > detail.total || detail.total > benchmark.taskCount) throw new Error("Invalid count breakdown");
+          detail.total < 1 || detail.count > detail.total || benchmark.taskCount === null || detail.total > benchmark.taskCount) throw new Error("Invalid count breakdown");
         const value = metric.unit === "count" ? detail.count : Number((detail.count / detail.total * 100).toFixed(metric.decimals ?? 1));
         if (provider.scores[id] !== value || (benchmark.metricSamples?.[id]?.sampleCount != null && benchmark.metricSamples[id].sampleCount !== detail.total)) throw new Error("Inconsistent count breakdown");
       }
@@ -218,7 +218,7 @@ export function validateSnapshot(snapshot, entry, catalog) {
           (pricing.approximate !== undefined && typeof pricing.approximate !== "boolean") ||
           (pricing.softwareCost !== undefined && (typeof pricing.softwareCost !== "number" || !Number.isFinite(pricing.softwareCost) || pricing.softwareCost < 0))) throw new Error("Invalid pricing range or description");
       }
-      if (provider.passed !== null && (!Number.isInteger(provider.passed) || provider.passed < 0 || provider.passed > benchmark.taskCount)) {
+      if (provider.passed !== null && (benchmark.taskCount === null || !Number.isInteger(provider.passed) || provider.passed < 0 || provider.passed > benchmark.taskCount)) {
         throw new Error("Invalid passed count");
       }
       for (const [id, value] of Object.entries(provider.categoryPassed ?? {})) {
