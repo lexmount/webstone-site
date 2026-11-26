@@ -52,11 +52,28 @@
       },
       "notes": [
         "Full text uses 545 pages; code 110; formulas 257; table content and structure 179 each. Overall is the equally weighted mean of the five aggregate dimension scores.",
-        "Moli 1.1.11 was measured at commit 721bd2e32.",
         "All-page latency includes failures and uses the final logical call. Total retry-inclusive time and successful-output-only time are different populations and are not substituted here. Methods ran in separate batches; no timing winner is declared."
       ],
       "reportUrl": null,
       "providers": [
+        {
+          "id": "moli",
+          "name": "Moli 1.1.9",
+          "description": "Moli 1.1.9",
+          "mode": "Frozen HTML to Markdown",
+          "passed": null,
+          "scores": {
+            "overall": 36.41,
+            "fullText": 41.45,
+            "code": 90.87,
+            "formula": 20.29,
+            "tableContent": 17.31,
+            "tableStructure": 12.12,
+            "meanTime": 513,
+            "p50Time": 323,
+            "p95Time": 1837
+          }
+        },
         {
           "id": "lightpanda",
           "name": "Lightpanda 0.4.1",
@@ -127,24 +144,6 @@
             "meanTime": 3445,
             "p50Time": 2729,
             "p95Time": 5391
-          }
-        },
-        {
-          "id": "moli-content-fixed",
-          "name": "Moli 1.1.11",
-          "description": "Moli 1.1.11",
-          "mode": "Frozen HTML to Markdown",
-          "passed": null,
-          "scores": {
-            "overall": 39.27,
-            "fullText": 40.73,
-            "code": 91.06,
-            "formula": 28.2,
-            "tableContent": 22.62,
-            "tableStructure": 13.75,
-            "meanTime": 274,
-            "p50Time": 179,
-            "p95Time": 696
           }
         }
       ]
@@ -219,7 +218,6 @@
       "Moli PR785 and PR919 are separate full-cohort runs. PR919 refers to measured commit 721bd2e32 and Moli 1.1.11; later rebased commits are not represented as tested.": "Moli PR785 与 PR919 是分别完成的全量运行。PR919 对应实测提交 721bd2e32 和 Moli 1.1.11，不把后续变基提交当成已测试结果。",
       "All-page latency includes failures and uses the final logical call. Total retry-inclusive time and successful-output-only time are different populations and are not substituted here. Methods ran in separate batches; no timing winner is declared.": "全部页面耗时保留失败，统计最终逻辑调用。含重试总耗时和仅正文成功页面的耗时属于其他总体，未在此替换。各方案在不同批次运行，不标出速度最优值。",
       "Publish one measured configuration per browser.": "每款浏览器使用一个实测配置。",
-      "Moli 1.1.11 was measured at commit 721bd2e32.": "Moli 1.1.11 的实测提交为 721bd2e32。",
       "Five browser configurations execute the same 812 WebArena-Verified tasks.": "五款浏览器使用同一组 812 个 WebArena-Verified 任务。"
     }
   },
