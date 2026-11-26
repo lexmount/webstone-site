@@ -905,7 +905,11 @@ test("an undisclosed task population renders scores without inventing a case or 
       const win = new Window({url: 'https://webstone.test/?benchmark=bu-bench-v1'});
       win.localStorage.setItem('webstone-language', language);
       [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
-      globalThis.fetch = async input => new Response(JSON.stringify(String(input).includes('/benchmarks/') ? catalog : String(input).includes('/results/') ? [{file: 'bu-bench-v1/bu-bench-v1-v1.0.0-report.json', report}] : {release: RELEASE}));
+      globalThis.fetch = async input => {
+        if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
+        if (String(input).includes('/results/')) return new Response(JSON.stringify([{file: 'bu-bench-v1/bu-bench-v1-v1.0.0-report.json', report}]));
+        return new Response(JSON.stringify({release: RELEASE}));
+      };
       const root = require('react-dom/client').createRoot(win.document.body);
       try {
         await React.act(async () => root.render(React.createElement(Dashboard)));
