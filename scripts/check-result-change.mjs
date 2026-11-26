@@ -91,19 +91,33 @@ export function checkResultChange(baseCatalog, catalog, changes, publishedPaths,
 export function validateBrowserCohort(catalog, benchmark) {
   const info = catalog.benchmarks.find(item => item.id === benchmark.id);
   if (info?.trackId !== "webfetch" && benchmark.id !== "webarena-verified") return;
+  const identities = new Map();
+  for (const [id, aliases] of Object.entries(catalog.browserProjects ?? {})) {
+    for (const alias of aliases) {
+      const key = browserProjectKey(alias);
+      if (identities.has(key)) throw new Error("Browser project aliases must identify one registered project.");
+      identities.set(key, id);
+    }
+  }
   const projects = new Set();
   for (const provider of benchmark.providers) {
-    const url = new URL(catalog.providerUrls[provider.id]);
-    url.hostname = url.hostname.replace(/\.$/, "");
-    let project = url.origin + url.pathname.replace(/\/+$/, "");
-    // A GitHub repository has one identity across case, clone URLs and subpaths.
-    const parts = url.pathname.split("/").filter(Boolean).map(part => decodeURIComponent(part));
-    if (url.hostname.replace(/^www\./, "") === "github.com" && parts.length >= 2) {
-      project = `github:${parts[0].toLowerCase()}/${parts[1].replace(/\.git$/i, "").toLowerCase()}`;
-    }
+    const project = identities.get(browserProjectKey(catalog.providerUrls[provider.id]));
+    if (!project) throw new Error("A new browser or domain alias needs a registered browser project in a separate reviewed catalog pull request.");
     if (projects.has(project)) throw new Error("Public comparisons allow one configuration per browser.");
     projects.add(project);
   }
+}
+
+function browserProjectKey(value) {
+  const url = new URL(value);
+  url.hostname = url.hostname.replace(/\.$/, "");
+  const hostname = url.hostname.replace(/^www\./, "");
+  // GitHub hosts many projects; a product's own domain identifies its project.
+  const parts = url.pathname.split("/").filter(Boolean).map(part => decodeURIComponent(part));
+  if (hostname === "github.com" && parts.length >= 2) {
+    return `github:${parts[0].toLowerCase()}/${parts[1].replace(/\.git$/i, "").toLowerCase()}`;
+  }
+  return hostname;
 }
 
 function population(benchmark) {

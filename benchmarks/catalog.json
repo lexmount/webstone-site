@@ -2082,5 +2082,22 @@
         "url": "https://www.browserbase.com/pricing"
       }
     ]
+  },
+  "browserProjects": {
+    "moli": [
+      "https://github.com/lexmount/moli"
+    ],
+    "chromium": [
+      "https://github.com/chromium/chromium"
+    ],
+    "lightpanda": [
+      "https://github.com/lightpanda-io/browser"
+    ],
+    "obscura": [
+      "https://github.com/h4ckf0r0day/obscura"
+    ],
+    "kitesurf": [
+      "https://kitesurf.dev/"
+    ]
   }
 }

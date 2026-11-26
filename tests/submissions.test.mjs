@@ -38,16 +38,18 @@ test("result submissions add the next version without changing definitions or hi
 });
 
 test("external submissions can add their own public project and evidence URLs", () => {
-  const next = structuredClone(catalog);
+  const registered = structuredClone(catalog);
+  registered.browserProjects.external = ["https://example.com/product"];
+  const next = structuredClone(registered);
   next.providerUrls["new-method"] = "https://example.com/product";
   const data = report(2);
   data.source.url = "https://example.com/evaluation";
   data.source.kind = "report-page";
   data.benchmarks[0].providers[0].id = "new-method";
   const change = { ...addition(2), content: JSON.stringify(data) };
-  assert.deepEqual(checkResultChange(catalog, next, [change], published), { reports: 1 });
+  assert.deepEqual(checkResultChange(registered, next, [change], published), { reports: 1 });
   next.providerUrls.moli = "https://example.com/replacement";
-  assert.throws(() => checkResultChange(catalog, next, [change], published), /Existing participant URLs/);
+  assert.throws(() => checkResultChange(registered, next, [change], published), /Existing participant URLs/);
   const invalid = report(2);
   invalid.source.url = "http://example.com/report";
   assert.throws(() => checkResultChange(catalog, catalog, [{ ...addition(2), content: JSON.stringify(invalid) }], published), /HTTPS source/);
@@ -237,7 +239,7 @@ test("unchanged historical cohorts still allow metadata-only corrections", () =>
   const candidate = structuredClone(legacy);
   candidate.id = 'lexbench-webfetch-v2.0.1';
   candidate.version = 'v2.0.1';
-  candidate.release = { date: '2026-11-26', kind: 'metadata', previous: 'v2.0.0', summary: 'Clarify the existing task scope.' };
+  candidate.release = { date: legacy.release.date, kind: 'metadata', previous: 'v2.0.0', summary: 'Clarify the existing task scope.' };
   candidate.benchmarks[0].notes.push('Task populations remain unchanged.');
   const change = { path: 'results/lexbench-webfetch/lexbench-webfetch-v2.0.1-report.json', status: 'A', mode: '100644', content: JSON.stringify(candidate) };
   const paths = ['results/lexbench-webfetch/lexbench-webfetch-v2.0.0-report.json'];
@@ -253,4 +255,25 @@ test("GitHub repository URL aliases cannot publish duplicate browser builds", ()
     candidate.benchmarks[0].providers.push({ ...structuredClone(first), id: 'another-moli-build', name: 'Moli another build' });
     assert.throws(() => checkResultChange(catalog, updatedCatalog, [{ ...addition(2), content: JSON.stringify(candidate) }], published), /one configuration per browser/i);
   }
+});
+
+
+test("official-site paths cannot establish a separate browser project", () => {
+  const updated = structuredClone(catalog);
+  updated.providerUrls['kitesurf-another-build'] = 'https://kitesurf.dev/build-2';
+  const candidate = report(2);
+  const first = candidate.benchmarks[0].providers.find(provider => provider.id === 'kitesurf');
+  candidate.benchmarks[0].providers.push({ ...structuredClone(first), id: 'kitesurf-another-build', name: 'Kitesurf another build' });
+  assert.throws(() => checkResultChange(catalog, updated, [{ ...addition(2), content: JSON.stringify(candidate) }], published), /one configuration per browser/i);
+});
+
+test("a result submission cannot register its own browser project identity", () => {
+  const updated = structuredClone(catalog);
+  updated.providerUrls['unreviewed-browser'] = 'https://example.com/browser';
+  const candidate = report(2);
+  candidate.benchmarks[0].providers[0].id = 'unreviewed-browser';
+  const change = { ...addition(2), content: JSON.stringify(candidate) };
+  assert.throws(() => checkResultChange(catalog, updated, [change], published), /registered browser project/i);
+  updated.browserProjects = { ...updated.browserProjects, unreviewed: ['https://example.com/browser'] };
+  assert.throws(() => checkResultChange(catalog, updated, [change], published), /separate pull request/i);
 });
