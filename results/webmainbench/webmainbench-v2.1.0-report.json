@@ -57,21 +57,21 @@
       "reportUrl": null,
       "providers": [
         {
-          "id": "moli",
-          "name": "Moli 1.1.9",
-          "description": "Moli 1.1.9",
+          "id": "moli-content-fixed",
+          "name": "Moli 1.1.11",
+          "description": "Moli 1.1.11 · PR919 721bd2e32",
           "mode": "Frozen HTML to Markdown",
           "passed": null,
           "scores": {
-            "overall": 36.41,
-            "fullText": 41.45,
-            "code": 90.87,
-            "formula": 20.29,
-            "tableContent": 17.31,
-            "tableStructure": 12.12,
-            "meanTime": 513,
-            "p50Time": 323,
-            "p95Time": 1837
+            "overall": 39.27,
+            "fullText": 40.73,
+            "code": 91.06,
+            "formula": 28.2,
+            "tableContent": 22.62,
+            "tableStructure": 13.75,
+            "meanTime": 274,
+            "p50Time": 179,
+            "p95Time": 696
           }
         },
         {
