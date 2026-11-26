@@ -324,8 +324,12 @@ test("version-specific sample notes must be nonempty English", () => {
 
 test("benchmarks in each published Track share its summary blog", () => {
   const reportMetadata = JSON.parse(readFileSync(new URL("../reports/metadata.json", import.meta.url), "utf8"));
-  const browserUseReport = reportMetadata.reports["bu-bench-v1-v1.0.0"];
-  const browserUseUrl = browserUseReport.urls[browserUseReport.originalLanguage ?? "zh"];
+  const browserUseIds = new Set(catalog.benchmarks.filter(item => item.trackId === "browser-use").map(item => item.id));
+  const browserUseReport = Object.values(reportMetadata.reports).find(report =>
+    report.benchmarkIds?.some(id => browserUseIds.has(id)));
+  assert.ok(browserUseReport, "browser-use track must reference published report metadata");
+  const browserUseUrl = browserUseReport.urls?.[browserUseReport.originalLanguage ?? "zh"];
+  assert.ok(browserUseUrl, "browser-use report metadata must provide a primary-language URL");
   const reports = {
     webfetch: "https://yours.lexmount.cn/artifact-site/s/sBygxmqjB5wc",
     websearch: "https://yours.lexmount.cn/artifact-site/s/-FtUMQm-NmQa",

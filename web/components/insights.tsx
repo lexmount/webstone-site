@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import MetricSelector from "./metric-selector";
 import { qualityMetrics, qualityScale } from "../lib/comparisons";
 import { isEligibleResourceMetric, radarAxes } from "../lib/radar";
@@ -50,102 +50,32 @@ function labelBox(x: number, y: number, anchor: "start" | "middle" | "end", widt
   return { left: x - width / 2 - 2, right: x + width / 2 + 2, top: y - 11, bottom: y + 3 };
 }
 
-function allocateDisclosedLabels(
-  entries: Array<{ id: string; x: number; y: number; text: string }>,
-  bounds: { left: number; right: number; top: number; bottom: number },
-): Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }> {
-  const markerBoxes: Box[] = entries.map(point => ({
-    left: point.x - 7, right: point.x + 7, top: point.y - 7, bottom: point.y + 7,
-  }));
-  const occupiedLabels: Box[] = [];
-  const result = new Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }>();
+type PairCluster = {
+  id: string;
+  kind: "disclosed" | "undisclosed";
+  cx: number;
+  cy: number;
+  memberIds: string[];
+};
 
-  for (const point of entries) {
-    const width = Math.max(48, point.text.length * 6.5);
-    const preferRight = point.x < bounds.right - width - 10;
-    const sideCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = preferRight
-      ? [
-        { lx: point.x + 10, ly: point.y + 4, anchor: "start" },
-        { lx: point.x - 10, ly: point.y + 4, anchor: "end" },
-      ]
-      : [
-        { lx: point.x - 10, ly: point.y + 4, anchor: "end" },
-        { lx: point.x + 10, ly: point.y + 4, anchor: "start" },
-      ];
-    const gridCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = [];
-    const xOffsets = [0, -(width + 12), width + 12];
-    for (const dy of [-14, 18, -28, 32, -42, 46, -56, 60, -70, 74, -84, 88, -98, 102]) {
-      const ly = point.y + dy;
-      for (const dx of xOffsets) {
-        const clampedX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.x + dx));
-        gridCandidates.push({ lx: clampedX, ly, anchor: "middle" });
-      }
-    }
-    const candidates = [...sideCandidates, ...gridCandidates];
-    let chosen: { lx: number; ly: number; anchor: "start" | "middle" | "end" } | null = null;
-    let chosenBox: Box | null = null;
-    for (const candidate of candidates) {
-      const box = labelBox(candidate.lx, candidate.ly, candidate.anchor, width);
-      const inside = box.left >= bounds.left - 6 && box.right <= bounds.right + 6 && box.top >= bounds.top - 8 && box.bottom <= bounds.bottom + 8;
-      if (!inside) continue;
-      if (occupiedLabels.some(existing => boxesOverlap(box, existing))) continue;
-      if (markerBoxes.some(marker => boxesOverlap(box, marker))) continue;
-      chosen = candidate;
-      chosenBox = box;
-      break;
-    }
-    if (!chosen || !chosenBox) continue;
-    occupiedLabels.push(chosenBox);
-    result.set(point.id, {
-      lx: Number(chosen.lx.toFixed(2)),
-      ly: Number(chosen.ly.toFixed(2)),
-      anchor: chosen.anchor,
-      leader: Math.abs(chosen.ly - (point.y + 4)) > 6 || Math.abs(chosen.lx - point.x) > width / 2 + 12,
-    });
-  }
-  return result;
-}
+type PairScale = {
+  plotLeft: number;
+  plotRight: number;
+  dividerX: number;
+  railCenter: number;
+  plotTop: number;
+  plotBottom: number;
+  minY: number;
+  maxY: number;
+  yTicks: number[];
+  yPos: (value: number) => number;
+  uniqueCosts: number[];
+  useLog: boolean;
+  xPos: (value: number) => number;
+  xTicks: number[];
+};
 
-function allocateUndisclosedX(
-  entries: Array<{ id: string; y: number }>,
-  railLeft: number,
-  railRight: number,
-): Map<string, number> {
-  const positions = new Map<string, number>();
-  const center = (railLeft + railRight) / 2;
-  const maxWidth = railRight - railLeft;
-  const clusters: Array<Array<{ id: string; y: number }>> = [];
-  for (const item of entries) {
-    const current = clusters.at(-1);
-    if (current && Math.abs(item.y - current.at(-1)!.y) < 14) {
-      current.push(item);
-    } else {
-      clusters.push([item]);
-    }
-  }
-  for (const cluster of clusters) {
-    if (cluster.length === 1) {
-      positions.set(cluster[0].id, center);
-      continue;
-    }
-    const step = Math.min(18, maxWidth / (cluster.length - 1));
-    const start = center - (step * (cluster.length - 1)) / 2;
-    cluster.forEach((item, index) => {
-      positions.set(item.id, Number((start + index * step).toFixed(2)));
-    });
-  }
-  return positions;
-}
-
-function PairChart({ providers, hidden, quality, resource, descriptionId, methodName, t }: {
-  providers: Provider[];
-  hidden: string[];
-  quality: Metric;
-  resource: Metric;
-  descriptionId: string;
-  methodName: (provider: Provider) => string;
-  t: Props["t"];
-}) {
+function computePairScale(providers: Provider[], quality: Metric, resource: Metric): PairScale {
   const plotLeft = 68;
   const plotRight = 432;
   const dividerX = 456;
@@ -192,8 +122,217 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
     if (!xTicks.length || Math.abs(xPos(value) - xPos(xTicks.at(-1)!)) >= 52) xTicks.push(value);
   }
 
-  const visibleEntries = providers.map((provider, index) => ({ provider, index }))
-    .filter(({ provider }) => !hidden.includes(provider.id));
+  return {
+    plotLeft, plotRight, dividerX, railCenter, plotTop, plotBottom,
+    minY, maxY, yTicks, yPos, uniqueCosts, useLog, xPos, xTicks,
+  };
+}
+
+function groupDisclosedOverlaps(
+  entries: Array<{ id: string; x: number; y: number }>,
+): PairCluster[] {
+  const visited = new Set<string>();
+  const clusters: PairCluster[] = [];
+  for (const item of entries) {
+    if (visited.has(item.id)) continue;
+    const members = [item];
+    visited.add(item.id);
+    for (let index = 0; index < members.length; index++) {
+      const current = members[index];
+      for (const candidate of entries) {
+        if (visited.has(candidate.id)) continue;
+        if (Math.hypot(candidate.x - current.x, candidate.y - current.y) < 11) {
+          visited.add(candidate.id);
+          members.push(candidate);
+        }
+      }
+    }
+    if (members.length >= 2) {
+      const cx = Number((members.reduce((sum, entry) => sum + entry.x, 0) / members.length).toFixed(2));
+      const cy = Number((members.reduce((sum, entry) => sum + entry.y, 0) / members.length).toFixed(2));
+      clusters.push({
+        id: `disclosed:${members.map(entry => entry.id).join(",")}`,
+        kind: "disclosed",
+        cx,
+        cy,
+        memberIds: members.map(entry => entry.id),
+      });
+    }
+  }
+  return clusters;
+}
+
+function allocateDisclosedLabels(
+  entries: Array<{ id: string; x: number; y: number; text: string }>,
+  overlapMemberIds: Set<string>,
+  bounds: { left: number; right: number; top: number; bottom: number },
+): Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }> {
+  const markerBoxes: Box[] = entries.map(point => {
+    const pad = overlapMemberIds.has(point.id) ? 11 : 7;
+    return { left: point.x - pad, right: point.x + pad, top: point.y - pad, bottom: point.y + pad };
+  });
+  const occupiedLabels: Box[] = [];
+  const result = new Map<string, { lx: number; ly: number; anchor: "start" | "middle" | "end"; leader: boolean }>();
+
+  for (const point of entries) {
+    const width = Math.max(48, point.text.length * 6.5);
+    const preferRight = point.x < bounds.right - width - 10;
+    const offset = overlapMemberIds.has(point.id) ? 13 : 10;
+    const sideCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = preferRight
+      ? [
+        { lx: point.x + offset, ly: point.y + 4, anchor: "start" },
+        { lx: point.x - offset, ly: point.y + 4, anchor: "end" },
+      ]
+      : [
+        { lx: point.x - offset, ly: point.y + 4, anchor: "end" },
+        { lx: point.x + offset, ly: point.y + 4, anchor: "start" },
+      ];
+    const gridCandidates: Array<{ lx: number; ly: number; anchor: "start" | "middle" | "end" }> = [];
+    const xOffsets = [0, -(width + 12), width + 12];
+    for (const dy of [-16, 20, -30, 34, -44, 48]) {
+      const ly = point.y + dy;
+      for (const dx of xOffsets) {
+        const clampedX = Math.max(bounds.left + width / 2, Math.min(bounds.right - width / 2, point.x + dx));
+        gridCandidates.push({ lx: clampedX, ly, anchor: "middle" });
+      }
+    }
+    const candidates = [...sideCandidates, ...gridCandidates];
+    let chosen: { lx: number; ly: number; anchor: "start" | "middle" | "end" } | null = null;
+    let chosenBox: Box | null = null;
+    for (const candidate of candidates) {
+      const box = labelBox(candidate.lx, candidate.ly, candidate.anchor, width);
+      const inside = box.left >= bounds.left - 6 && box.right <= bounds.right + 6 && box.top >= bounds.top - 8 && box.bottom <= bounds.bottom + 8;
+      if (!inside) continue;
+      if (occupiedLabels.some(existing => boxesOverlap(box, existing))) continue;
+      if (markerBoxes.some(marker => boxesOverlap(box, marker))) continue;
+      chosen = candidate;
+      chosenBox = box;
+      break;
+    }
+    if (!chosen || !chosenBox) continue;
+    occupiedLabels.push(chosenBox);
+    result.set(point.id, {
+      lx: Number(chosen.lx.toFixed(2)),
+      ly: Number(chosen.ly.toFixed(2)),
+      anchor: chosen.anchor,
+      leader: Math.abs(chosen.ly - (point.y + 4)) > 6 || Math.abs(chosen.lx - point.x) > width / 2 + 14,
+    });
+  }
+  return result;
+}
+
+const DOT_RADIUS = 5.5;
+const CLUSTER_RADIUS = 9.5;
+
+function allocateUndisclosedRail(
+  entries: Array<{ id: string; y: number }>,
+  railLeft: number,
+  railRight: number,
+): { positions: Map<string, number>; overflowClusters: PairCluster[] } {
+  const center = (railLeft + railRight) / 2;
+  const lanes: number[] = [center];
+  for (let offset = 16; center - offset >= railLeft && center + offset <= railRight; offset += 16) {
+    lanes.push(center - offset, center + offset);
+  }
+
+  type SingleMarker = { kind: "single"; id: string; cx: number; cy: number; r: number };
+  type BadgeMarker = { kind: "badge"; cx: number; cy: number; r: number; members: Array<{ id: string; y: number }> };
+  const placed: Array<SingleMarker | BadgeMarker> = [];
+
+  const collides = (ax: number, ay: number, ar: number, bx: number, by: number, br: number) =>
+    Math.hypot(ax - bx, ay - by) < ar + br + 1;
+
+  const findClearLane = (y: number, ignore?: SingleMarker | BadgeMarker): number | null => {
+    for (const laneX of lanes) {
+      const blocked = placed.some(other => other !== ignore && collides(laneX, y, DOT_RADIUS, other.cx, other.cy, other.r));
+      if (!blocked) return laneX;
+    }
+    return null;
+  };
+
+  for (const item of entries) {
+    const matchingBadge = placed.find(
+      (marker): marker is BadgeMarker => marker.kind === "badge" && Math.abs(marker.cy - item.y) < DOT_RADIUS * 2 + 1,
+    );
+    if (matchingBadge) {
+      matchingBadge.members.push(item);
+      matchingBadge.cy = Number((matchingBadge.members.reduce((sum, member) => sum + member.y, 0) / matchingBadge.members.length).toFixed(2));
+      continue;
+    }
+    const laneX = findClearLane(item.y);
+    if (laneX !== null) {
+      placed.push({ kind: "single", id: item.id, cx: laneX, cy: item.y, r: DOT_RADIUS });
+      continue;
+    }
+    const members: Array<{ id: string; y: number }> = [item];
+    for (let index = placed.length - 1; index >= 0; index--) {
+      const existing = placed[index];
+      const threshold = existing.kind === "badge" ? CLUSTER_RADIUS + CLUSTER_RADIUS + 1 : DOT_RADIUS + DOT_RADIUS + 1;
+      if (Math.abs(existing.cy - item.y) < threshold) {
+        if (existing.kind === "badge") members.push(...existing.members);
+        else members.push({ id: existing.id, y: existing.cy });
+        placed.splice(index, 1);
+      }
+    }
+    const badgeY = Number((members.reduce((sum, member) => sum + member.y, 0) / members.length).toFixed(2));
+    placed.push({ kind: "badge", cx: center, cy: badgeY, r: CLUSTER_RADIUS, members });
+  }
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < placed.length; i++) {
+      const first = placed[i];
+      if (first.kind !== "badge") continue;
+      for (let j = placed.length - 1; j >= 0; j--) {
+        if (i === j) continue;
+        const second = placed[j];
+        if (!collides(first.cx, first.cy, first.r, second.cx, second.cy, second.r)) continue;
+        if (second.kind === "single") {
+          const relocated = findClearLane(second.cy, second);
+          if (relocated !== null) {
+            second.cx = relocated;
+            changed = true;
+            continue;
+          }
+          first.members.push({ id: second.id, y: second.cy });
+        } else {
+          first.members.push(...second.members);
+        }
+        placed.splice(j, 1);
+        if (j < i) i--;
+        first.cy = Number((first.members.reduce((sum, member) => sum + member.y, 0) / first.members.length).toFixed(2));
+        changed = true;
+      }
+    }
+  }
+
+  const positions = new Map<string, number>();
+  const overflowClusters: PairCluster[] = [];
+  for (const marker of placed) {
+    if (marker.kind === "single") {
+      positions.set(marker.id, Number(marker.cx.toFixed(2)));
+    } else {
+      const sortedMembers = [...marker.members].sort((a, b) => a.y - b.y || a.id.localeCompare(b.id));
+      overflowClusters.push({
+        id: `undisclosed:${sortedMembers.map(member => member.id).join(",")}`,
+        kind: "undisclosed",
+        cx: marker.cx,
+        cy: marker.cy,
+        memberIds: sortedMembers.map(member => member.id),
+      });
+    }
+  }
+  return { positions, overflowClusters };
+}
+
+function computePairLayout(
+  visibleEntries: Array<{ provider: Provider; index: number }>,
+  quality: Metric,
+  resource: Metric,
+  scale: PairScale,
+) {
+  const { plotLeft, plotRight, dividerX, plotTop, plotBottom, yPos, xPos } = scale;
   const undisclosedScored = visibleEntries
     .flatMap(({ provider }) => {
       const score = provider.scores[quality.id];
@@ -201,7 +340,7 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
       return [{ id: provider.id, y: yPos(score) }];
     })
     .sort((a, b) => a.y - b.y);
-  const undisclosedX = allocateUndisclosedX(undisclosedScored, dividerX + 20, 572);
+  const { positions: undisclosedX, overflowClusters } = allocateUndisclosedRail(undisclosedScored, dividerX + 20, 572);
   const disclosedScored = visibleEntries.flatMap(({ provider }) => {
     const score = provider.scores[quality.id];
     const cost = provider.scores[resource.id];
@@ -210,12 +349,46 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
     const costText = formatMetric(cost, resource.unit, resource.decimals);
     return [{ id: provider.id, x: Number(xPos(cost).toFixed(2)), y: Number(yPos(score).toFixed(2)), text: `${scoreText} · ${costText}` }];
   });
-  const disclosedLabels = allocateDisclosedLabels(disclosedScored, {
+  const disclosedClusters = groupDisclosedOverlaps(disclosedScored);
+  const disclosedOverlapIds = new Set(disclosedClusters.flatMap(cluster => cluster.memberIds));
+  const disclosedLabels = allocateDisclosedLabels(disclosedScored, disclosedOverlapIds, {
     left: plotLeft + 8, right: plotRight - 8, top: plotTop + 8, bottom: plotBottom - 8,
   });
+  return {
+    undisclosedX,
+    overflowClusters,
+    overflowMemberIds: new Set(overflowClusters.flatMap(cluster => cluster.memberIds)),
+    disclosedClusters,
+    disclosedLabels,
+    allClusters: [...disclosedClusters, ...overflowClusters],
+  };
+}
+
+function PairChart({ visibleEntries, quality, resource, scale, layout, activeProviderId, selectedClusterId, onSelectCluster, descriptionId, methodName, t }: {
+  visibleEntries: Array<{ provider: Provider; index: number }>;
+  quality: Metric;
+  resource: Metric;
+  scale: PairScale;
+  layout: ReturnType<typeof computePairLayout>;
+  activeProviderId: string | null;
+  selectedClusterId: string | null;
+  onSelectCluster: (clusterId: string | null, trigger?: SVGGElement | null) => void;
+  descriptionId: string;
+  methodName: (provider: Provider) => string;
+  t: Props["t"];
+}) {
+  const { plotLeft, plotRight, dividerX, railCenter, plotTop, plotBottom, yTicks, yPos, useLog, xPos, xTicks } = scale;
+  const { undisclosedX, overflowMemberIds, disclosedLabels, allClusters } = layout;
+  const providerLookup = new Map(visibleEntries.map(entry => [entry.provider.id, entry]));
 
   const labelFor = (provider: Provider) =>
     `${methodName(provider)} · ${t(quality.label)}: ${formatMetric(provider.scores[quality.id], quality.unit, quality.decimals)} · ${t(resource.label)}: ${formatMetric(provider.scores[resource.id], resource.unit, resource.decimals)}`;
+
+  const orderedEntries = activeProviderId
+    ? [...visibleEntries.filter(entry => entry.provider.id !== activeProviderId), ...visibleEntries.filter(entry => entry.provider.id === activeProviderId)]
+    : visibleEntries;
+
+  const resourceAxisLabel = useLog ? `${t(resource.label)} (${t("log scale")})` : t(resource.label);
 
   return <svg viewBox="0 0 600 340" role="img" aria-label={t("Capability profile")} aria-describedby={descriptionId}>
     <desc id={descriptionId}>{visibleEntries.map(({ provider }) => labelFor(provider)).join(". ")}</desc>
@@ -243,18 +416,20 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
         </text>
       </g>;
     })}
-    <text x={(plotLeft + plotRight) / 2} y={322} textAnchor="middle" className="radar-label">{t(resource.label)}</text>
+    <text x={(plotLeft + plotRight) / 2} y={322} textAnchor="middle" className="radar-label">{resourceAxisLabel}</text>
     <text x={railCenter} y={plotBottom + 20} textAnchor="middle" className="radar-tick">{t("Undisclosed")}</text>
     <text x={18} y={(plotTop + plotBottom) / 2} textAnchor="middle" className="radar-label" transform={`rotate(-90 18 ${(plotTop + plotBottom) / 2})`}>{t(quality.label)}</text>
-    {visibleEntries.map(({ provider, index }) => {
+    {orderedEntries.map(({ provider, index }) => {
       const score = provider.scores[quality.id];
       const cost = provider.scores[resource.id];
       const disclosed = typeof cost === "number";
+      if (!disclosed && overflowMemberIds.has(provider.id)) return null;
       const label = labelFor(provider);
       const seriesColor = colors[index % colors.length];
+      const activeClass = activeProviderId === provider.id ? "radar-series is-active" : "radar-series";
       if (typeof score !== "number") {
         const tickX = disclosed ? xPos(cost) : null;
-        return <g key={provider.id} className="radar-series" style={{ color: seriesColor }}
+        return <g key={provider.id} className={activeClass} style={{ color: seriesColor }}
           tabIndex={0} aria-label={label}>
           <title>{label}</title>
           {tickX !== null && <line x1={tickX} y1={plotBottom - 5} x2={tickX} y2={plotBottom + 5} stroke="currentColor" strokeWidth="2.5" />}
@@ -270,7 +445,7 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
       if (labelPlacement) {
         leaderY = labelPlacement.ly > cy ? labelPlacement.ly - 10 : labelPlacement.ly + 3;
       }
-      return <g key={provider.id} className="radar-series" style={{ color: seriesColor }}
+      return <g key={provider.id} className={activeClass} style={{ color: seriesColor }}
         tabIndex={0} aria-label={label}>
         <title>{label}</title>
         {labelPlacement?.leader && <line className="radar-leader" x1={cx} y1={cy} x2={labelPlacement.lx} y2={leaderY} />}
@@ -280,22 +455,61 @@ function PairChart({ providers, hidden, quality, resource, descriptionId, method
         </text>}
       </g>;
     })}
+    {allClusters.map(cluster => {
+      const members = cluster.memberIds.map(id => providerLookup.get(id)).filter((item): item is { provider: Provider; index: number } => Boolean(item));
+      const summary = members.map(({ provider }) => labelFor(provider)).join("\n");
+      const heading = t("{count} overlapping methods").replace("{count}", String(members.length));
+      const isSelected = selectedClusterId === cluster.id;
+      const clusterClass = cluster.kind === "undisclosed" ? "pair-cluster is-undisclosed" : "pair-cluster";
+      const toggleCluster = (trigger: SVGGElement) => onSelectCluster(isSelected ? null : cluster.id, trigger);
+      return <g key={cluster.id} className={isSelected ? `${clusterClass} is-selected` : clusterClass}
+        role="button" tabIndex={0} aria-expanded={isSelected}
+        aria-label={`${heading}: ${members.map(({ provider }) => labelFor(provider)).join("; ")}`}
+        onClick={event => toggleCluster(event.currentTarget)}
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleCluster(event.currentTarget);
+          } else if (event.key === "Escape" && isSelected) {
+            onSelectCluster(null, event.currentTarget);
+          }
+        }}>
+        <title>{`${heading}\n${summary}`}</title>
+        <circle className="pair-cluster-badge" cx={cluster.cx} cy={cluster.cy} r="9.5" />
+        <text className="pair-cluster-count" x={cluster.cx} y={cluster.cy + 3.5} textAnchor="middle">{members.length}</text>
+      </g>;
+    })}
   </svg>;
 }
 
 export default function Insights({ benchmark, t }: Props) {
   const [hidden, setHidden] = useState<string[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<string[] | null>(null);
+  const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const clusterTriggerRef = useRef<SVGGElement | null>(null);
   const descriptionId = useId();
+  function handleSelectCluster(clusterId: string | null, trigger?: SVGGElement | null) {
+    if (trigger) clusterTriggerRef.current = trigger;
+    setSelectedClusterId(clusterId);
+  }
+  function dismissCluster() {
+    setSelectedClusterId(null);
+    const trigger = clusterTriggerRef.current;
+    if (trigger && trigger.isConnected) {
+      trigger.focus();
+    }
+  }
   const availableAxes = radarAxes(benchmark);
   const defaultIds = availableAxes.filter(axis => axis.defaultSelected).map(axis => axis.id);
   const selectedIds = selectedMetrics ?? defaultIds;
   const axes = availableAxes.filter(axis => selectedIds.includes(axis.id)).map(axis => ({ ...axis, label: t(axis.label) }));
   const primary = benchmark.metrics.find(metric => metric.id === benchmark.primaryMetric);
-  if (!primary || !benchmark.providers.length || defaultIds.length < 3) return null;
+  if (!primary || !benchmark.providers.length) return null;
 
   const sortedProviders = sortProviders(benchmark.providers, primary.id, primary.direction);
   const pair = twoAxisComparison(benchmark, availableAxes);
+  const pairScale = pair ? computePairScale(sortedProviders, pair.quality, pair.resource) : null;
   const providers = sortedProviders.map(provider => ({ provider, values: axes.map(axis => axis.value(provider)) }));
 
   function point(index: number, distance: number) {
@@ -309,10 +523,45 @@ export default function Insights({ benchmark, t }: Props) {
   const profileLabel = (provider: Provider) =>
     [methodName(provider), ...axes.map(axis => `${axis.label}: ${axis.display(provider)}`)].join(" · ");
 
+  const visibleIndexed = sortedProviders.map((provider, index) => ({ provider, index })).filter(({ provider }) => !hidden.includes(provider.id));
+  const pairLayout = pair && pairScale ? computePairLayout(visibleIndexed, pair.quality, pair.resource, pairScale) : null;
+  let activeClusterMembers: Array<{ provider: Provider; index: number }> = [];
+  let activeClusterKind: "disclosed" | "undisclosed" | null = null;
+  if (pairLayout && selectedClusterId) {
+    const lookup = new Map(visibleIndexed.map(item => [item.provider.id, item]));
+    const matched = pairLayout.allClusters.find(cluster => cluster.id === selectedClusterId);
+    if (matched) {
+      activeClusterKind = matched.kind;
+      activeClusterMembers = matched.memberIds.map(id => lookup.get(id)).filter((item): item is { provider: Provider; index: number } => Boolean(item));
+    }
+  }
+
+  let caption = t("Quality and category axes show a share of the maximum. Lower latency, memory and measured cost plot farther out when reported.");
+  if (pair && pairScale) {
+    const parts = [
+      t("Higher {quality} plots higher; lower {resource} plots farther left. Methods without a disclosed value appear on the right.")
+        .replaceAll("{quality}", t(pair.quality.label))
+        .replaceAll("{resource}", t(pair.resource.label)),
+    ];
+    if (pairScale.useLog) {
+      parts.push(t("Horizontal {resource} axis uses a logarithmic scale.").replaceAll("{resource}", t(pair.resource.label)));
+    }
+    if (pairScale.minY > 0) {
+      const baselineDecimals = pair.quality.unit === "percent" ? 0 : pair.quality.decimals;
+      const minYText = formatMetric(pairScale.minY, pair.quality.unit, baselineDecimals);
+      parts.push(t("Vertical {quality} axis starts at {minY} rather than zero.")
+        .replaceAll("{quality}", t(pair.quality.label))
+        .replaceAll("{minY}", minYText));
+    }
+    caption = parts.join(" ");
+  }
+
   let chart = <p className="chart-empty" role="status">{t("Select at least three metrics for a radar chart.")}</p>;
-  if (pair) {
-    chart = <PairChart providers={sortedProviders} hidden={hidden}
-      quality={pair.quality} resource={pair.resource} descriptionId={descriptionId} methodName={methodName} t={t} />;
+  if (pair && pairScale && pairLayout) {
+    chart = <PairChart visibleEntries={visibleIndexed}
+      quality={pair.quality} resource={pair.resource} scale={pairScale} layout={pairLayout}
+      activeProviderId={activeProviderId} selectedClusterId={selectedClusterId} onSelectCluster={handleSelectCluster}
+      descriptionId={descriptionId} methodName={methodName} t={t} />;
   } else if (axes.length >= 3) {
     chart = <svg viewBox="-285 -173 570 346" role="img" aria-label={t("Capability profile")} aria-describedby={descriptionId}>
       <desc id={descriptionId}>{visible.map(({ provider }) => profileLabel(provider)).join(". ")}</desc>
@@ -376,7 +625,11 @@ export default function Insights({ benchmark, t }: Props) {
     </div>
     <div className="radar-layout">
     <div className="radar-legend" role="group" aria-label={t("Methods to compare")}>
-      {providers.map(({ provider }, index) => <label key={provider.id} style={{ color: colors[index % colors.length] }}>
+      {providers.map(({ provider }, index) => <label key={provider.id} style={{ color: colors[index % colors.length] }}
+        onMouseEnter={() => setActiveProviderId(provider.id)}
+        onMouseLeave={() => setActiveProviderId(current => current === provider.id ? null : current)}
+        onFocus={() => setActiveProviderId(provider.id)}
+        onBlur={() => setActiveProviderId(current => current === provider.id ? null : current)}>
         <input type="checkbox" checked={!hidden.includes(provider.id)} onChange={event => {
           const checked = event.currentTarget.checked;
           setHidden(current => checked ? current.filter(id => id !== provider.id) : [...current, provider.id]);
@@ -388,15 +641,28 @@ export default function Insights({ benchmark, t }: Props) {
       <div className="radar-scroll" tabIndex={0} role="region" aria-label={t("Capability profile")}>
         {chart}
       </div>
+      {pair && activeClusterMembers.length > 0 && <div className="pair-inspector" role="region"
+        aria-label={t(activeClusterKind === "undisclosed" ? "Undisclosed methods" : "Overlapping methods")}
+        onKeyDown={event => { if (event.key === "Escape") dismissCluster(); }}>
+        <div className="pair-inspector-header">
+          <strong>{t("{count} overlapping methods").replace("{count}", String(activeClusterMembers.length))}</strong>
+          <button type="button" className="text-button" onClick={dismissCluster}>{t("Close group details")}</button>
+        </div>
+        <ul>
+          {activeClusterMembers.map(({ provider, index }) => <li key={provider.id} style={{ "--series-color": colors[index % colors.length] } as React.CSSProperties}>
+            <span className="pair-inspector-swatch" aria-hidden="true" />
+            <span className="pair-inspector-name">{methodName(provider)}</span>
+            <span className="pair-inspector-values">
+              {formatMetric(provider.scores[pair.quality.id], pair.quality.unit, pair.quality.decimals)}
+              {" · "}
+              {formatMetric(provider.scores[pair.resource.id], pair.resource.unit, pair.resource.decimals)}
+            </span>
+          </li>)}
+        </ul>
+      </div>}
       {visible.length === 0 && <p role="status">{t("Select a method to show its results.")}</p>}
       {missingPrimaryOnly && <p role="status">{t("Selected methods do not disclose the primary quality metric.")}</p>}
-      <figcaption>
-        {pair
-          ? t("Higher {quality} plots higher; lower {resource} plots farther left. Methods without a disclosed value appear on the right.")
-            .replaceAll("{quality}", t(pair.quality.label))
-            .replaceAll("{resource}", t(pair.resource.label))
-          : t("Quality and category axes show a share of the maximum. Lower latency, memory and measured cost plot farther out when reported.")}
-      </figcaption>
+      <figcaption>{caption}</figcaption>
     </figure>
     </div>
   </section>;
