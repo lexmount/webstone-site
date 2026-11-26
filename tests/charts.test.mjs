@@ -992,6 +992,50 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
     }
   }
 
+  const ringWithCenter = {
+    ...sample,
+    providers: [
+      { id: "scale-lo", name: "Scale Lo", description: "Lo", mode: "Reported", passed: null, scores: { successRate: 75.0, costPerTask: 0 } },
+      { id: "scale-hi", name: "Scale Hi", description: "Hi", mode: "Reported", passed: null, scores: { successRate: 100.0, costPerTask: 10.0 } },
+      { id: "ring-center", name: "Ring Center", description: "Center", mode: "Reported", passed: null, scores: { successRate: 87.5, costPerTask: 5.0 } },
+      ...Array.from({ length: 12 }, (_, index) => {
+        const angle = (index / 12) * Math.PI * 2;
+        return {
+          id: `ring-${index + 1}`,
+          name: `Ring ${index + 1}`,
+          description: `Ring ${index + 1}`,
+          mode: "Reported",
+          passed: null,
+          scores: {
+            successRate: Number((87.5 + Math.sin(angle) * 2.05).toFixed(3)),
+            costPerTask: Number((5.0 + Math.cos(angle) * 0.79).toFixed(3)),
+          },
+        };
+      }),
+    ],
+  };
+  const ringHtml = render(ringWithCenter);
+  const ringSeries = parseSeries(ringHtml);
+  const centerPoint = ringSeries.find(item => item.label.startsWith("Ring Center"));
+  assert.ok(centerPoint && Number.isFinite(centerPoint.cx) && Number.isFinite(centerPoint.cy));
+  const ringBadgeMatch = /<g class="pair-cluster"[^>]*aria-label="([^"]+)"[^>]*>[\s\S]*?<circle class="pair-cluster-badge"[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"[^>]*r="([^"]+)"/.exec(ringHtml);
+  assert.ok(ringBadgeMatch, "transitive ring must render a disclosed cluster badge");
+  assert.doesNotMatch(ringBadgeMatch[1], /Ring Center/, "unrelated center point must not be absorbed when ring anchor is clear");
+  const badgeCx = Number(ringBadgeMatch[2]), badgeCy = Number(ringBadgeMatch[3]), badgeR = Number(ringBadgeMatch[4]);
+  const centerDist = Math.hypot(badgeCx - centerPoint.cx, badgeCy - centerPoint.cy);
+  assert.ok(centerDist >= badgeR + 5.5, `cluster badge must not cover unrelated center point (dist=${centerDist})`);
+  const badgeBox = { left: badgeCx - badgeR, right: badgeCx + badgeR, top: badgeCy - badgeR, bottom: badgeCy + badgeR };
+  for (const item of ringSeries) {
+    if (item.lx === null || item.ly === null) continue;
+    const w = 90;
+    let left = item.lx - w / 2;
+    if (item.anchor === "start") left = item.lx;
+    else if (item.anchor === "end") left = item.lx - w;
+    const labelRect = { left, right: left + w, top: item.ly - 11, bottom: item.ly + 3 };
+    const overlapsBadge = labelRect.left < badgeBox.right && labelRect.right > badgeBox.left && labelRect.top < badgeBox.bottom && labelRect.bottom > badgeBox.top;
+    assert.equal(overlapsBadge, false, `allocated label for ${item.label} must not overlap cluster badge`);
+  }
+
   const twelveTiedUndisclosed = {
     ...sample,
     providers: Array.from({ length: 12 }, (_, index) => ({
@@ -1016,9 +1060,13 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   const clusterRoot = require("react-dom/client").createRoot(clusterHost);
   try {
     await React.act(async () => clusterRoot.render(React.createElement(Insights, { benchmark: twelveTiedUndisclosed, t: text => text })));
-    const undisclosedBadge = clusterHost.querySelector(".pair-cluster.is-undisclosed");
-    assert.ok(undisclosedBadge);
-    await React.act(async () => undisclosedBadge.dispatchEvent(new clusterWin.MouseEvent("click", { bubbles: true })));
+    const undisclosedSvg = clusterHost.querySelector("svg");
+    assert.equal(undisclosedSvg.getAttribute("role"), "group", "interactive PairChart SVG must not hide descendant controls behind role=img");
+    const undisclosedButton = [...clusterHost.querySelectorAll('button')].find(btn => /12 overlapping methods/.test(btn.textContent));
+    assert.ok(undisclosedButton, "overflow group must expose an equivalent native HTML button");
+    assert.equal(undisclosedButton.getAttribute("aria-expanded"), "false");
+    await React.act(async () => undisclosedButton.click());
+    assert.equal(undisclosedButton.getAttribute("aria-expanded"), "true");
     const inspectorItems = [...clusterHost.querySelectorAll(".pair-inspector li")].map(li => li.textContent);
     assert.equal(inspectorItems.length, 12);
     for (let i = 1; i <= 12; i++) assert.ok(inspectorItems.some(text => text.includes(`Undisclosed Tied ${i}`) && text.includes("90.00%")));
@@ -1027,7 +1075,7 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
     assert.equal(clusterWin.document.activeElement, closeUndisclosed);
     await React.act(async () => closeUndisclosed.click());
     assert.equal(clusterHost.querySelector(".pair-inspector"), null);
-    assert.equal(clusterWin.document.activeElement, undisclosedBadge, "closing inspector must restore focus to cluster trigger");
+    assert.equal(clusterWin.document.activeElement, undisclosedButton, "closing inspector must restore focus to activating cluster button");
 
     const twentyIdenticalDisclosed = {
       ...sample,
@@ -1048,11 +1096,12 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
     );
     const omittedNames = twentyIdenticalDisclosed.providers.map(p => p.name).filter(name => !seriesWithLabel.has(name));
     assert.ok(omittedNames.length > 0, "dense 20-point group exercises inline label omission");
-    const disclosedBadge = clusterHost.querySelector(".pair-cluster:not(.is-undisclosed)");
-    assert.ok(disclosedBadge, "coincident disclosed group must render an interactive cluster badge");
-    assert.match(disclosedBadge.textContent, /20/);
+    const disclosedBadge = [...clusterHost.querySelectorAll('[role="button"]')].find(el => /20 overlapping methods/.test(el.getAttribute("aria-label") ?? ""));
+    assert.ok(disclosedBadge, "coincident disclosed group must expose an accessible SVG role=button");
+    assert.equal(disclosedBadge.getAttribute("aria-expanded"), "false");
     assert.ok(disclosedBadge.querySelector("title").textContent.includes(omittedNames[0]), "cluster hover title must include omitted-label members");
     await React.act(async () => disclosedBadge.dispatchEvent(new clusterWin.MouseEvent("click", { bubbles: true })));
+    assert.equal(disclosedBadge.getAttribute("aria-expanded"), "true");
     const disclosedItems = [...clusterHost.querySelectorAll(".pair-inspector li")].map(li => li.textContent);
     assert.equal(disclosedItems.length, 20, "cluster inspector must expose all 20 members including omitted-label ones");
     for (const omitted of omittedNames) {

@@ -439,6 +439,10 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .pair-cluster-count { fill: #fff; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
 .pair-cluster.is-undisclosed .pair-cluster-count { fill: #204d36; }
 .pair-inspector { margin: 8px 0 10px; padding: 10px 12px; border: 1px solid #d8e4db; border-radius: 6px; background: #f8fbf9; text-align: left; }
+.pair-cluster-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; justify-content: center; }
+.pair-cluster-button { padding: 4px 10px; border: 1px solid #c9d8cd; border-radius: 999px; background: #f6faf7; color: #204d36; font-size: 12px; cursor: pointer; }
+.pair-cluster-button.is-selected { border-color: #1e6274; background: #e6f2f5; color: #164855; }
+.pair-cluster-button:focus-visible { outline: 2px solid #286449; outline-offset: 2px; }
 .pair-inspector-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 12px; color: #204d36; }
 .pair-inspector ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
 .pair-inspector li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #2b4536; }
