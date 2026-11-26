@@ -62,6 +62,7 @@ export function checkResultChange(baseCatalog, catalog, changes, publishedPaths,
     rejectCredentials(report);
     if (!publicEvidenceUrl(report.source?.url)) throw new Error("New submissions require a public HTTPS source URL with a DNS hostname and no credentials.");
     validateSnapshot(report, entry, catalog);
+    validateBrowserCohort(catalog, report.benchmarks[0]);
     return { entry, report };
   }).sort((a, b) => a.entry.benchmarkId.localeCompare(b.entry.benchmarkId) || compareVersions(a.entry.version, b.entry.version));
   const participants = new Set(reports.flatMap(({ report }) => report.benchmarks[0].providers.map(provider => provider.id)));
@@ -83,6 +84,20 @@ export function checkResultChange(baseCatalog, catalog, changes, publishedPaths,
     reportsByPath.set(`${entry.benchmarkId}/${entry.version}`, report);
   }
   return { reports: reports.length };
+}
+
+// Standard browser comparisons publish one configuration per verified project.
+// The historical Headless Browser protocol explicitly compares build/layout variants.
+export function validateBrowserCohort(catalog, benchmark) {
+  const info = catalog.benchmarks.find(item => item.id === benchmark.id);
+  if (info?.trackId !== "webfetch" && benchmark.id !== "webarena-verified") return;
+  const projects = new Set();
+  for (const provider of benchmark.providers) {
+    const url = new URL(catalog.providerUrls[provider.id]);
+    const project = url.origin + url.pathname.replace(/\/+$/, "");
+    if (projects.has(project)) throw new Error("Public comparisons allow one configuration per browser.");
+    projects.add(project);
+  }
 }
 
 function population(benchmark) {

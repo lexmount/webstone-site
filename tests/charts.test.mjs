@@ -672,3 +672,87 @@ test("method details retain raw numerators and denominators alongside compact ra
     }
   } finally {await win.happyDOM.close();}
 });
+
+test("every benchmark view supplies a sourced task, an input, a flow and a reference output", () => {
+  for (const benchmark of catalog.benchmarks) {
+    const example = benchmark.example;
+    assert.ok(example, `${benchmark.id}: missing example`);
+    assert.ok(example.taskId && example.input && example.output && example.check);
+    assert.ok(example.steps.length >= 2);
+    assert.match(example.sourceUrl, /^https:\/\/huggingface\.co\/datasets\/Lexmount\/[^/]+\/blob\/[a-f0-9]{40}\//);
+    assert.ok(example.outputLabel, 'Reference output must be distinguished from measured output');
+  }
+});
+
+test("all published versions highlight comparable column winners consistently, including after reversing sort", async () => {
+  const { prepareData } = await import("../scripts/prepare-data.mjs");
+  await prepareData();
+  const files = JSON.parse(readFileSync(new URL('../web/public/results/reports.json', import.meta.url)));
+  const Dashboard = require('../web/components/dashboard.tsx').default;
+  const { RELEASE } = require('../web/lib/release.generated.ts');
+  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  try {
+    for (const file of files) {
+      const benchmark = resolveBenchmark(catalog, file.report.benchmarks[0]);
+      const win = new Window({ url: `https://webstone.test/?benchmark=${benchmark.id}&version=${file.report.version}` });
+      [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+      globalThis.fetch = async input => new Response(JSON.stringify(String(input).includes('/benchmarks/') ? catalog : String(input).includes('/results/') ? [file] : { release: RELEASE }));
+      const root = require('react-dom/client').createRoot(win.document.body);
+      try {
+        await React.act(async () => root.render(React.createElement(Dashboard)));
+        const more = [...win.document.querySelectorAll('.table-controls button')].find(button => button.textContent === 'More metrics');
+        if (more) await React.act(async () => more.click());
+        const check = () => {
+          const headers = [...win.document.querySelectorAll('.wide-table thead th')];
+          const rows = [...win.document.querySelectorAll('.wide-table tbody tr')];
+          for (const metric of benchmark.metrics) {
+            const index = headers.findIndex(header => header.querySelector('.sort-button')?.textContent === metric.label);
+            if (index < 0) {
+              assert.ok(metric.id !== benchmark.primaryMetric && benchmark.providers.every(provider => provider.scores[metric.id] == null));
+              continue;
+            }
+            const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value != null);
+            const varied = new Set(values).size > 1;
+            const best = metric.direction === 'asc' ? Math.min(...values) : Math.max(...values);
+            const expected = benchmark.rankable === false || metric.highlightBest === false || !varied ? 0 : values.filter(value => value === best).length;
+            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${metric.id}`);
+          }
+          for (const category of benchmark.categories) {
+            const index = headers.findIndex(header => header.classList.contains('category-head') && header.textContent === category.name);
+            const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value != null);
+            const expected = benchmark.rankable === false || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
+            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${category.id}`);
+          }
+        };
+        check();
+        await React.act(async () => win.document.querySelector('th.sorted .sort-button').click());
+        check();
+      } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); }
+    }
+  } finally { [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});
+
+test("Track example selection changes the task, reference and output together", async () => {
+  const win = new Window({ url: 'https://webstone.test/' });
+  const prior = [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+  const root = require('react-dom/client').createRoot(win.document.body);
+  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
+  const benchmarks = catalog.benchmarks.filter(benchmark => ['lexbench-swde', 'lexbench-zyte-product-extraction'].includes(benchmark.id));
+  try {
+    for (const language of ['en', 'zh']) {
+      await React.act(async () => root.render(React.createElement(ExampleDialog, { title: 'Web Extract', description: 'Structured field extraction', benchmarks, onClose() {}, t: translator(language, catalog) })));
+      const select = win.document.querySelectorAll('.example-switcher button');
+      for (const index of [0, 1, 0]) {
+        await React.act(async () => select[index].click());
+        const expected = benchmarks[index].example;
+        assert.ok(win.document.querySelector('.example-source').textContent.includes(expected.taskId));
+        assert.equal(win.document.querySelector('.example-source a').href, expected.sourceUrl);
+        assert.equal(win.document.querySelectorAll('pre')[0].textContent, expected.input);
+        assert.equal(win.document.querySelectorAll('pre')[1].textContent, expected.output);
+        assert.equal(select[index].getAttribute('aria-pressed'), 'true');
+        assert.equal(win.document.querySelectorAll('.example-flow section').length, 3);
+      }
+    }
+  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});

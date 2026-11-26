@@ -350,7 +350,19 @@
           ],
           "rankable": false
         }
-      ]
+      ],
+      "example": {
+        "taskId": "article-030",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Fetch/blob/e4e036818c48a813f9a40f6e8f350c55e8132c59/data/articles.jsonl",
+        "input": "https://hacks.mozilla.org/2017/02/a-cartoon-intro-to-webassembly/",
+        "steps": [
+          "Give the live URL to each retrieval method.",
+          "Save returned content and timing; check the required body regions and page content."
+        ],
+        "outputLabel": "Reference content (excerpt)",
+        "output": "A cartoon intro to WebAssembly\nLin Clark",
+        "check": "The title alone is not a pass. The task checks the required article content; latency is recorded separately."
+      }
     },
     {
       "id": "webmainbench",
@@ -497,7 +509,19 @@
             }
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "33e291cd-5b26-48b1-977f-3c63b45e6d13",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-WebMainBench/blob/7b1c20438cf9c2fb9d17dc81fbaa86fb9c4fec25/data/corrected-545.jsonl",
+        "input": "https://www.creativia.ch/en/product-page/logo-palm-institute\nInput: the archived HTML snapshot, not a fresh website fetch.",
+        "steps": [
+          "Pass the same saved HTML to each main-content extractor.",
+          "Compare the resulting Markdown with the annotated main content, including code, formulas and tables where present."
+        ],
+        "outputLabel": "Reference content (excerpt)",
+        "output": "## THE PALM INSTITUTE LOGO\n\n```\nPREMIUM GRAPHIC DESIGN\nORDER YOUR LOGO\n- Graphic, typographic and colorimetric research and proposal\n- Delivery of your files in High Resolution",
+        "check": "This is a reference excerpt. Overall and dimension scores measure how well the full main content is preserved."
+      }
     },
     {
       "id": "lexbench-websearch",
@@ -632,7 +656,19 @@
         }
       ],
       "searchGroup": "scenarios",
-      "outputLayer": "L1"
+      "outputLayer": "L1",
+      "example": {
+        "taskId": "ds-price-en",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search/blob/3f7b9f2f52745dc5eba4328e432fe227caf4adba/data/scenarios-v2.jsonl",
+        "input": "DeepSeek search fetch API pricing count need_content",
+        "steps": [
+          "Send the same query to each search API.",
+          "Keep the returned ranking and judge the top five results for relevance."
+        ],
+        "outputLabel": "Reference page",
+        "output": "https://api-docs.deepseek.com/guides/search/",
+        "check": "This is one annotated relevant source. nDCG@5 rewards relevant results appearing earlier."
+      }
     },
     {
       "id": "simpleqa-verified",
@@ -767,7 +803,19 @@
         }
       ],
       "searchGroup": "facts",
-      "outputLayer": "L1"
+      "outputLayer": "L1",
+      "example": {
+        "taskId": "sqv-4276",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified/blob/270cb2a46e60ff2ba89052604c92d17f445074ff/data/factual-v1.jsonl",
+        "input": "How many countries border Nigeria?",
+        "steps": [
+          "Search for the factual question and preserve the top five results.",
+          "Match results to annotated reference pages and check their answer text."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"reference_answer\": \"4\",\n  \"reference_page\": \"https://en.wikipedia.org/wiki/Geography_of_Nigeria\"\n}",
+        "check": "Reference-page hits, their rank and answer-text matches are separate measurements. A matching domain alone is insufficient."
+      }
     },
     {
       "datasetName": "LexBench-Web-Search",
@@ -856,7 +904,19 @@
         }
       ],
       "searchGroup": "scenarios",
-      "outputLayer": "L2"
+      "outputLayer": "L2",
+      "example": {
+        "taskId": "ds-price-en",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search/blob/3f7b9f2f52745dc5eba4328e432fe227caf4adba/data/scenarios-v2.jsonl",
+        "input": "DeepSeek search fetch API pricing count need_content",
+        "steps": [
+          "Run the same search query and keep supplemental source excerpts separately from primary snippets.",
+          "Score the supplemental excerpts independently of the primary result list."
+        ],
+        "outputLabel": "Reference page",
+        "output": "https://api-docs.deepseek.com/guides/search/",
+        "check": "The official reference source grounds this query. Supplemental-text relevance and generated-answer usefulness are evaluated separately."
+      }
     },
     {
       "datasetName": "LexBench-SimpleQA-Verified",
@@ -929,7 +989,19 @@
         }
       ],
       "searchGroup": "facts",
-      "outputLayer": "L2"
+      "outputLayer": "L2",
+      "example": {
+        "taskId": "sqv-4276",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified/blob/270cb2a46e60ff2ba89052604c92d17f445074ff/data/factual-v1.jsonl",
+        "input": "How many countries border Nigeria?",
+        "steps": [
+          "Run the same search query and keep supplemental source excerpts separately from primary snippets.",
+          "Score the supplemental excerpts independently of the primary result list."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"reference_answer\": \"4\",\n  \"reference_page\": \"https://en.wikipedia.org/wiki/Geography_of_Nigeria\"\n}",
+        "check": "The reference answer is 4. Excerpt matching and generated-answer correctness use different scoring rules; neither is a search-result rank."
+      }
     },
     {
       "datasetName": "LexBench-Web-Search",
@@ -1013,7 +1085,19 @@
         }
       ],
       "searchGroup": "scenarios",
-      "outputLayer": "L3"
+      "outputLayer": "L3",
+      "example": {
+        "taskId": "ds-price-en",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Web-Search/blob/3f7b9f2f52745dc5eba4328e432fe227caf4adba/data/scenarios-v2.jsonl",
+        "input": "DeepSeek search fetch API pricing count need_content",
+        "steps": [
+          "Give the same question to the search API with generated answers enabled.",
+          "Keep the generated answer and its citations; score this answer separately from the search results."
+        ],
+        "outputLabel": "Reference page",
+        "output": "https://api-docs.deepseek.com/guides/search/",
+        "check": "The official reference source grounds this query. Supplemental-text relevance and generated-answer usefulness are evaluated separately."
+      }
     },
     {
       "datasetName": "LexBench-SimpleQA-Verified",
@@ -1093,7 +1177,19 @@
         }
       ],
       "searchGroup": "facts",
-      "outputLayer": "L3"
+      "outputLayer": "L3",
+      "example": {
+        "taskId": "sqv-4276",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SimpleQA-Verified/blob/270cb2a46e60ff2ba89052604c92d17f445074ff/data/factual-v1.jsonl",
+        "input": "How many countries border Nigeria?",
+        "steps": [
+          "Give the same question to the search API with generated answers enabled.",
+          "Keep the generated answer and its citations; score this answer separately from the search results."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"reference_answer\": \"4\",\n  \"reference_page\": \"https://en.wikipedia.org/wiki/Geography_of_Nigeria\"\n}",
+        "check": "The reference answer is 4. Excerpt matching and generated-answer correctness use different scoring rules; neither is a search-result rank."
+      }
     },
     {
       "id": "webarena-verified",
@@ -1166,7 +1262,20 @@
             }
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "webarena-0",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-WebArena-Replay/blob/b43a7341cbb9a92e8a836bbf7878ea5971d2613c/data/full-812-v1.jsonl",
+        "input": "Get the top-1 best-selling product name(s) in 2022",
+        "steps": [
+          "Open the sales report in the benchmark shop environment.",
+          "Replay the supplied actions: select yearly totals, fill the 2022 date range and show the report.",
+          "Read the top product and submit the saved answer to the task evaluator."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"retrieved_data\": [\n    \"Quest Lumaflex™ Band\"\n  ],\n  \"status\": \"SUCCESS\",\n  \"task_type\": \"retrieve\"\n}",
+        "check": "The browser executes a fixed sequence. Success checks the final answer; a model does not choose the actions during replay."
+      }
     },
     {
       "id": "lexbench-headless-372",
@@ -1290,7 +1399,19 @@
             }
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "sc_agentloop_ax_id_stable_across_mutation__pw",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Headless-Browser/blob/34abe794d0e15d7e4ece1497d0cc9089363d0f81/data/l1.playwright.jsonl",
+        "input": "An unchanged AX target keeps its identity across an unrelated DOM mutation (playwright)\n{\n  \"fixture\": \"/v0_4/obs\",\n  \"target\": {\n    \"role\": \"button\",\n    \"name\": \"ax-stable-63\"\n  }\n}",
+        "steps": [
+          "Read the target button through the accessibility tree and save its identity.",
+          "Insert an unrelated sibling element, then read the same target again."
+        ],
+        "outputLabel": "Reference output",
+        "output": "stable|role=button|name=ax-stable-63|",
+        "check": "The assertion requires the target identity to remain stable. This example comes from the full source dataset; the historical leaderboard uses its own 372-task subset."
+      }
     },
     {
       "id": "lexbench-swde",
@@ -1404,7 +1525,20 @@
             }
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "auto-aol-0048",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-SWDE/blob/b28b77519bfb21ad88515669cc8493f2ec993fe6/inputs.jsonl",
+        "referenceUrl": "https://github.com/woailaosang/swde/blob/e9b60dbbcb899d70e813e8b899b84e3540d540da/swde/sourceCode/sourceCode/groundtruth.7z",
+        "input": "http://autos.aol.com/cars-Suzuki-SX4-2011-Standard__4dr_Front_wheel_Drive_Sedan/overview/\nauto/auto-aol(2000)/0048.htm",
+        "steps": [
+          "Read the archived automobile page, requesting the model and price fields.",
+          "Compare the structured values against the original SWDE field annotations."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"model\": \"2011 Suzuki SX4\",\n  \"price\": \"$13,499\"\n}",
+        "check": "The shown fields come from the original SWDE annotations. Field F1 and full-page exact match measure different kinds of extraction errors."
+      }
     },
     {
       "id": "lexbench-zyte-product-extraction",
@@ -1526,7 +1660,19 @@
             }
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "01efbb747904557e90dcb56d1f255a4034d5206c796539e2ce4d9dd68672c098",
+        "sourceUrl": "https://huggingface.co/datasets/Lexmount/LexBench-Zyte-Product-Extraction/blob/b79dc52e246ad33f70dc1da3c48b961976ee0679/data/zyte-products-140.jsonl",
+        "input": "https://www.amazon.com/dp/B01GOH7PKA\nUse the archived product HTML; request price, SKU and availability.",
+        "steps": [
+          "Read the saved product page with each extraction method.",
+          "Return structured fields, then compare each field and the complete page with the reference."
+        ],
+        "outputLabel": "Reference output",
+        "output": "{\n  \"price\": [\n    \"87.11\"\n  ],\n  \"sku\": [\n    \"B01GOH7PKA\"\n  ],\n  \"availability\": [\n    \"InStock\"\n  ]\n}",
+        "check": "Full-page exact match requires every evaluated field to match. The price is historical reference data, not a current offer."
+      }
     }
   ],
   "translations": {
@@ -1731,7 +1877,58 @@
       "Web Fetch and WebMainBench: browser results, timing and scoring": "Web Fetch 与 WebMainBench：浏览器结果、耗时和评分",
       "Six live-page configurations and seven frozen-HTML methods, with separate task populations and scoring rules.": "六种在线网页配置与七种冻结 HTML 方案，分别说明任务范围和评分规则。",
       "Final logical-call duration over all 545 pages, including failures. Methods were collected in different batches; these timings are not a controlled same-window speed comparison.": "全部 545 页的最终逻辑调用耗时，保留失败。各方案在不同批次运行，不能作为同一时间窗口内的受控速度比较。",
-      "Moli reaches an 89.3% pass rate on Web Fetch": "Moli 在 Web Fetch 中取得 89.3% 通过率"
+      "Moli reaches an 89.3% pass rate on Web Fetch": "Moli 在 Web Fetch 中取得 89.3% 通过率",
+      "Reference output": "参考输出",
+      "Reference content (excerpt)": "参考内容（节选）",
+      "Reference page": "参考网页",
+      "Give the live URL to each retrieval method.": "将在线网页 URL 交给各个获取方案。",
+      "Save returned content and timing; check the required body regions and page content.": "保存返回内容和耗时，检查要求的正文段落及页面内容。",
+      "The title alone is not a pass. The task checks the required article content; latency is recorded separately.": "只拿到标题不算通过。任务会检查要求的文章内容，耗时另外记录。",
+      "Input: the archived HTML snapshot, not a fresh website fetch.": "输入为归档 HTML 快照，不重新访问在线网页。",
+      "Pass the same saved HTML to each main-content extractor.": "把同一份保存的 HTML 交给各个正文提取方案。",
+      "Compare the resulting Markdown with the annotated main content, including code, formulas and tables where present.": "将输出的 Markdown 与标注正文比较；页面含有代码、公式或表格时，也分别评分。",
+      "This is a reference excerpt. Overall and dimension scores measure how well the full main content is preserved.": "这里展示参考正文的节选。总分和分项分数衡量完整正文的保留情况。",
+      "Send the same query to each search API.": "向各个 Search API 发送同一个查询。",
+      "Keep the returned ranking and judge the top five results for relevance.": "保留返回顺序，对前五条结果的相关性评分。",
+      "Search for the factual question and preserve the top five results.": "搜索这个事实问题，保留前五条结果。",
+      "Match results to annotated reference pages and check their answer text.": "检查结果是否命中标注参考页，以及文本中是否包含参考答案。",
+      "Reference-page hits, their rank and answer-text matches are separate measurements. A matching domain alone is insufficient.": "是否命中参考页、命中位置和答案文本匹配分别计分。仅域名相同不算命中。",
+      "Use the archived product HTML; request price, SKU and availability.": "使用归档商品 HTML，提取 price、SKU 和 availability。",
+      "Read the saved product page with each extraction method.": "用各个提取方案读取保存的商品页。",
+      "Return structured fields, then compare each field and the complete page with the reference.": "返回结构化字段，分别比较字段值与整页结果。",
+      "Full-page exact match requires every evaluated field to match. The price is historical reference data, not a current offer.": "整页完全匹配要求所有参与评分的字段均匹配。这里的价格是历史参考数据，不是当前报价。",
+      "Open the sales report in the benchmark shop environment.": "在评测商店环境打开销售报告。",
+      "Replay the supplied actions: select yearly totals, fill the 2022 date range and show the report.": "执行给定操作：选择按年统计，填入 2022 年起止日期，显示报告。",
+      "Read the top product and submit the saved answer to the task evaluator.": "读取第一名商品，将保存的答案交给任务评估器。",
+      "The browser executes a fixed sequence. Success checks the final answer; a model does not choose the actions during replay.": "浏览器执行固定操作序列，任务按最终答案判断成功；回放过程中不由模型选择动作。",
+      "Read the target button through the accessibility tree and save its identity.": "通过无障碍树读取目标按钮，保存其身份标识。",
+      "Insert an unrelated sibling element, then read the same target again.": "插入一个无关的同级元素，再读取同一个目标。",
+      "The assertion requires the target identity to remain stable. This example comes from the full source dataset; the historical leaderboard uses its own 372-task subset.": "断言要求目标身份保持稳定。此例来自完整源数据集；历史榜单使用其独立的 372 项任务子集。",
+      "Run the same search query and keep supplemental source excerpts separately from primary snippets.": "执行同一搜索查询，将补充原文与主搜索摘要分开保存。",
+      "Score the supplemental excerpts independently of the primary result list.": "补充原文独立于主搜索列表评分。",
+      "The official reference source grounds this query. Supplemental-text relevance and generated-answer usefulness are evaluated separately.": "这个查询以官方来源为参考。补充原文的相关性与生成答案的有用性分别评估。",
+      "The reference answer is 4. Excerpt matching and generated-answer correctness use different scoring rules; neither is a search-result rank.": "参考答案为 4。原文答案匹配与生成答案正确性使用不同评分规则，都不是搜索排名。",
+      "Give the same question to the search API with generated answers enabled.": "向 Search API 提交同一问题，并启用生成答案。",
+      "Keep the generated answer and its citations; score this answer separately from the search results.": "保存生成答案及其引用，独立于搜索列表为答案评分。",
+      "Read the archived automobile page, requesting the model and price fields.": "读取归档汽车页，提取 model 和 price 字段。",
+      "Compare the structured values against the original SWDE field annotations.": "将结构化结果与 SWDE 原始字段标注比较。",
+      "The shown fields come from the original SWDE annotations. Field F1 and full-page exact match measure different kinds of extraction errors.": "这里的字段来自 SWDE 原始标注。字段 F1 和整页完全匹配衡量不同的提取错误。",
+      "Find the right tools for your agent to browse the web.": "为你的 Agent 选对上网工具。",
+      "Compare web tools, browsers and browser agents on real tasks.": "用真实任务比较 Web Tools、浏览器和 Browser Agents。",
+      "See an example": "看一个例子",
+      "Close example": "关闭示例",
+      "Choose an example": "选择示例",
+      "View source task": "查看原始任务",
+      "View reference": "查看参考标注",
+      "Task": "任务",
+      "Input": "输入",
+      "Run": "执行",
+      "This dataset example explains the task. Reference values are not a measured result for the selected version.": "此例用于说明数据集任务。参考值并非当前所选版本的实测输出。",
+      "Collection dates and retry policies differ in this edition.": "此版本中，各方案的采集日期和重试策略不同。",
+      "How highlights work": "高亮规则",
+      "Green marks the best comparable value in each column, including ties. Missing values and columns with no variation have no highlight.": "绿色标出每列可比较的最佳值，并列最佳也会标出。缺失值，以及所有数值相同的列不标出。",
+      "This diagnostic edition has no ranks or best-value highlights.": "此诊断版本不显示名次或最佳值高亮。",
+      "This is one annotated relevant source. nDCG@5 rewards relevant results appearing earlier.": "这是标注的相关来源之一。nDCG@5 会奖励排在前面的相关结果。"
     },
     "en": {
       "全程关闭": "Layout off throughout",

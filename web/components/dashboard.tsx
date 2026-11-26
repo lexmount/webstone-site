@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, CircleDashed, Layers3, Menu, Star } from "lucide-react";
 import { canonicalVersion, benchmarkEntries, bestValue, formatMetric, formatPricing, isBestValue, latestEntry, reportEntries, resolveBenchmark, selectEntry, sortProviders, type Catalog, type Entry, type Metric, type Provider, type ReportFile, type Snapshot } from "../lib/results";
 import { providerColors } from "../lib/presentation";
+import ExampleDialog from "./example-dialog";
 import InfoTooltip from "./info-tooltip";
 import Insights from "./insights";
 import MethodDetails from "./method-details";
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [language, chooseLanguage] = useLanguage();
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [showCategories, setShowCategories] = useState(true);
+  const [showExample, setShowExample] = useState(false);
   const [moreMetrics, setMoreMetrics] = useState(false);
 
   useEffect(() => {
@@ -133,12 +135,14 @@ export default function Dashboard() {
     setDirection(primary?.direction ?? "desc");
     setMenuOpen(false);
     setSelectedProvider(null);
+    setShowExample(false);
   }
 
   function chooseVersion(version: string) {
     setMoreMetrics(false);
     setShowCategories(true);
     setSelectedProvider(null);
+    setShowExample(false);
     const selectedEntry = entries ? selectEntry(entries, version, selection.benchmark) : null;
     const selectedResult = snapshots.find(record => record.id === selectedEntry?.id)?.benchmarks.find(item => item.id === selection.benchmark);
     const selected = catalog && selectedResult ? resolveBenchmark(catalog, selectedResult) : null;
@@ -229,6 +233,7 @@ export default function Dashboard() {
             {details && <p className="benchmark-description">{t(details.description)}</p>}
             {details && <div className="benchmark-links">
               <a href={details.datasetUrl} target="_blank" rel="noreferrer" aria-label={`${t("Dataset")}: ${details.datasetName}`}><img src="/huggingface.svg" width={16} height={16} alt="" aria-hidden="true" />{t("Dataset")}<ArrowUpRight size={13} aria-hidden="true" /></a>
+              <button type="button" className="example-open" aria-haspopup="dialog" onClick={() => setShowExample(true)}>{t("See an example")}</button>
               <a href="#reports">{t("Reports")}<ArrowDown size={13} aria-hidden="true" /></a>
             </div>}
 
@@ -274,7 +279,7 @@ export default function Dashboard() {
           </div> : <>
             <section id="results" className="leaderboard" aria-label={`${t(benchmark.name)} ${t("Leaderboard")}`}>
               <h2 className="sr-only">{t("Leaderboard")}</h2>
-              {benchmark.rankable === false && <p className="sample-scope">{t("Diagnostic results; no ranking or best-value claims.")}</p>}
+              {benchmark.rankable === false && <p className="sample-scope">{t("Diagnostic results; no ranking or best-value claims.")} {t("Collection dates and retry policies differ in this edition.")}</p>}
               <div className="table-toolbar"><span>{benchmark.providerCount} {t("methods")} · {benchmark.taskCount.toLocaleString()} {t("cases")}</span><div className="column-views table-controls" role="group" aria-label={t("Table columns")}>
                 {benchmark.categories.length > 0 && <button aria-pressed={showCategories} onClick={() => setShowCategories(current => !current)}>{t("Category breakdown")}</button>}
                 {decisionMetrics(benchmark, true, benchmark.primaryMetric).some(item => !decisionMetrics(benchmark, false, benchmark.primaryMetric).includes(item)) && <button aria-pressed={moreMetrics} onClick={() => {
@@ -291,6 +296,7 @@ export default function Dashboard() {
               <div key={`${selection.benchmark}:${selection.version}`} className="table-scroll" tabIndex={0} role="region" aria-label={t("Leaderboard")}>
                 <table className="wide-table" style={{ "--data-columns": categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) } as React.CSSProperties}>
                   <caption className="sr-only">{t(benchmark.name)} {t("Leaderboard")}</caption>
+                  <colgroup><col style={{ width: "var(--rank-width)" }} /><col style={{ width: "var(--provider-width)" }} />{Array.from({ length: categories.length + visibleMetrics.length + Number(showPassed) + Number(showPricing) }, (_, index) => <col key={index} />)}</colgroup>
                   <thead><tr>
                     <th className="rank-cell" scope="col">#</th>
                     <th className="provider-heading" scope="col">{t("Method")}</th>
@@ -316,6 +322,10 @@ export default function Dashboard() {
               </div>
 
             </section>
+            <details className="highlight-rules"><summary>{t("How highlights work")}</summary><p>{t("Green marks the best comparable value in each column, including ties. Missing values and columns with no variation have no highlight.")}</p>
+              {benchmark.rankable === false ? <p>{t("This diagnostic edition has no ranks or best-value highlights.")}</p> : benchmark.metrics.some(item => item.highlightBest === false) && <ul>{benchmark.metrics.filter(item => item.highlightBest === false).map(item => <li key={item.id}><strong>{t(item.label)}: </strong>{t(item.description ?? "")}</li>)}</ul>}
+            </details>
+            {showExample && details && <ExampleDialog key={details.id} title={details.name} description={details.description} benchmarks={[details]} onClose={() => setShowExample(false)} t={t} />}
             <Insights key={`${benchmark.id}-${selection.version}`} benchmark={benchmark} t={t} />
             {details && <EvaluationReports key={selection.benchmark} catalog={catalog} snapshots={snapshots} current={details} t={t} language={language} />}
             <MethodDetails provider={selectedProvider} benchmark={benchmark} t={t} onClose={() => setSelectedProvider(null)} />

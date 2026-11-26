@@ -455,3 +455,16 @@ test("browser and touch icons are square at their declared sizes", () => {
     assert.equal(png.readUInt32BE(20),size);
   }
 });
+
+test("example references must be public HTTPS and the task flow must be complete", () => {
+  const invalidExamples = [
+    { sourceUrl: 'javascript:alert(1)' }, { sourceUrl: 'https://localhost/task' },
+    { referenceUrl: 'https://internal/task' }, { steps: [] }, { steps: [''] },
+    { outputLabel: '' }, { input: '' }, { output: '' }, { check: '' },
+  ];
+  for (const patch of invalidExamples) {
+    const invalid = structuredClone(catalog);
+    Object.assign(invalid.benchmarks[0].example, patch);
+    assert.throws(() => validateCatalog(invalid), /Invalid benchmark example/);
+  }
+});

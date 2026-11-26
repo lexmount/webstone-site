@@ -82,6 +82,12 @@ export function validateCatalog(catalog) {
     if (![benchmark.datasetUrl, benchmark.reportUrl].every(httpsUrl)) throw new Error("Missing or invalid benchmark resource URL");
     if (benchmark.datasetUrl === benchmark.reportUrl) throw new Error("Dataset and report must have separate URLs");
     if (new URL(benchmark.datasetUrl).pathname.split("/").filter(Boolean).at(-1) !== benchmark.datasetName) throw new Error("Dataset name must match its URL");
+    if (benchmark.example !== undefined) {
+      const example = benchmark.example;
+      if (!record(example) || ![example.taskId, example.input, example.outputLabel, example.output, example.check].every(value => typeof value === "string" && value.trim())
+        || !publicEvidenceUrl(example.sourceUrl) || (example.referenceUrl !== undefined && !publicEvidenceUrl(example.referenceUrl))
+        || !Array.isArray(example.steps) || example.steps.length < 2 || example.steps.some(step => typeof step !== "string" || !step.trim())) throw new Error("Invalid benchmark example");
+    }
     uniqueIds(benchmark.definitions, "definition");
     for (const definition of benchmark.definitions) {
       if (definition.rankable !== undefined && typeof definition.rankable !== "boolean") throw new Error("Invalid ranking presentation");

@@ -4,13 +4,18 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSyn
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { checkResultChange as checkResultChangeRaw, checkGitChange, validateReleaseChange } from "../scripts/check-result-change.mjs";
+import { checkResultChange as checkResultChangeRaw, checkGitChange, validateReleaseChange, validateBrowserCohort } from "../scripts/check-result-change.mjs";
 
 const catalog = JSON.parse(readFileSync(new URL("../benchmarks/catalog.json", import.meta.url), "utf8"));
 const original = JSON.parse(readFileSync(new URL("../results/lexbench-webfetch/lexbench-webfetch-v1-report.json", import.meta.url), "utf8"));
+// The publication fixture contains one measured version per browser.
+original.benchmarks[0].providers = original.benchmarks[0].providers.filter(provider => provider.id !== "moli-1-1-15");
 const published = ["results/lexbench-webfetch/lexbench-webfetch-v1-report.json"];
 const versionName = version => typeof version === "number" ? `v1.${version - 1}.0` : version;
-const report = version => ({ ...structuredClone(original), source: { ...original.source, url: "https://example.com/evaluation" }, id: `lexbench-webfetch-${versionName(version)}`, version: versionName(version), release: { date: "2026-11-16", kind: "results", previous: typeof version === "number" && version > 2 ? `v1.${version - 2}.0` : "v1.0.0", summary: "Publish evaluation results." } });
+const report = version => {
+  const candidate = { ...structuredClone(original), source: { ...original.source, url: "https://example.com/evaluation" }, id: `lexbench-webfetch-${versionName(version)}`, version: versionName(version), release: { date: "2026-11-16", kind: "results", previous: typeof version === "number" && version > 2 ? `v1.${version - 2}.0` : "v1.0.0", summary: "Publish evaluation results." } };
+  return candidate;
+};
 const addition = version => ({ path: `results/lexbench-webfetch/lexbench-webfetch-${versionName(version)}-report.json`, status: "A", mode: "100644", content: JSON.stringify(report(version)) });
 const checkResultChange = (before, after, changes, paths, prior = new Map([[published[0], original]])) => checkResultChangeRaw(before, after, changes, paths, prior);
 
@@ -207,4 +212,21 @@ test("metadata may correct pricing wording while preserving all numeric pricing 
   assert.deepEqual(checkResultChange(catalog, catalog, [change], [previousPath], new Map([[previousPath, previous]])), { reports: 1 });
   pricing.min += 1;
   assert.throws(() => validateReleaseChange(previous, metadata), /cannot change measurements/);
+});
+
+
+test("new browser comparisons reject multiple configurations of one project", () => {
+  const candidate = report(2);
+  const first = candidate.benchmarks[0].providers.find(provider => provider.id === "moli-1-1-17");
+  assert.ok(first);
+  candidate.benchmarks[0].providers.push({ ...structuredClone(first), id: "moli-1-1-15", name: "Moli other build" });
+  assert.throws(() => checkResultChange(catalog, catalog, [{ ...addition(2), content: JSON.stringify(candidate) }], published), /one configuration per browser/i);
+});
+
+
+test("cohort policy keeps real service tiers and explicit Headless build comparisons", () => {
+  for (const [id, version] of [["lexbench-headless-372", "v2.0.0"], ["lexbench-websearch", "v2"]]) {
+    const snapshot = JSON.parse(readFileSync(new URL(`../results/${id}/${id}-${version}-report.json`, import.meta.url)));
+    assert.doesNotThrow(() => validateBrowserCohort(catalog, snapshot.benchmarks[0]));
+  }
 });
