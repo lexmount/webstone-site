@@ -3,7 +3,7 @@
   "reports": {
     "webmainbench-v1": {
       "publishedAt": "2026-10-16T14:13:21.880Z",
-      "title": "Moli reaches an 89.3% pass rate on Web Fetch",
+      "title": "Moli Ranks First in Web Fetch with an 89.8% Pass Rate",
       "summary": "Six live-page configurations and seven frozen-HTML methods, with separate task populations and scoring rules.",
       "benchmarkIds": [
         "lexbench-webfetch",

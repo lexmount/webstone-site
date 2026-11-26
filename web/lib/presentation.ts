@@ -7,7 +7,6 @@ export const providerColors: Record<string, string> = {
   "obscura": "#9b83b0",
   "kitesurf": "#dc825e",
   "moli": "#16876b",
-  "moli-content-fixed": "#16876b",
   "lexmount": "#16876b",
   "serper": "#4978c8",
   "browserbase": "#d29b32",
