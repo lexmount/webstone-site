@@ -34,13 +34,13 @@ test("Web Fetch compares overall quality and timings without adding a second tab
   const { snapshot, benchmark } = load("lexbench-webfetch");
   const html = render(benchmark, translator("zh", catalog, snapshot));
   assert.match(html, /role="img" aria-label="能力对比"/);
-  assert.deepEqual(radarAxes(benchmark).filter(axis => axis.defaultSelected).map(axis => axis.id), ["passRate", "requestRate", "totalMean", "totalP95"]);
+  assert.deepEqual(radarAxes(benchmark).filter(axis => axis.defaultSelected).map(axis => axis.id), ["passRate", "requestRate", "totalMean"]);
   assert.equal(radarAxes(benchmark).filter(axis => axis.id.startsWith("category:")).length, 7);
   assert.equal((html.match(/class="radar-shape"/g) ?? []).length, 6);
   assert.doesNotMatch(html, /<table|<select|disabled/);
 });
 
-test("all published bench views have a capability chart and keep each method visible when a measurement is missing", async () => {
+test("published bench views draw meaningful profiles and retain methods with missing values", async () => {
   const { discoverResults } = await import("../scripts/prepare-data.mjs");
   const { fileURLToPath } = await import("node:url");
   const files = await discoverResults(fileURLToPath(new URL("../results", import.meta.url)), catalog);
@@ -48,9 +48,13 @@ test("all published bench views have a capability chart and keep each method vis
     const snapshot = JSON.parse(readFileSync(new URL(`../results/${file}`, import.meta.url)));
     const benchmark = resolveBenchmark(catalog, snapshot.benchmarks[0]);
     const html = render(benchmark);
+    if (radarAxes(benchmark).filter(axis => axis.defaultSelected).length < 3) {
+      assert.equal(html, '', file);
+      continue;
+    }
     assert.match(html, /aria-label="Capability profile"/, file);
     assert.equal((html.match(/class="radar-series"/g) ?? []).length, benchmark.providers.length, file);
-    assert.ok(radarAxes(benchmark).length >= 2, file);
+    assert.ok(radarAxes(benchmark).length >= 3, file);
     assert.doesNotMatch(html, /NaN|Infinity/, file);
   }
 
@@ -72,7 +76,7 @@ test("radars include latency and memory while keeping quoted prices out of capab
   for (const benchmark of [load("lexbench-websearch", "v2").benchmark,
     load("lexbench-swde").benchmark, load("lexbench-zyte-product-extraction").benchmark]) {
     const axes = radarAxes(benchmark);
-    assert.ok(axes.some(axis => axis.id === "meanTime"));
+    assert.equal(axes.some(axis => axis.id === "meanTime"), benchmark.metrics.find(metric => metric.id === "meanTime")?.highlightBest !== false);
     assert.ok(!axes.some(axis => ["pricePerThousand", "quoted-price"].includes(axis.id)));
     assert.equal((render(benchmark).match(/class="radar-series"/g) ?? []).length, benchmark.providers.length);
   }
@@ -134,10 +138,10 @@ test("the radar starts with all series and lets readers hide or show each one", 
     const metricOptions = [...container.querySelectorAll(".metric-selector-panel label")];
     const median = metricOptions.find(option => option.textContent === "P50 latency").querySelector("input");
     await React.act(async () => median.click());
-    assert.equal(container.querySelectorAll(".radar-axis").length, 5);
+    assert.equal(container.querySelectorAll(".radar-axis").length, 4);
     const reset = container.querySelector(".metric-selector-panel button");
     await React.act(async () => reset.click());
-    assert.equal(container.querySelectorAll(".radar-axis").length, 4);
+    assert.equal(container.querySelectorAll(".radar-axis").length, 3);
     assert.equal(container.querySelectorAll(".radar-shape").length, 5);
   } finally {
     await React.act(async () => root.unmount());
@@ -300,15 +304,15 @@ test("every published benchmark edition shares table and radar controls in both 
       try {
         await React.act(async () => root.render(React.createElement(Dashboard)));
         const table = container.querySelector("table");
-        const definition = resolveBenchmark(catalog, report.benchmarks[0]);
-        const isPair = definition.trackId === "browser-use";
         assert.equal(table.className, "wide-table", report.id);
-        assert.equal(container.querySelectorAll(".metric-selector").length, isPair ? 0 : 1, report.id);
+        const hasProfile = radarAxes(resolveBenchmark(catalog, report.benchmarks[0])).filter(axis => axis.defaultSelected).length >= 3;
+        assert.equal(container.querySelectorAll(".metric-selector").length, Number(hasProfile), report.id);
         assert.equal(table.querySelectorAll("th")[1].textContent, "Method", report.id);
         assert.ok(container.querySelector("#reports"), report.id);
         for (const row of table.querySelectorAll("tbody tr")) assert.equal(row.children.length, table.querySelectorAll("th").length, report.id);
 
         const more = [...container.querySelectorAll(".table-controls button")].find(button => button.textContent === "More metrics");
+        const definition = resolveBenchmark(catalog, report.benchmarks[0]);
         const { decisionMetrics } = require("../web/lib/comparisons.ts");
         const disclosed = decisionMetrics(definition, true, definition.primaryMetric);
         const extras = disclosed.length > decisionMetrics(definition, false, definition.primaryMetric).length;
@@ -325,42 +329,37 @@ test("every published benchmark edition shares table and radar controls in both 
           const extra = disclosed.find(item => !decisionMetrics(definition, false, definition.primaryMetric).some(metric => metric.id === item.id));
           const extraHeader = [...table.querySelectorAll("th")].find(header => header.querySelector(".sort-button")?.textContent === extra.label);
           await React.act(async () => extraHeader.querySelector(".sort-button").click());
-          const collapse = [...container.querySelectorAll(".table-controls button")].find(button => button.textContent === "More metrics");
+          const collapse = [...container.querySelectorAll(".table-controls button")].find(button => button.textContent === "Key metrics");
           assert.ok(collapse, report.id + " can collapse after sorting an extra column");
           await React.act(async () => collapse.click());
           assert.equal(table.querySelectorAll("th").length, initialColumns, report.id);
         }
         assert.equal(container.querySelector('a[href="https://huggingface.co/datasets?author=Lexmount"]')?.textContent, "Datasets", report.id);
         const chartMenu = container.querySelector(".radar-heading .metric-selector");
-        if (isPair) {
-          assert.equal(container.querySelectorAll(".radar-series").length, definition.providers.length, report.id);
-        } else {
-          const initialAxes = container.querySelectorAll(".radar-axis").length;
-          assert.ok(initialAxes >= 3, report.id);
-          for (const input of [...chartMenu.querySelectorAll("input")].filter(input => input.checked)) {
-            await React.act(async () => input.click());
-          }
-          assert.equal(container.querySelectorAll(".radar-axis").length, 0, report.id);
-          assert.match(container.querySelector(".chart-empty").textContent, /at least three/, report.id);
-          await React.act(async () => chartMenu.querySelector("button").click());
-          assert.equal(container.querySelectorAll(".radar-axis").length, initialAxes, report.id);
-
-          const summary = chartMenu.querySelector("summary");
-          chartMenu.open = true;
-          await React.act(async () => container.dispatchEvent(new win.PointerEvent("pointerdown", { bubbles: true })));
-          assert.ok(!chartMenu.open, report.id);
-          chartMenu.open = true;
-          await React.act(async () => summary.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
-          assert.ok(!chartMenu.open, report.id);
+        if (chartMenu) {
+        const initialAxes = container.querySelectorAll(".radar-axis").length;
+        assert.ok(initialAxes >= 3, report.id);
+        for (const input of [...chartMenu.querySelectorAll("input")].filter(input => input.checked)) {
+          await React.act(async () => input.click());
         }
+        assert.equal(container.querySelectorAll(".radar-axis").length, 0, report.id);
+        assert.match(container.querySelector(".chart-empty").textContent, /at least three/, report.id);
+        await React.act(async () => chartMenu.querySelector("button").click());
+        assert.equal(container.querySelectorAll(".radar-axis").length, initialAxes, report.id);
 
+        const summary = chartMenu.querySelector("summary");
+        chartMenu.open = true;
+        await React.act(async () => container.dispatchEvent(new win.PointerEvent("pointerdown", { bubbles: true })));
+        assert.ok(!chartMenu.open, report.id);
+        chartMenu.open = true;
+        await React.act(async () => summary.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+        assert.ok(!chartMenu.open, report.id);
+
+        }
         await React.act(async () => [...container.querySelectorAll(".language-control button")].find(button => button.textContent === "中文").click());
         assert.equal(table.querySelectorAll("th")[1].textContent, "方案", report.id);
-        if (!isPair) assert.match(chartMenu.querySelector("summary").textContent, /图表指标/, report.id);
+        if (chartMenu) assert.match(chartMenu.querySelector("summary").textContent, /图表指标/, report.id);
         assert.equal(container.querySelectorAll(".table-controls .metric-selector").length, 0, report.id);
-        if (definition.notes.length > 0) {
-          assert.ok(container.querySelector(".leaderboard .sample-scope"), report.id + " renders reusable evaluation notes above table");
-        }
         let scrollTop = 900;
         win.scrollTo = options => { scrollTop = options.top; };
         const nextTab = [...container.querySelectorAll('.benchmark-navigation button')].find(button => button.getAttribute('aria-current') !== 'page');
@@ -432,7 +431,7 @@ test("report links select distinct published language editions and identify a mi
 test("compact columns preserve ranking and disclosed resources without inventing missing measurements", () => {
   const {decisionMetrics}=require('../web/lib/comparisons.ts');
   const metric=(id,unit)=>({id,unit});
-  const benchmark={primaryMetric:"quality",leadingMetricIds:["leading"],metrics:[metric("quality","ratio"),metric("time","ms"),metric("other","ratio"),metric("leading","ratio")],providers:[{scores:{quality:1,time:null,other:0.5,leading:null}}]};
+  const benchmark={primaryMetric:"quality",keyMetricIds:["quality","time"],leadingMetricIds:["leading"],metrics:[metric("quality","ratio"),metric("time","ms"),metric("other","ratio"),metric("leading","ratio")],providers:[{scores:{quality:1,time:null,other:0.5,leading:null}}]};
   const ids=(expanded=false,selected="quality")=>decisionMetrics(benchmark,expanded,selected).map(item=>item.id);
   assert.deepEqual(ids(),["quality"]);
   benchmark.providers[0].scores.time=0;assert.deepEqual(ids(),["quality","time"]);
@@ -537,6 +536,14 @@ test("homepage counts reports instead of historical result editions and uses the
     const logo=readFileSync(new URL('../web/public/brand/webstone.png',import.meta.url));
     assert.deepEqual([...logo.subarray(0, 8)], [137,80,78,71,13,10,26,10]);
     assert.match(readFileSync(new URL('../README.md',import.meta.url),'utf8'),/web\/public\/brand\/webstone\.png/);
+    assert.match(readFileSync(new URL('../README.md',import.meta.url),'utf8'),/^# Webstone Site\n/);
+    for (const language of ['en', 'zh']) {
+      const t = translator(language, catalog);
+      win.document.body.innerHTML = renderToStaticMarkup(React.createElement(Home, { catalog, snapshots, t, language }));
+      const hero = win.document.querySelector('.overview-hero').textContent;
+      assert.ok(hero.includes(t("Find the right tools for your agent to browse the web.")));
+      assert.ok(hero.includes(t("The touchstone for your agent's web browsing.")));
+    }
   } finally {await win.happyDOM.close();}
 });
 
@@ -605,13 +612,251 @@ test("diagnostic comparisons never imply a rank or best value in either language
       assert.equal(win.document.querySelectorAll('.category-head').length,7);
       assert.equal(win.document.querySelectorAll('td.best-value').length,0);
       assert.ok([...win.document.querySelectorAll('tbody .rank-cell')].every(cell=>cell.textContent==='—'));
-      assert.match(win.document.querySelector('.leaderboard').textContent,language==='EN'?/Diagnostic results/:/诊断结果/);
+      assert.match(win.document.querySelector('.leaderboard').textContent,language==='EN'?/Different test conditions/:/测试条件不同/);
       assert.equal(win.document.querySelectorAll('tbody tr').length,diagnostic.benchmarks[0].providers.length);
     }
   } finally {
     await React.act(async()=>root.unmount());await win.happyDOM.close();
     [globalThis.window,globalThis.document,globalThis.fetch,globalThis.IS_REACT_ACT_ENVIRONMENT]=prior;
   }
+});
+
+test("pricing details keep official links usable by keyboard and close with Escape", async () => {
+  const Tooltip=require('../web/components/info-tooltip.tsx').default;
+  const win=new Window();
+  const previous=[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=[win,win.document,true];
+  const container=win.document.createElement('div');win.document.body.append(container);
+  const root=require('react-dom/client').createRoot(container);
+  try {
+    await React.act(async()=>root.render(React.createElement(Tooltip,{label:'Cloudflare · Billing basis',description:'Browser usage and model inference.',sources:[{label:'Browser Run',url:'https://developers.cloudflare.com/browser-run/pricing/'},{label:'Workers AI',url:'https://developers.cloudflare.com/workers-ai/platform/pricing/'}]})));
+    const trigger=container.querySelector('button');
+    const next=win.document.createElement('button');next.textContent='Next control';container.after(next);
+    trigger.getClientRects=()=>[new win.DOMRect(0,0,20,20)];next.getClientRects=()=>[new win.DOMRect(0,0,20,20)];
+    await React.act(async()=>trigger.focus());
+    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
+    const panel=win.document.querySelector('[role="dialog"]');assert.ok(panel);
+    const links=[...panel.querySelectorAll('a')];assert.equal(links.length,2);
+    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
+    assert.equal(links[0].href,'https://developers.cloudflare.com/browser-run/pricing/');
+    assert.equal(links[1].href,'https://developers.cloudflare.com/workers-ai/platform/pricing/');
+    assert.ok(links.every(link=>link.target==='_blank'&&link.rel.includes('noopener')));
+    await React.act(async()=>{panel.dispatchEvent(new win.MouseEvent('mouseout',{bubbles:true,relatedTarget:win.document.body}));await new Promise(resolve=>setTimeout(resolve,150));});
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    await React.act(async()=>links[0].dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true})));
+    assert.ok(win.document.activeElement===trigger);
+    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true})));
+    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
+    await React.act(async()=>{links[1].focus();links[1].dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));});
+    assert.ok(win.document.activeElement===next);
+    assert.equal(win.document.querySelector('[role="dialog"]'),null);
+    await React.act(async()=>trigger.focus());
+    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
+    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    assert.equal(win.document.querySelector('[role="dialog"]'),null);
+    assert.ok(win.document.activeElement===trigger);
+    await React.act(async()=>{next.focus();trigger.dispatchEvent(new win.MouseEvent('mouseover',{bubbles:true,relatedTarget:next}));});
+    assert.ok(win.document.querySelector('[role="dialog"]'));
+    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    assert.equal(win.document.querySelector('[role="dialog"]'),null);
+    assert.ok(win.document.activeElement===next);
+    for(const eventType of ['scroll','resize']) {
+      await React.act(async()=>{trigger.focus();trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));});
+      assert.ok(win.document.querySelector('[role="dialog"]').contains(win.document.activeElement));
+      await React.act(async()=>win.dispatchEvent(new win.Event(eventType)));
+      assert.equal(win.document.querySelector('[role="dialog"]'),null);
+      assert.ok(win.document.activeElement===trigger);
+    }
+  } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
+});
+
+test("method details retain raw numerators and denominators alongside compact rates", async () => {
+  const Details=require('../web/components/method-details.tsx').default;
+  const win=new Window();
+  try {
+    for(const id of ['lexbench-swde','lexbench-zyte-product-extraction']) {
+      const {benchmark}=load(id,'v1.0.1');
+      for(const provider of benchmark.providers) {
+        win.document.body.innerHTML=renderToStaticMarkup(React.createElement(Details,{benchmark,provider,t:text=>text,onClose:()=>{}}));
+        const details=win.document.querySelector('.method-metrics').textContent;
+        for(const metric of benchmark.metrics.filter(item=>item.unit==='ratio')) {
+          if(provider.scores[metric.id] !== null && provider.scores[metric.id] !== undefined)assert.ok(details.includes(`Source value: ${provider.scores[metric.id].toFixed(metric.decimals)} (0–1)`));
+        }
+        for(const [metric,counts]of Object.entries(provider.counts??{})) {
+          if(provider.scores[metric] !== null && provider.scores[metric] !== undefined)assert.ok(details.includes(`${counts.count} / ${counts.total}`),`${id} ${provider.id} ${metric}`);
+        }
+      }
+    }
+  } finally {await win.happyDOM.close();}
+});
+
+test("every benchmark view supplies a sourced task, an input, a flow and a reference output", () => {
+  for (const benchmark of catalog.benchmarks) {
+    const isLexmountDataset = benchmark.datasetUrl.startsWith("https://huggingface.co/datasets/Lexmount/");
+    const example = benchmark.example;
+    if (isLexmountDataset) {
+      assert.ok(example, `${benchmark.id}: missing example`);
+    }
+    if (!example) continue;
+    assert.ok(example.taskId && example.input && example.output && example.check);
+    assert.ok(example.steps.length >= 2);
+    if (isLexmountDataset) {
+      assert.match(example.sourceUrl, /^https:\/\/huggingface\.co\/datasets\/Lexmount\/[^/]+\/blob\/[a-f0-9]{40}\//);
+    } else {
+      assert.match(example.sourceUrl, /^https:\/\/(?:huggingface\.co\/datasets\/[^/]+\/[^/]+\/blob\/[a-f0-9]{40}\/|github\.com\/[^/]+\/[^/]+\/blob\/[a-f0-9]{40}\/)/);
+    }
+    assert.ok(example.outputLabel, 'Reference output must be distinguished from measured output');
+  }
+  for (const track of catalog.tracks.filter(item => !item.url)) {
+    const trackBenchmarks = catalog.benchmarks.filter(item => item.trackId === track.id);
+    assert.ok(trackBenchmarks.some(item => item.example), `${track.id}: published track needs at least one sourced example`);
+  }
+});
+
+test("all published versions highlight comparable column winners consistently, including after reversing sort", async () => {
+  const { prepareData } = await import("../scripts/prepare-data.mjs");
+  await prepareData();
+  const files = JSON.parse(readFileSync(new URL('../web/public/results/reports.json', import.meta.url)));
+  const Dashboard = require('../web/components/dashboard.tsx').default;
+  const { RELEASE } = require('../web/lib/release.generated.ts');
+  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  try {
+    for (const file of files) {
+      const benchmark = resolveBenchmark(catalog, file.report.benchmarks[0]);
+      const win = new Window({ url: `https://webstone.test/?benchmark=${benchmark.id}&version=${file.report.version}` });
+      [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+      globalThis.fetch = async input => {
+        if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
+        if (String(input).includes('/results/')) return new Response(JSON.stringify([file]));
+        return new Response(JSON.stringify({ release: RELEASE }));
+      };
+      const root = require('react-dom/client').createRoot(win.document.body);
+      try {
+        await React.act(async () => root.render(React.createElement(Dashboard)));
+        const more = [...win.document.querySelectorAll('.table-controls button')].find(button => button.textContent === 'More metrics');
+        const check = (expanded) => {
+          const headers = [...win.document.querySelectorAll('.wide-table thead th')];
+          const rows = [...win.document.querySelectorAll('.wide-table tbody tr')];
+          for (const metric of benchmark.metrics) {
+            const index = headers.findIndex(header => header.querySelector('.sort-button')?.textContent === metric.label);
+            if (index < 0) {
+              assert.ok(!expanded && !benchmark.keyMetricIds.includes(metric.id) || metric.id !== benchmark.primaryMetric && benchmark.providers.every(provider => (provider.scores[metric.id] === null || provider.scores[metric.id] === undefined)));
+              continue;
+            }
+            const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value !== null && value !== undefined);
+            const varied = new Set(values).size > 1;
+            const best = metric.direction === 'asc' ? Math.min(...values) : Math.max(...values);
+            const expected = benchmark.rankable === false || metric.highlightBest === false || !varied ? 0 : values.filter(value => value === best).length;
+            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${metric.id}`);
+            for (const provider of benchmark.providers) {
+              const row = rows.find(item => item.dataset.provider === provider.id);
+              assert.ok(row, `${file.file}: ${provider.id}`);
+              const wins = expected > 0 && provider.scores[metric.id] === best;
+              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${metric.id}`);
+            }
+          }
+          for (const category of benchmark.categories) {
+            const index = headers.findIndex(header => header.classList.contains('category-head') && header.textContent === category.name);
+            const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value !== null && value !== undefined);
+            const expected = benchmark.rankable === false || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
+            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${category.id}`);
+            for (const provider of benchmark.providers) {
+              const row = rows.find(item => item.dataset.provider === provider.id);
+              assert.ok(row);
+              const wins = expected > 0 && provider.categoryPassed?.[category.id] === Math.max(...values);
+              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${category.id}`);
+            }
+          }
+        };
+        check(false);
+        await React.act(async () => win.document.querySelector('th.sorted .sort-button').click());
+        check(false);
+        if (more) {
+          await React.act(async () => more.click());
+          check(true);
+          await React.act(async () => win.document.querySelector('th.sorted .sort-button').click());
+          check(true);
+        }
+      } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); }
+    }
+  } finally { [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});
+
+test("Track example selection changes the task, reference and output together", async () => {
+  const win = new Window({ url: 'https://webstone.test/' });
+  const prior = [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+  const root = require('react-dom/client').createRoot(win.document.body);
+  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
+  const benchmarks = catalog.benchmarks.filter(benchmark => ['lexbench-swde', 'lexbench-zyte-product-extraction'].includes(benchmark.id));
+  try {
+    for (const language of ['en', 'zh']) {
+      await React.act(async () => root.render(React.createElement(ExampleDialog, { title: 'Web Extract', description: 'Structured field extraction', benchmarks, onClose() {}, t: translator(language, catalog) })));
+      const select = win.document.querySelectorAll('.example-switcher button');
+      for (const index of [0, 1, 0]) {
+        await React.act(async () => select[index].click());
+        const expected = benchmarks[index].example;
+        assert.ok(win.document.querySelector('.example-source').textContent.includes(expected.taskId));
+        assert.equal(win.document.querySelector('.example-source a').href, expected.sourceUrl);
+        assert.equal(win.document.querySelectorAll('pre')[0].textContent, expected.input);
+        assert.equal(win.document.querySelectorAll('pre')[1].textContent, expected.output);
+        assert.equal(select[index].getAttribute('aria-pressed'), 'true');
+        assert.equal(win.document.querySelectorAll('.example-flow section').length, 3);
+      }
+    }
+  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});
+
+test("benchmark examples remain usable when a requested result version is missing", async () => {
+  const { prepareData } = await import('../scripts/prepare-data.mjs');
+  await prepareData();
+  const Dashboard = require('../web/components/dashboard.tsx').default;
+  const { RELEASE } = require('../web/lib/release.generated.ts');
+  const win = new Window({ url: 'https://webstone.test/?benchmark=lexbench-webfetch&version=v999.0.0' });
+  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
+  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
+  globalThis.fetch = async input => {
+    if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
+    if (String(input).includes('/results/')) return new Response(JSON.stringify([]));
+    return new Response(JSON.stringify({ release: RELEASE }));
+  };
+  const root = require('react-dom/client').createRoot(win.document.body);
+  try {
+    await React.act(async () => root.render(React.createElement(Dashboard)));
+    assert.ok(win.document.querySelector('.empty-state'));
+    await React.act(async () => win.document.querySelector('.benchmark-links .example-open').click());
+    assert.equal(win.document.querySelectorAll('.example-dialog[open]').length, 1);
+    assert.ok(win.document.querySelector('.example-source').textContent.includes('article-030'));
+  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
+});
+
+test("example dialogs distinguish recorded provider responses from reference answers", () => {
+  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
+  const benchmark = structuredClone(catalog.benchmarks[0]);
+  benchmark.example.recording = { provider: 'Recorded provider', reportUrl: 'https://example.com/report', file: 'calls/response.json', sha256: 'a'.repeat(64) };
+  const html = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
+  assert.match(html, /Recorded provider/);
+  assert.match(html, /href="https:\/\/example.com\/report"/);
+  assert.doesNotMatch(html, /Reference values are not a measured result/);
+  delete benchmark.example.recording;
+  const reference = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
+  assert.match(reference, /Reference values are not a measured result/);
+});
+
+test("capability profiles do not turn non-comparable timing into an efficiency advantage", () => {
+  for (const id of ['webmainbench', 'lexbench-websearch']) {
+    const { benchmark } = load(id, id === 'webmainbench' ? 'v2.1.0' : 'v2');
+    const axes = radarAxes(benchmark);
+    for (const metric of benchmark.metrics.filter(item => ['ms', 'seconds', 'mib', 'usd'].includes(item.unit) && item.highlightBest === false)) {
+      assert.ok(!axes.some(axis => axis.id === metric.id), `${id}: ${metric.id} is not a comparable efficiency axis`);
+    }
+  }
+  const { benchmark } = load('webarena-verified', 'v1.1.0');
+  assert.ok(radarAxes(benchmark).filter(axis => axis.defaultSelected).every(axis => !/p50|p95/i.test(axis.id)));
+  const single = load('simpleqa-verified-excerpts', 'v2.0.0').benchmark;
+  assert.equal(render(single), '', 'One quality dimension does not need a radar assembled from incomparable timings');
 });
 
 test("two-metric quality and cost benchmarks plot disclosed costs and preserve undisclosed methods", async () => {
@@ -772,7 +1017,7 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   };
   const ascendingPrimaryHtml = render(ascendingPrimary);
   assert.doesNotMatch(ascendingPrimaryHtml, /class="radar-divider"/, "ascending non-quality primary must not route to PairChart");
-  assert.match(ascendingPrimaryHtml, /at least three/);
+  assert.equal(ascendingPrimaryHtml, "", "an unsupported single dimension omits the profile");
 
   const excludedUsdMetric = {
     ...sample,
@@ -787,7 +1032,7 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   };
   const excludedUsdHtml = render(excludedUsdMetric);
   assert.doesNotMatch(excludedUsdHtml, /class="radar-divider"/, "pricePerThousand must not route to PairChart");
-  assert.match(excludedUsdHtml, /at least three/);
+  assert.equal(excludedUsdHtml, "", "quoted prices must not fabricate a second profile dimension");
 
   const nonRankedUsdMetric = {
     ...sample,
@@ -1120,221 +1365,38 @@ test("two-metric quality and cost benchmarks plot disclosed costs and preserve u
   }
 });
 
-test("pricing details keep official links usable by keyboard and close with Escape", async () => {
-  const Tooltip=require('../web/components/info-tooltip.tsx').default;
-  const win=new Window();
-  const previous=[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT];
-  [globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=[win,win.document,true];
-  const container=win.document.createElement('div');win.document.body.append(container);
-  const root=require('react-dom/client').createRoot(container);
-  try {
-    await React.act(async()=>root.render(React.createElement(Tooltip,{label:'Cloudflare · Billing basis',description:'Browser usage and model inference.',sources:[{label:'Browser Run',url:'https://developers.cloudflare.com/browser-run/pricing/'},{label:'Workers AI',url:'https://developers.cloudflare.com/workers-ai/platform/pricing/'}]})));
-    const trigger=container.querySelector('button');
-    const next=win.document.createElement('button');next.textContent='Next control';container.after(next);
-    trigger.getClientRects=()=>[new win.DOMRect(0,0,20,20)];next.getClientRects=()=>[new win.DOMRect(0,0,20,20)];
-    await React.act(async()=>trigger.focus());
-    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
-    const panel=win.document.querySelector('[role="dialog"]');assert.ok(panel);
-    const links=[...panel.querySelectorAll('a')];assert.equal(links.length,2);
-    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
-    assert.equal(links[0].href,'https://developers.cloudflare.com/browser-run/pricing/');
-    assert.equal(links[1].href,'https://developers.cloudflare.com/workers-ai/platform/pricing/');
-    assert.ok(links.every(link=>link.target==='_blank'&&link.rel.includes('noopener')));
-    await React.act(async()=>{panel.dispatchEvent(new win.MouseEvent('mouseout',{bubbles:true,relatedTarget:win.document.body}));await new Promise(resolve=>setTimeout(resolve,150));});
-    assert.ok(win.document.querySelector('[role="dialog"]'));
-    await React.act(async()=>links[0].dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true})));
-    assert.ok(win.document.activeElement===trigger);
-    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true})));
-    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
-    await React.act(async()=>{links[1].focus();links[1].dispatchEvent(new win.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));});
-    assert.ok(win.document.activeElement===next);
-    assert.equal(win.document.querySelector('[role="dialog"]'),null);
-    await React.act(async()=>trigger.focus());
-    await React.act(async()=>trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
-    assert.ok(win.document.querySelector('[role="dialog"]'));
-    assert.equal(win.document.activeElement?.getAttribute('href'),links[0].getAttribute('href'));
-    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
-    assert.equal(win.document.querySelector('[role="dialog"]'),null);
-    assert.ok(win.document.activeElement===trigger);
-    await React.act(async()=>{next.focus();trigger.dispatchEvent(new win.MouseEvent('mouseover',{bubbles:true,relatedTarget:next}));});
-    assert.ok(win.document.querySelector('[role="dialog"]'));
-    await React.act(async()=>win.document.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
-    assert.equal(win.document.querySelector('[role="dialog"]'),null);
-    assert.ok(win.document.activeElement===next);
-    for(const eventType of ['scroll','resize']) {
-      await React.act(async()=>{trigger.focus();trigger.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));});
-      assert.ok(win.document.querySelector('[role="dialog"]').contains(win.document.activeElement));
-      await React.act(async()=>win.dispatchEvent(new win.Event(eventType)));
-      assert.equal(win.document.querySelector('[role="dialog"]'),null);
-      assert.ok(win.document.activeElement===trigger);
-    }
-  } finally {await React.act(async()=>root.unmount());[globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=previous;await win.happyDOM.close();}
-});
-
-test("method details retain raw numerators and denominators alongside compact rates", async () => {
-  const Details=require('../web/components/method-details.tsx').default;
-  const win=new Window();
-  try {
-    for(const id of ['lexbench-swde','lexbench-zyte-product-extraction']) {
-      const {benchmark}=load(id,'v1.0.1');
-      for(const provider of benchmark.providers) {
-        win.document.body.innerHTML=renderToStaticMarkup(React.createElement(Details,{benchmark,provider,t:text=>text,onClose:()=>{}}));
-        const details=win.document.querySelector('.method-metrics').textContent;
-        for(const metric of benchmark.metrics.filter(item=>item.unit==='ratio')) {
-          if(provider.scores[metric.id] !== null && provider.scores[metric.id] !== undefined)assert.ok(details.includes(`Source value: ${provider.scores[metric.id].toFixed(metric.decimals)} (0–1)`));
-        }
-        for(const [metric,counts]of Object.entries(provider.counts??{})) {
-          if(provider.scores[metric] !== null && provider.scores[metric] !== undefined)assert.ok(details.includes(`${counts.count} / ${counts.total}`),`${id} ${provider.id} ${metric}`);
-        }
-      }
-    }
-  } finally {await win.happyDOM.close();}
-});
-
-test("every benchmark view supplies a sourced task, an input, a flow and a reference output", () => {
-  for (const benchmark of catalog.benchmarks) {
-    const isLexmountDataset = benchmark.datasetUrl.startsWith("https://huggingface.co/datasets/Lexmount/");
-    const example = benchmark.example;
-    if (isLexmountDataset) {
-      assert.ok(example, `${benchmark.id}: missing example`);
-    }
-    if (!example) continue;
-    assert.ok(example.taskId && example.input && example.output && example.check);
-    assert.ok(example.steps.length >= 2);
-    if (isLexmountDataset) {
-      assert.match(example.sourceUrl, /^https:\/\/huggingface\.co\/datasets\/Lexmount\/[^/]+\/blob\/[a-f0-9]{40}\//);
-    } else {
-      assert.match(example.sourceUrl, /^https:\/\/(?:huggingface\.co\/datasets\/[^/]+\/[^/]+\/blob\/[a-f0-9]{40}\/|github\.com\/[^/]+\/[^/]+\/blob\/[a-f0-9]{40}\/)/);
-    }
-    assert.ok(example.outputLabel, 'Reference output must be distinguished from measured output');
-  }
-  for (const track of catalog.tracks.filter(item => !item.url)) {
-    const trackBenchmarks = catalog.benchmarks.filter(item => item.trackId === track.id);
-    assert.ok(trackBenchmarks.some(item => item.example), `${track.id}: published track needs at least one sourced example`);
+test("pair profiles reject diagnostic editions and incomparable resources in every supported unit", () => {
+  const quality = { id: 'quality', label: 'Success rate', unit: 'percent', direction: 'desc' };
+  for (const unit of ['ms', 'seconds', 'mib', 'usd']) {
+    const sample = {
+      id: 'test-pair', name: 'Test comparison', primaryMetric: 'quality',
+      keyMetricIds: ['quality', 'resource'], categories: [],
+      metrics: [quality, { id: 'resource', label: 'Measured resource', unit, direction: 'asc' }],
+      providers: [
+        { id: 'a', name: 'Test Agent A', scores: { quality: 90, resource: 1 } },
+        { id: 'b', name: 'Test Agent B', scores: { quality: 80, resource: 2 } },
+      ],
+    };
+    assert.match(render(sample), /class="radar-divider"/, `${unit}: disclosed comparable resources support a pair`);
+    assert.equal(render({ ...sample, metrics: [quality, { ...sample.metrics[1], highlightBest: false }] }), '', `${unit}: incomparable resource cannot return through the pair fallback`);
+    assert.equal(render({ ...sample, rankable: false }), '', `${unit}: diagnostic measurements cannot become an efficiency comparison`);
   }
 });
 
-test("all published versions highlight comparable column winners consistently, including after reversing sort", async () => {
-  const { prepareData } = await import("../scripts/prepare-data.mjs");
-  await prepareData();
-  const files = JSON.parse(readFileSync(new URL('../web/public/results/reports.json', import.meta.url)));
-  const Dashboard = require('../web/components/dashboard.tsx').default;
-  const { RELEASE } = require('../web/lib/release.generated.ts');
-  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
-  try {
-    for (const file of files) {
-      const benchmark = resolveBenchmark(catalog, file.report.benchmarks[0]);
-      const win = new Window({ url: `https://webstone.test/?benchmark=${benchmark.id}&version=${file.report.version}` });
-      [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
-      globalThis.fetch = async input => {
-        if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
-        if (String(input).includes('/results/')) return new Response(JSON.stringify([file]));
-        return new Response(JSON.stringify({ release: RELEASE }));
-      };
-      const root = require('react-dom/client').createRoot(win.document.body);
-      try {
-        await React.act(async () => root.render(React.createElement(Dashboard)));
-        const more = [...win.document.querySelectorAll('.table-controls button')].find(button => button.textContent === 'More metrics');
-        if (more) await React.act(async () => more.click());
-        const check = () => {
-          const headers = [...win.document.querySelectorAll('.wide-table thead th')];
-          const rows = [...win.document.querySelectorAll('.wide-table tbody tr')];
-          for (const metric of benchmark.metrics) {
-            const index = headers.findIndex(header => header.querySelector('.sort-button')?.textContent === metric.label);
-            if (index < 0) {
-              assert.ok(metric.id !== benchmark.primaryMetric && benchmark.providers.every(provider => (provider.scores[metric.id] === null || provider.scores[metric.id] === undefined)));
-              continue;
-            }
-            const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value !== null && value !== undefined);
-            const varied = new Set(values).size > 1;
-            const best = metric.direction === 'asc' ? Math.min(...values) : Math.max(...values);
-            const expected = benchmark.rankable === false || metric.highlightBest === false || !varied ? 0 : values.filter(value => value === best).length;
-            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${metric.id}`);
-            for (const provider of benchmark.providers) {
-              const row = rows.find(item => item.dataset.provider === provider.id);
-              assert.ok(row, `${file.file}: ${provider.id}`);
-              const wins = expected > 0 && provider.scores[metric.id] === best;
-              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${metric.id}`);
-            }
-          }
-          for (const category of benchmark.categories) {
-            const index = headers.findIndex(header => header.classList.contains('category-head') && header.textContent === category.name);
-            const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value !== null && value !== undefined);
-            const expected = benchmark.rankable === false || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
-            assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${category.id}`);
-            for (const provider of benchmark.providers) {
-              const row = rows.find(item => item.dataset.provider === provider.id);
-              assert.ok(row);
-              const wins = expected > 0 && provider.categoryPassed?.[category.id] === Math.max(...values);
-              assert.equal(row.children[index].classList.contains('best-value'), wins, `${file.file}: ${provider.id} ${category.id}`);
-            }
-          }
-        };
-        check();
-        await React.act(async () => win.document.querySelector('th.sorted .sort-button').click());
-        check();
-      } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); }
-    }
-  } finally { [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
-});
-
-test("Track example selection changes the task, reference and output together", async () => {
-  const win = new Window({ url: 'https://webstone.test/' });
-  const prior = [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT];
-  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
-  const root = require('react-dom/client').createRoot(win.document.body);
-  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
-  const benchmarks = catalog.benchmarks.filter(benchmark => ['lexbench-swde', 'lexbench-zyte-product-extraction'].includes(benchmark.id));
-  try {
-    for (const language of ['en', 'zh']) {
-      await React.act(async () => root.render(React.createElement(ExampleDialog, { title: 'Web Extract', description: 'Structured field extraction', benchmarks, onClose() {}, t: translator(language, catalog) })));
-      const select = win.document.querySelectorAll('.example-switcher button');
-      for (const index of [0, 1, 0]) {
-        await React.act(async () => select[index].click());
-        const expected = benchmarks[index].example;
-        assert.ok(win.document.querySelector('.example-source').textContent.includes(expected.taskId));
-        assert.equal(win.document.querySelector('.example-source a').href, expected.sourceUrl);
-        assert.equal(win.document.querySelectorAll('pre')[0].textContent, expected.input);
-        assert.equal(win.document.querySelectorAll('pre')[1].textContent, expected.output);
-        assert.equal(select[index].getAttribute('aria-pressed'), 'true');
-        assert.equal(win.document.querySelectorAll('.example-flow section').length, 3);
-      }
-    }
-  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
-});
-
-test("benchmark examples remain usable when a requested result version is missing", async () => {
-  const { prepareData } = await import('../scripts/prepare-data.mjs');
-  await prepareData();
-  const Dashboard = require('../web/components/dashboard.tsx').default;
-  const { RELEASE } = require('../web/lib/release.generated.ts');
-  const win = new Window({ url: 'https://webstone.test/?benchmark=lexbench-webfetch&version=v999.0.0' });
-  const prior = [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT];
-  [globalThis.window, globalThis.document, globalThis.IS_REACT_ACT_ENVIRONMENT] = [win, win.document, true];
-  globalThis.fetch = async input => {
-    if (String(input).includes('/benchmarks/')) return new Response(JSON.stringify(catalog));
-    if (String(input).includes('/results/')) return new Response(JSON.stringify([]));
-    return new Response(JSON.stringify({ release: RELEASE }));
-  };
-  const root = require('react-dom/client').createRoot(win.document.body);
-  try {
-    await React.act(async () => root.render(React.createElement(Dashboard)));
-    assert.ok(win.document.querySelector('.empty-state'));
-    await React.act(async () => win.document.querySelector('.benchmark-links .example-open').click());
-    assert.equal(win.document.querySelectorAll('.example-dialog[open]').length, 1);
-    assert.ok(win.document.querySelector('.example-source').textContent.includes('article-030'));
-  } finally { await React.act(async () => root.unmount()); await win.happyDOM.close(); [globalThis.window, globalThis.document, globalThis.fetch, globalThis.IS_REACT_ACT_ENVIRONMENT] = prior; }
-});
-
-test("example dialogs distinguish recorded provider responses from reference answers", () => {
-  const ExampleDialog = require('../web/components/example-dialog.tsx').default;
-  const benchmark = structuredClone(catalog.benchmarks[0]);
-  benchmark.example.recording = { provider: 'Recorded provider', reportUrl: 'https://example.com/report', file: 'calls/response.json', sha256: 'a'.repeat(64) };
-  const html = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
-  assert.match(html, /Recorded provider/);
-  assert.match(html, /href="https:\/\/example.com\/report"/);
-  assert.doesNotMatch(html, /Reference values are not a measured result/);
-  delete benchmark.example.recording;
-  const reference = renderToStaticMarkup(React.createElement(ExampleDialog, {title: benchmark.name, description: benchmark.description, benchmarks: [benchmark], onClose: () => {}, t: text => text}));
-  assert.match(reference, /Reference values are not a measured result/);
+test("every Browser Use definition renders its quality and reported per-task cost without requiring a result directory", () => {
+  for (const id of ['bu-bench-v1', 'online-mind2web', 'webvoyager', 'osworld']) {
+    const quality = id === 'osworld' ? 'scoreRate' : 'successRate';
+    const benchmark = resolveBenchmark(catalog, {
+      id, definitionId: 'standard', taskCount: 100, notes: [], reportUrl: null,
+      providers: [
+        { id: 'qa-agent-a', name: 'QA Agent A', scores: { [quality]: 90, costPerTask: 0.1 } },
+        { id: 'qa-agent-b', name: 'QA Agent B', scores: { [quality]: 80, costPerTask: null } },
+      ],
+    });
+    assert.deepEqual(benchmark.keyMetricIds, [quality, 'costPerTask']);
+    const html = render(benchmark);
+    assert.match(html, /class="radar-divider"/, id);
+    assert.match(html, /QA Agent B/);
+    assert.match(html, /Undisclosed/);
+  }
 });

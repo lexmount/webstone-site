@@ -311,7 +311,6 @@ h1 { font-size: 30px; line-height: 1.2; }
 .results-controls { margin-bottom: 14px; align-items: center; }
 .table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 10px; font-size: 12px; color: #69766d; flex-wrap: wrap; }
 .column-views { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.sample-scope { margin: 0 0 10px; font-size: 11px; color: #667368; line-height: 1.6; }.sample-scope:empty { display: none; }
 .table-scroll { width: 100%; max-width: 100%; }
 .wide-table { --rank-width: 36px; --provider-width: 252px; width: calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * 132px); min-width: calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * 132px); }
 .wide-table th.provider-heading { width: var(--provider-width); }
@@ -351,7 +350,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .evaluation-notes p { margin: 6px 0; }.evaluation-notes ul { margin: 8px 0; }
 .table-scroll { width: 100%; }
 .wide-table { --data-column-width: 132px; width: max(100%, calc(var(--rank-width) + var(--provider-width) + var(--data-columns) * var(--data-column-width))); }
-.cost-disclosure { color: #6d756c; font-size: 11px; margin: 0 0 10px; }
 .method-dialog { width: min(620px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border-radius: 14px; }
 .method-dialog::backdrop { background: #15271d35; }
 .dialog-heading { margin-bottom: 12px; align-items: center; gap: 12px; }
@@ -449,8 +447,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .pair-inspector-swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--series-color); flex: 0 0 auto; }
 .pair-inspector-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .pair-inspector-values { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: #52685a; }
-.evaluation-notes-group { margin-bottom: 10px; }
-.evaluation-notes-group .sample-scope { margin-bottom: 4px; }
 .radar-edge, .radar-range { stroke: currentColor; stroke-width: 1.8; }
 .radar-range { stroke-width: 3; stroke-dasharray: 3 2; }
 
@@ -546,7 +542,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .track-card li a { display: flex; padding: 6px 8px; border: 1px solid #d4e1d8; border-radius: 5px; color: #24563c; background: #f7faf7; }
 .track-card li a:hover { background: #e5efe7; }
 
-.evaluation-scope { display: flex; align-items: center; gap: 7px; margin: 10px 0 16px; color: #52685a; font-size: 12px; }
 .report-pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 18px; }
 .report-pagination button { border: 1px solid #b6cbbd; padding: 8px 14px; border-radius: 6px; background: #ecf4ee; color: #23583f; }
 .report-pagination button:disabled { opacity: .45; }
@@ -647,10 +642,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .example-open { display: inline-flex; align-items: center; min-height: 30px; padding: 3px 0; border: 0; background: transparent; color: #286449; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 .benchmark-links button { font-size: 12px; }
 .overview-hero .overview-summary { margin: -8px 0 22px; font-size: 14px; max-width: 420px; }
-.highlight-rules { margin: 10px 0 20px; color: #52685a; font-size: 12px; line-height: 1.6; }
-.highlight-rules summary { cursor: pointer; width: fit-content; }
-.highlight-rules p { margin: 8px 0; }
-.highlight-rules ul { padding-left: 18px; }
 .example-dialog { width: min(860px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; border: 1px solid #dbe6de; border-radius: 14px; padding: 24px; color: #243e31; background: #fff; }
 .example-dialog::backdrop { background: #15271d70; }
 .example-dialog .dialog-heading { display: flex; justify-content: space-between; }
@@ -672,3 +663,6 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 
 .wide-table col.rank-column { width: var(--rank-width); }
 .wide-table col.provider-column { width: var(--provider-width); }
+
+.table-summary { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.comparison-status { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; color: #667368; font-size: 11px; }

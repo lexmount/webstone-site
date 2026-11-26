@@ -45,9 +45,9 @@ function resourceAxis(axis: Axis, providers: Provider[]): Axis | null {
 }
 
 export function isEligibleResourceMetric(metric: Metric): boolean {
-  if (metric.signed || metric.direction !== "asc") return false;
+  if (metric.signed || metric.direction !== "asc" || metric.highlightBest === false) return false;
   if (["ms", "seconds", "mib"].includes(metric.unit)) return true;
-  return metric.unit === "usd" && metric.id !== "pricePerThousand" && metric.highlightBest !== false;
+  return metric.unit === "usd" && metric.id !== "pricePerThousand";
 }
 
 export function radarAxes(benchmark: Benchmark): Axis[] {

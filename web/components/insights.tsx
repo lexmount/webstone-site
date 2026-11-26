@@ -15,7 +15,7 @@ function twoAxisComparison(
   benchmark: Benchmark,
   availableAxes: ReturnType<typeof radarAxes>,
 ): { quality: Metric; resource: Metric } | null {
-  if (availableAxes.length >= 3) return null;
+  if (benchmark.rankable === false || availableAxes.length >= 3) return null;
   const quality = qualityMetrics(benchmark).find(metric => metric.id === benchmark.primaryMetric);
   if (!quality) return null;
   const eligibleResources = benchmark.metrics.filter(metric => metric.id !== quality.id && isEligibleResourceMetric(metric));
@@ -567,6 +567,7 @@ export default function Insights({ benchmark, t }: Props) {
 
   const sortedProviders = sortProviders(benchmark.providers, primary.id, primary.direction);
   const pair = twoAxisComparison(benchmark, availableAxes);
+  if (!pair && defaultIds.length < 3) return null;
   const pairScale = pair ? computePairScale(sortedProviders, pair.quality, pair.resource) : null;
   const providers = sortedProviders.map(provider => ({ provider, values: axes.map(axis => axis.value(provider)) }));
 

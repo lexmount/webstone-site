@@ -226,8 +226,8 @@ export default function Dashboard() {
           <div className="benchmark-heading"><h1>{details ? t(details.name) : "Webstone"}</h1>
             {details && <p className="benchmark-description">{t(details.description)}</p>}
             {details && <div className="benchmark-links">
-              <a href={details.datasetUrl} target="_blank" rel="noreferrer" aria-label={`${t("Dataset")}: ${details.datasetName}`}><img src="/huggingface.svg" width={16} height={16} alt="" aria-hidden="true" />{t("Dataset")}<ArrowUpRight size={13} aria-hidden="true" /></a>
-              <button type="button" className="example-open" aria-haspopup="dialog" onClick={() => setShowExample(true)}>{t("See an example")}</button>
+              <a href={details.datasetUrl} target="_blank" rel="noreferrer" aria-label={`${t("Dataset")}: ${details.datasetName}`}>{new URL(details.datasetUrl).hostname === "github.com" ? <Github /> : <img src="/huggingface.svg" width={16} height={16} alt="" aria-hidden="true" />}{t("Dataset")}<ArrowUpRight size={13} aria-hidden="true" /></a>
+              {details.example && <button type="button" className="example-open" aria-haspopup="dialog" onClick={() => setShowExample(true)}>{t("See an example")}</button>}
               <a href="#reports">{t("Reports")}<ArrowDown size={13} aria-hidden="true" /></a>
             </div>}
 

@@ -67,8 +67,10 @@ equal and capped; extra viewport width must not stretch a score column across th
 page. Narrow screens scroll the table while keeping rank and method visible.
 Method names remain readable. [AGENTS.md](../AGENTS.md#rendering-rules) owns exact geometry.
 
-A capability profile must reveal several meaningful dimensions. Do not construct
-one from redundant timing percentiles or incomparable costs to fill three axes.
+Use a paired plot for one quality metric and one comparable resource metric;
+keep undisclosed resource values on a separate rail. Use a radar for three or
+more meaningful dimensions. Do not fill it with redundant timing percentiles or
+incomparable costs.
 Preserve absent values and label scales. Readers can select methods and axes.
 
 Selecting a benchmark or layer starts its content at the top. Version and metric

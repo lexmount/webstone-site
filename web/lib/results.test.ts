@@ -3,8 +3,13 @@ import { initialLanguage, translator } from "./i18n.ts";
 import { clearLegacyCache, LEGACY_CACHE_RESET_KEY, shouldReloadRelease } from "./release.ts";
 import { categoryRate, costBounds, decisionMetrics, quotedCost, qualityScale } from "./comparisons.ts";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { benchmarkEntries, bestValue, compareVersions, isBestValue, latestEntry, selectEntry, reportEntries, formatMetric, formatPricing, sumCategoryPasses, resolveBenchmark, sortProviders, type Catalog, type Provider, type Snapshot } from "./results.ts";
+
+function resultFiles(id: string) {
+  const directory = new URL(`../../results/${id}/`, import.meta.url);
+  return existsSync(directory) ? readdirSync(directory) : [];
+}
 
 const catalog: Catalog = JSON.parse(readFileSync(new URL("../../benchmarks/catalog.json", import.meta.url), "utf8"));
 
@@ -72,6 +77,7 @@ test("failed or unsupported cache resets remain retryable and do not break relea
 test("English method details and notes never expose untranslated historical source text", () => {
   for (const benchmark of catalog.benchmarks) {
     const directory = new URL(`../../results/${benchmark.id}/`, import.meta.url);
+    if (!existsSync(directory)) continue;
     for (const name of readdirSync(directory)) {
       const report: Snapshot = JSON.parse(readFileSync(new URL(name, directory), "utf8"));
       const t = translator("en", catalog, report);
@@ -93,7 +99,7 @@ const searchSnapshot = readSnapshot("lexbench-websearch/lexbench-websearch-v1-re
 const search = { ...searchSnapshot, benchmarks: [...searchSnapshot.benchmarks, ...readSnapshot("simpleqa-verified/simpleqa-verified-v1-report.json").benchmarks] };
 
 test("compact tables keep the ranking metric and charts preserve natural scales and missing data", () => {
-  for (const info of catalog.benchmarks) for (const name of readdirSync(new URL(`../../results/${info.id}/`, import.meta.url))) {
+  for (const info of catalog.benchmarks) for (const name of resultFiles(info.id)) {
     const benchmark = readSnapshot(`${info.id}/${name}`).benchmarks[0];
     const visible = decisionMetrics(benchmark, false, benchmark.primaryMetric);
     assert.ok(visible.some(metric => metric.id === benchmark.primaryMetric));
@@ -352,7 +358,7 @@ test("best values follow each column direction and ignore missing cells", () => 
 });
 
 test("benchmark titles, dataset names and links follow the public dataset catalog", () => {
-  const expected: Record<string, { name: string; datasetName: string }> = {
+  const expected: Record<string, { name: string; datasetName: string; datasetUrl?: string }> = {
     "lexbench-webfetch": { name: "LexBench Web Fetch", datasetName: "LexBench-Web-Fetch" },
     webmainbench: { name: "LexBench WebMainBench", datasetName: "LexBench-WebMainBench" },
     "lexbench-websearch": { name: "LexBench Web Search", datasetName: "LexBench-Web-Search" },
@@ -365,12 +371,16 @@ test("benchmark titles, dataset names and links follow the public dataset catalo
     "webarena-verified": { name: "LexBench WebArena Replay", datasetName: "LexBench-WebArena-Replay" },
     "lexbench-swde": { name: "LexBench SWDE", datasetName: "LexBench-SWDE" },
     "lexbench-zyte-product-extraction": { name: "LexBench Zyte Product Extraction", datasetName: "LexBench-Zyte-Product-Extraction" },
+    "bu-bench-v1": { name: "BU Bench v1", datasetName: "benchmark", datasetUrl: "https://github.com/browser-use/benchmark" },
+    "online-mind2web": { name: "Online-Mind2Web", datasetName: "Online-Mind2Web", datasetUrl: "https://huggingface.co/datasets/osunlp/Online-Mind2Web" },
+    webvoyager: { name: "WebVoyager", datasetName: "WebVoyager", datasetUrl: "https://github.com/MinorJerry/WebVoyager" },
+    osworld: { name: "OSWorld", datasetName: "OSWorld", datasetUrl: "https://github.com/xlang-ai/OSWorld" },
   };
-  assert.deepEqual(catalog.tracks.map(track => track.name), ["Web Fetch", "Web Search", "Web Extract", "Trajectory Replay", "BrowserArena"]);
+  assert.deepEqual(catalog.tracks.map(track => track.name), ["Web Fetch", "Web Search", "Web Extract", "Trajectory Replay", "BrowserArena", "Browser Use"]);
   for (const benchmark of catalog.benchmarks) {
     assert.equal(benchmark.name, expected[benchmark.id].name);
     assert.equal(benchmark.datasetName, expected[benchmark.id].datasetName);
-    assert.equal(benchmark.datasetUrl, `https://huggingface.co/datasets/Lexmount/${benchmark.datasetName}`);
+    assert.equal(benchmark.datasetUrl, expected[benchmark.id].datasetUrl ?? `https://huggingface.co/datasets/Lexmount/${benchmark.datasetName}`);
   }
 });
 
@@ -497,8 +507,12 @@ test("key views prioritize benchmark quality and expose one representative timin
     "lexbench-headless-372": ["successRate"],
     "lexbench-swde": ["pageMacroF1", "valueMicroF1", "fieldSetExact", "pageExact"],
     "lexbench-zyte-product-extraction": ["pageExact", "priceF1", "skuF1", "stockF1", "outOfStockF1"],
+    "bu-bench-v1": ["successRate"],
+    "online-mind2web": ["successRate"],
+    "webvoyager": ["successRate"],
+    "osworld": ["scoreRate"],
   };
-  for (const info of catalog.benchmarks) for (const name of readdirSync(new URL(`../../results/${info.id}/`, import.meta.url))) {
+  for (const info of catalog.benchmarks) for (const name of resultFiles(info.id)) {
     const benchmark = readSnapshot(`${info.id}/${name}`).benchmarks[0];
     const visible = decisionMetrics(benchmark, false, benchmark.primaryMetric);
     const ids = visible.map(metric => metric.id);

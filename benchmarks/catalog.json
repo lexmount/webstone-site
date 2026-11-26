@@ -1823,6 +1823,10 @@
               "decimals": 2,
               "description": "Reported model cost per task in USD. Lower is better."
             }
+          ],
+          "keyMetricIds": [
+            "successRate",
+            "costPerTask"
           ]
         }
       ]
@@ -1857,6 +1861,10 @@
               "decimals": 2,
               "description": "Reported model cost per task in USD. Lower is better."
             }
+          ],
+          "keyMetricIds": [
+            "successRate",
+            "costPerTask"
           ]
         }
       ]
@@ -1891,9 +1899,26 @@
               "decimals": 2,
               "description": "Reported model cost per task in USD. Lower is better."
             }
+          ],
+          "keyMetricIds": [
+            "successRate",
+            "costPerTask"
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "Allrecipes--0",
+        "sourceUrl": "https://github.com/MinorJerry/WebVoyager/blob/5a7896738c10bfb8b9edccce6bb0e0411f8ae569/data/WebVoyager_data.jsonl",
+        "referenceUrl": "https://github.com/MinorJerry/WebVoyager/blob/5a7896738c10bfb8b9edccce6bb0e0411f8ae569/data/reference_answer.json",
+        "input": "https://www.allrecipes.com/\nProvide a recipe for vegetarian lasagna with more than 100 reviews and a rating of at least 4.5 stars suitable for 6 people.",
+        "steps": [
+          "Navigate the live Allrecipes website to search and filter matching vegetarian lasagna recipes.",
+          "Inspect candidate recipe pages for rating, review count and serving size, then return a matching recipe."
+        ],
+        "outputLabel": "Reference answer",
+        "output": "'Vegetarian Four Cheese Lasagna', 4.6-star, 181 reviews, Servings 8",
+        "check": "The task asks for a matching live recipe on Allrecipes. Review counts and ratings reflect live site state when run."
+      }
     },
     {
       "id": "osworld",
@@ -1902,7 +1927,7 @@
       "datasetUrl": "https://github.com/xlang-ai/OSWorld",
       "reportUrl": "https://yours.lexmount.cn/artifact-site/s/m7XSPPvew0gv",
       "trackId": "browser-use",
-      "description": "Evaluate browser and local-file workflows on 75 OSWorld tasks.",
+      "description": "Evaluate agents on desktop, browser and local-file workflows in OSWorld.",
       "providerLabel": "Agent",
       "definitions": [
         {
@@ -1915,7 +1940,7 @@
               "unit": "percent",
               "direction": "desc",
               "decimals": 2,
-              "description": "Average score across the 75 OSWorld tasks focused on browser and file handling. Higher is better."
+              "description": "Average task score rate across the evaluated OSWorld tasks. Higher is better."
             },
             {
               "id": "costPerTask",
@@ -1925,9 +1950,25 @@
               "decimals": 2,
               "description": "Reported model cost per task in USD. Lower is better."
             }
+          ],
+          "keyMetricIds": [
+            "scoreRate",
+            "costPerTask"
           ]
         }
-      ]
+      ],
+      "example": {
+        "taskId": "030eeff7-b492-4218-b312-701ec99ee0cc",
+        "sourceUrl": "https://github.com/xlang-ai/OSWorld/blob/0ad41bee56565efe7bb3c3a5ebc67590a1b8276f/evaluation_examples/examples/chrome/030eeff7-b492-4218-b312-701ec99ee0cc.json",
+        "input": "Can you enable the 'Do Not Track' feature in Chrome to enhance my online privacy?",
+        "steps": [
+          "Open Chrome privacy settings inside the Ubuntu desktop environment.",
+          "Enable the 'Do Not Track' preference and allow Chrome to persist its configuration."
+        ],
+        "outputLabel": "Reference check",
+        "output": "enable_do_not_track == true",
+        "check": "The OSWorld evaluator restarts Chrome and checks the browser preference with an exact_match rule."
+      }
     }
   ],
   "translations": {
@@ -2194,7 +2235,8 @@
       "Key metrics": "关键指标",
       "Different test conditions": "测试条件不同",
       "Collection dates and retry policies differ.": "采集日期和重试规则不同。",
-      "Six live-page configurations and seven frozen-HTML methods, with separate task populations and scoring rules.": "六种在线网页配置与七种冻结 HTML 方案，分别说明任务范围和评分规则。",
+      "Reference answer": "参考答案",
+      "Reference check": "参考判定",
       "BU Bench v1": "BU Bench v1",
       "Online-Mind2Web": "Online-Mind2Web",
       "WebVoyager": "WebVoyager",
@@ -2202,13 +2244,19 @@
       "Evaluate browser agents on multi-site research, cross-checking and interactive web controls.": "评测浏览器智能体在跨站调研、信息核验和网页控件操作上的表现。",
       "Evaluate browser agents on end-to-end tasks across live websites.": "评测浏览器智能体在真实在线网站上完成端到端任务的表现。",
       "Evaluate browser agents across 13 major live websites.": "评测浏览器智能体在 13 个主流真实网站上的操作表现。",
-      "Evaluate browser and local-file workflows on 75 OSWorld tasks.": "在 75 道浏览器和文件处理相关的 OSWorld 任务上评测跨应用操作表现。",
+      "Evaluate agents on desktop, browser and local-file workflows in OSWorld.": "在 OSWorld 环境中评测智能体的桌面、浏览器与本地文件操作表现。",
       "Success rate": "成功率",
       "Score rate": "得分率",
       "Cost / task": "每题成本",
       "Success rate on evaluable tasks, excluding tasks blocked by website access denials. Higher is better.": "可评价任务上的成功率（排除了遭到网站拒绝访问类的任务），越高越好。",
-      "Average score across the 75 OSWorld tasks focused on browser and file handling. Higher is better.": "75 道浏览器和文件处理相关 OSWorld 任务的平均得分率，越高越好。",
+      "Average task score rate across the evaluated OSWorld tasks. Higher is better.": "评测集 OSWorld 任务的平均得分率，越高越好。",
       "Reported model cost per task in USD. Lower is better.": "公开披露的每题模型费用（美元），越低越好。",
+      "Navigate the live Allrecipes website to search and filter matching vegetarian lasagna recipes.": "访问在线 Allrecipes 网站，搜索并筛选符合条件的素食千层面食谱。",
+      "Inspect candidate recipe pages for rating, review count and serving size, then return a matching recipe.": "逐一检查候选食谱页面的评分、评价数量和份量，返回符合要求的食谱。",
+      "The task asks for a matching live recipe on Allrecipes. Review counts and ratings reflect live site state when run.": "任务要求在 Allrecipes 上找到符合条件的在线食谱，评价数和评分以运行时的实时页面为准。",
+      "Open Chrome privacy settings inside the Ubuntu desktop environment.": "在 Ubuntu 桌面环境中打开 Chrome 隐私设置。",
+      "Enable the 'Do Not Track' preference and allow Chrome to persist its configuration.": "开启“请勿跟踪（Do Not Track）”选项，并保存 Chrome 配置。",
+      "The OSWorld evaluator restarts Chrome and checks the browser preference with an exact_match rule.": "OSWorld 评估器会重启 Chrome，并用 exact_match 规则检查该浏览器偏好设置。",
       "Lexmount Browser Agent: four-benchmark evaluation and cost comparison": "Lexmount Browser Agent：四项国际基准评测与成本对比",
       "Success rates, per-task model costs and peer results across BU Bench v1, Online-Mind2Web, WebVoyager and 75 OSWorld tasks.": "BU Bench v1、Online-Mind2Web、WebVoyager 与 75 道 OSWorld 任务上的成功率、每题成本及同行对比。"
     },
