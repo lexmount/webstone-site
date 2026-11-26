@@ -420,33 +420,7 @@ a.result-published { display: inline-flex; align-items: center; gap: 4px; }
 .radar-legend label { min-height: 34px; padding: 7px 9px; align-items: baseline; }
 .radar-legend label:has(input:not(:checked)) { color: #566961 !important; }
 .radar-series:hover .radar-shape, .radar-series:focus-visible .radar-shape { fill-opacity: .14; stroke-width: 3; }
-.radar-series:hover .radar-dot, .radar-series:focus-visible .radar-dot, .radar-series.is-active .radar-dot { stroke: currentColor; stroke-width: 3; }
-.radar-series:hover .comparison-value, .radar-series:focus-visible .comparison-value, .radar-series.is-active .comparison-value { fill: #102a20; font-weight: 700; }
 .radar-dot { fill: currentColor; }
-.radar-dot.is-undisclosed { fill: #fff; stroke: currentColor; stroke-width: 2.2; }
-.radar-divider { stroke: #c9d8cd; stroke-dasharray: 4 3; }
-.radar-leader { stroke: currentColor; stroke-opacity: .45; stroke-width: 1; }
-.radar-series:hover .radar-leader, .radar-series:focus-visible .radar-leader, .radar-series.is-active .radar-leader { stroke-opacity: .9; stroke-width: 1.6; }
-.comparison-value { fill: #2b4536; font-size: 11px; font-variant-numeric: tabular-nums; }
-.pair-cluster { cursor: pointer; }
-.pair-cluster-badge { fill: #204d36; stroke: #fff; stroke-width: 2; }
-.pair-cluster.is-undisclosed .pair-cluster-badge { fill: #fff; stroke: #204d36; stroke-width: 2; }
-.pair-cluster.is-selected .pair-cluster-badge { stroke: #1e6274; stroke-width: 3; }
-.pair-cluster:focus-visible { outline: 2px solid #286449; outline-offset: 2px; }
-.pair-cluster:focus-visible .pair-cluster-badge, .pair-cluster.is-undisclosed:focus-visible .pair-cluster-badge { stroke: #173d30; stroke-width: 3; }
-.pair-cluster-count { fill: #fff; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
-.pair-cluster.is-undisclosed .pair-cluster-count { fill: #204d36; }
-.pair-inspector { margin: 8px 0 10px; padding: 10px 12px; border: 1px solid #d8e4db; border-radius: 6px; background: #f8fbf9; text-align: left; }
-.pair-cluster-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; justify-content: center; }
-.pair-cluster-button { padding: 4px 10px; border: 1px solid #c9d8cd; border-radius: 999px; background: #f6faf7; color: #204d36; font-size: 12px; cursor: pointer; }
-.pair-cluster-button.is-selected { border-color: #1e6274; background: #e6f2f5; color: #164855; }
-.pair-cluster-button:focus-visible { outline: 2px solid #286449; outline-offset: 2px; }
-.pair-inspector-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 12px; color: #204d36; }
-.pair-inspector ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
-.pair-inspector li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #2b4536; }
-.pair-inspector-swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--series-color); flex: 0 0 auto; }
-.pair-inspector-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-.pair-inspector-values { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: #52685a; }
 .radar-edge, .radar-range { stroke: currentColor; stroke-width: 1.8; }
 .radar-range { stroke-width: 3; stroke-dasharray: 3 2; }
 

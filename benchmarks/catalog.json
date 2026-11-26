@@ -2257,8 +2257,9 @@
       "Open Chrome privacy settings inside the Ubuntu desktop environment.": "在 Ubuntu 桌面环境中打开 Chrome 隐私设置。",
       "Enable the 'Do Not Track' preference and allow Chrome to persist its configuration.": "开启“请勿跟踪（Do Not Track）”选项，并保存 Chrome 配置。",
       "The OSWorld evaluator restarts Chrome and checks the browser preference with an exact_match rule.": "OSWorld 评估器会重启 Chrome，并用 exact_match 规则检查该浏览器偏好设置。",
-      "Lexmount Browser Agent: four-benchmark evaluation and cost comparison": "Lexmount Browser Agent：四项国际基准评测与成本对比",
-      "Success rates, per-task model costs and peer results across BU Bench v1, Online-Mind2Web, WebVoyager and 75 OSWorld tasks.": "BU Bench v1、Online-Mind2Web、WebVoyager 与 75 道 OSWorld 任务上的成功率、每题成本及同行对比。"
+      "Lexmount Browser Agent: capability benchmarks and real-world examples": "Lexmount Browser Agent · 产品能力评测与真实案例白皮书",
+      "Browser agent capabilities, four benchmark comparisons and real-world task examples.": "浏览器 Agent 能力、四项基准对比与真实任务案例。",
+      "Agent": "智能体"
     },
     "en": {
       "全程关闭": "Layout off throughout",

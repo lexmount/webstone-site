@@ -86,8 +86,8 @@
     },
     "bu-bench-v1-v1.0.0": {
       "publishedAt": "2026-11-24T07:48:00.000Z",
-      "title": "Lexmount Browser Agent: four-benchmark evaluation and cost comparison",
-      "summary": "Success rates, per-task model costs and peer results across BU Bench v1, Online-Mind2Web, WebVoyager and 75 OSWorld tasks.",
+      "title": "Lexmount Browser Agent: capability benchmarks and real-world examples",
+      "summary": "Browser agent capabilities, four benchmark comparisons and real-world task examples.",
       "benchmarkIds": [
         "bu-bench-v1",
         "online-mind2web",
