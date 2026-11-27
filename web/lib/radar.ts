@@ -1,5 +1,5 @@
 import { categoryRate, qualityMetrics, qualityScale } from "./comparisons.ts";
-import { comparableMetric, formatMetric, type Benchmark, type Metric, type Provider } from "./results.ts";
+import { rankableMetric, comparableMetric, formatMetric, type Benchmark, type Metric, type Provider } from "./results.ts";
 
 type Bounds = [number, number];
 type Axis = {
@@ -47,7 +47,7 @@ function resourceAxis(axis: Axis, providers: Provider[]): Axis | null {
 export function radarAxes(benchmark: Benchmark): Axis[] {
   const keyIds = new Set(benchmark.keyMetricIds ?? [benchmark.primaryMetric]);
   const comparable = (metric: Metric) => comparableMetric(benchmark, metric) && metric.highlightBest !== false;
-  const categories: Axis[] = benchmark.categories.filter(category => comparableMetric(benchmark) && category.total > 0 &&
+  const categories: Axis[] = benchmark.categories.filter(category => rankableMetric(benchmark) && category.total > 0 &&
     benchmark.providers.some(provider => typeof provider.categoryPassed?.[category.id] === "number")).map(category => ({
     defaultSelected: false,
     id: `category:${category.id}`,
@@ -60,7 +60,7 @@ export function radarAxes(benchmark: Benchmark): Axis[] {
   }));
 
   const hasValues = (metric: Metric) => benchmark.providers.some(provider => typeof provider.scores[metric.id] === "number");
-  const quality = qualityMetrics(benchmark).filter(metric => comparable(metric) && hasValues(metric))
+  const quality = qualityMetrics(benchmark).filter(metric => rankableMetric(benchmark) && metric.highlightBest !== false && hasValues(metric))
     .sort((a, b) => Number(b.id === benchmark.primaryMetric) - Number(a.id === benchmark.primaryMetric));
   const timing = benchmark.metrics.filter(metric => ["ms", "seconds"].includes(metric.unit) && comparable(metric) && hasValues(metric));
   const cost = benchmark.metrics.find(metric => metric.unit === "usd" && metric.id !== "pricePerThousand" && comparable(metric) && hasValues(metric));

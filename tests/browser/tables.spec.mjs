@@ -6,7 +6,6 @@ import assert from 'node:assert/strict';
 const catalog=JSON.parse(readFileSync('benchmarks/catalog.json','utf8'));
 const reports=readdirSync('results',{recursive:true}).filter(file=>file.endsWith('-report.json')).sort().map(file=>JSON.parse(readFileSync(`results/${file}`,'utf8')));
 const crossSourceBenches = new Set(['bu-bench-v1','online-mind2web','webvoyager','osworld']);
-const crossSourceResult = (info,result) => crossSourceBenches.has(info.id) || info.id==='lexbench-webfetch' && result.definitionId==='reviewed-diagnostic';
 const sortedBackground='rgb(234, 244, 238)';
 const winnerBackground='rgb(238, 248, 241)';
 const hoverBackground='rgb(228, 243, 233)';
@@ -24,14 +23,19 @@ function expectedWinner(rows,column) {
   if(column.allowed===false||new Set(values).size<2)return null;
   return column.direction==='asc'?Math.min(...values):Math.max(...values);
 }
-// Source compilations, independently measured timings, output length and non-point
-// billing do not declare winners. Check the publication policy independently of
-// the renderer's ranking and highlighting helpers.
+// Source labels do not remove numeric ranks, extrema or charts. Descriptive
+// output length and non-point billing still have no best-value claim.
 function publishedColumns(info,result,...options) {
   const def=definition(info,result);
   return benchmarkColumns(info,result,...options).map(column=>({...column,
-    allowed:!crossSourceResult(info,result) && !column.reported && !column.pricing && def.metrics.find(metric=>`metric:${metric.id}`===column.id)?.unit!=='characters',
+    allowed:def.rankable!==false && !column.pricing,
   }));
+}
+function expectedExtremumLabel(column,language) {
+  let labels=['Best in this column','本列最佳'];
+  if(column.descriptive)labels=column.direction==='asc'?['Lowest value','本列最低值']:['Highest value','本列最高值'];
+  else if(column.reported)labels=column.direction==='asc'?['Lowest reported value','公开结果中的最低值']:['Highest reported value','公开结果中的最高值'];
+  return labels[language==='zh'?1:0];
 }
 function expectedOrder(rows,column,direction,alphabetical=false) {
   return [...rows].sort((a,b)=>{
@@ -96,10 +100,9 @@ async function inspect(page,rows,columns,sort,direction,alphabetical,language) {
       if(wins) {
         assert.equal(cell.bg,winnerBackground,`${context}: winner background`);
         assert.equal(cell.color,winnerText,`${context}: winner text`);assert(+cell.font>=600);
-        const label=column.reported?(column.direction==='asc'?'Lowest reported value':'Highest reported value'):'Best in this column';
-        const zh=column.reported?(column.direction==='asc'?'公开结果中的最低值':'公开结果中的最高值'):'本列最佳';
-        assert.equal(cell.label,language==='zh'?zh:label,`${context}: winner accessibility label`);
-        assert(cell.title?.includes(language==='zh'?zh:label),`${context}: winner hover explanation survives custom count and method details`);
+        const label=expectedExtremumLabel(column,language);
+        assert.equal(cell.label,label,`${context}: winner accessibility label`);
+        assert(cell.title?.includes(label),`${context}: winner hover explanation survives custom count and method details`);
         const counts=source.counts?.[column.id.replace(/^metric:/,'')];
         if(counts)assert(cell.title.includes(`${counts.count} / ${counts.total}`),`${context}: hover retains source counts`);
       } else {assert(![winnerBackground,hoverBackground].includes(cell.bg),context);assert.equal(cell.label,'',context);}
@@ -124,10 +127,10 @@ function benchmarkColumns(info,result,expanded,categories=true) {
   const def=definition(info,result);
   const metrics=def.metrics.filter(metric=>metric.id===def.primaryMetric||result.providers.some(provider=>numeric(provider.scores[metric.id]))).filter(metric=>expanded||def.keyMetricIds.includes(metric.id));
   return [
-    ...metrics.map(metric=>({id:`metric:${metric.id}`,rankable:def.rankable!==false&&def.comparisonMode!=='reported'&&metric.comparisonMode!=='reported',direction:metric.direction,value:provider=>provider.scores[metric.id],allowed:def.rankable!==false&&def.comparisonMode!=='reported'&&metric.comparisonMode!=='reported'&&metric.highlightBest!==false,reported:def.comparisonMode==='reported'||metric.comparisonMode==='reported',scale:metric.unit==='ratio'?100:metric.unit==='ms'?0.001:1,precision:metric.unit==='ratio'?Math.max(0,metric.decimals-2):metric.unit==='ms'?Math.min(6,metric.decimals+3):metric.unit==='seconds'?Math.max(3,metric.decimals):metric.decimals})),
-    ...(categories?(def.categories??[]).map(category=>({id:`category:${category.id}`,direction:'desc',value:provider=>provider.categoryPassed?.[category.id],displayValue:provider=>provider.categoryPassed[category.id]/result.categoryTotals[category.id]*100,precision:1,reported:def.comparisonMode==='reported',allowed:def.rankable!==false&&def.comparisonMode!=='reported',sortable:false})):[]),
+    ...metrics.map(metric=>({id:`metric:${metric.id}`,rankable:def.rankable!==false,direction:metric.direction,value:provider=>provider.scores[metric.id],allowed:def.rankable!==false,descriptive:metric.highlightBest===false,reported:def.comparisonMode==='reported'||metric.comparisonMode==='reported',scale:metric.unit==='ratio'?100:metric.unit==='ms'?0.001:1,precision:metric.unit==='ratio'?Math.max(0,metric.decimals-2):metric.unit==='ms'?Math.min(6,metric.decimals+3):metric.unit==='seconds'?Math.max(3,metric.decimals):metric.decimals})),
+    ...(categories?(def.categories??[]).map(category=>({id:`category:${category.id}`,direction:'desc',value:provider=>provider.categoryPassed?.[category.id],displayValue:provider=>provider.categoryPassed[category.id]/result.categoryTotals[category.id]*100,precision:1,reported:def.comparisonMode==='reported',allowed:def.rankable!==false,sortable:false})):[]),
     ...(result.providers.some(provider=>provider.pricing&&(numeric(provider.pricing.min)&&numeric(provider.pricing.max)||numeric(provider.pricing.softwareCost)))?[{id:'pricing',pricing:true,sortable:false,allowed:false,value:()=>null}]:[]),
-    ...(categories&&result.providers.some(provider=>numeric(provider.passed))?[{id:'passed',direction:'desc',value:provider=>provider.passed,reported:def.comparisonMode==='reported',allowed:def.rankable!==false&&def.comparisonMode!=='reported',sortable:false}]:[]),
+    ...(categories&&result.providers.some(provider=>numeric(provider.passed))?[{id:'passed',direction:'desc',value:provider=>provider.passed,reported:def.comparisonMode==='reported',allowed:def.rankable!==false,sortable:false}]:[]),
   ];
 }
 for(const report of reports) {
@@ -138,6 +141,11 @@ for(const report of reports) {
     const key=publishedColumns(info,result,false);
     const primary=key.find(column=>column.id===`metric:${def.primaryMetric}`);
     await inspect(page,result.providers,key,primary,primary.direction,false,language);
+    await expect(page.locator('.insights-section')).toHaveCount(1);
+    if(typeof result.taskCount==='number') {
+      const count=await page.evaluate(value=>value.toLocaleString(),result.taskCount);
+      await expect(page.locator('.table-summary')).toContainText(count);
+    }
     const method=await page.locator('thead .method-cell').boundingBox(),score=await page.locator(`thead ${columnSelector(primary.id)}`).boundingBox();
     expect(score.x).toBeGreaterThanOrEqual(method.x+method.width-1);
     expect(score.x).toBeLessThan((await page.locator('.table-scroll').boundingBox()).x+(await page.locator('.table-scroll').boundingBox()).width);
@@ -170,7 +178,7 @@ function overview(track,layer) {
   const columns=catalog.benchmarks.filter(info=>info.trackId===track.id&&(!info.outputLayer||info.outputLayer===layer)).map(info=>{
     const report=reports.filter(report=>report.benchmarks[0].id===info.id).sort(editionOrder).at(-1),result=report?.benchmarks[0];
     const def=result?definition(info,result):info.definitions.at(-1),metric=def.metrics.find(metric=>metric.id===def.primaryMetric);
-    return {id:`benchmark:${info.id}`,info,report,result,metric,direction:metric.direction,rankable:!crossSourceResult(info,result),allowed:!crossSourceResult(info,result),reported:def.comparisonMode==='reported',scale:metric.unit==='ratio'?100:metric.unit==='ms'?0.001:1,precision:metric.unit==='ratio'?Math.max(0,metric.decimals-2):metric.decimals,value:row=>row.values[info.id]};
+    return {id:`benchmark:${info.id}`,info,report,result,metric,direction:metric.direction,rankable:def.rankable!==false,allowed:def.rankable!==false,reported:def.comparisonMode==='reported',scale:metric.unit==='ratio'?100:metric.unit==='ms'?0.001:1,precision:metric.unit==='ratio'?Math.max(0,metric.decimals-2):metric.decimals,value:row=>row.values[info.id]};
   });
   const rows=new Map();
   for(const column of columns)for(const provider of column.result?.providers??[]){
@@ -201,15 +209,20 @@ for(const track of catalog.tracks.filter(track=>track.overview))for(const layer 
   });
 }
 
-test('cross-source scores retain attribution and source evidence without ranks, winners or comparison charts',async({page},testInfo)=>{
+test('source labels and original links retain numeric ranks, extrema and quality charts',async({page},testInfo)=>{
   const language=testInfo.project.metadata.language;
   for(const id of crossSourceBenches) {
     await open(page,`/?benchmark=${id}&version=v1.0.0`,language);
-    await expect(page.locator('.rank-cell')).toHaveCount(0);
-    await expect(page.locator('.best-value')).toHaveCount(0);
-    await expect(page.locator('.insights-section')).toHaveCount(0);
-    await expect(page.locator('.evaluation-source-label')).toHaveCount(5);
-    const report=reports.find(report=>report.benchmarks[0].id===id);
+    const report=reports.find(report=>report.benchmarks[0].id===id&&reportVersion(report.version)==='v1.0.0');
+    const result=report.benchmarks[0],info=catalog.benchmarks.find(info=>info.id===id);
+    const extrema=publishedColumns(info,result,false).reduce((count,column)=>{
+      const winner=expectedWinner(result.providers,column);
+      return count+(winner===null?0:result.providers.filter(row=>column.value(row)===winner).length);
+    },0);
+    await expect(page.locator('tbody .rank-cell')).toHaveCount(result.providers.length);
+    await expect(page.locator('.best-value')).toHaveCount(extrema);
+    await expect(page.locator('.insights-section')).toHaveCount(1);
+    await expect(page.locator('.evaluation-source-label')).toHaveCount(result.providers.length);
     expect(await page.locator('tbody tr').count()).toBe(report.benchmarks[0].providers.length);
     for(const row of report.benchmarks[0].providers) {
       await page.locator(`tr[data-provider="${row.id}"] .method-open`).click();
@@ -225,7 +238,9 @@ test('cross-source scores retain attribution and source evidence without ranks, 
     }
   }
   await open(page,'/?track=browser-use',language);
-  await expect(page.locator('.rank-cell,.best-value,.overview-comparisons')).toHaveCount(0);
+  const expected=overview(catalog.tracks.find(track=>track.id==='browser-use'),'L1');
+  await expect(page.locator('tbody .rank-cell')).toHaveCount(expected.rows.length);
+  await expect(page.locator('.overview-comparisons .quality-comparison')).toHaveCount(expected.columns.filter(column=>column.rankable!==false&&column.result?.providers.some(row=>numeric(row.scores[column.metric.id]))).length);
 });
 
 test('reports fill two grid rows before paging, retain every report and clamp after resizing',async({page},testInfo)=>{
@@ -338,6 +353,25 @@ test('ties, zero, negative deltas, missing values and diagnostic tables render c
     const columns=benchmarkColumns(info,result,false),primary=columns[0];
     await inspect(page,providers,columns,primary,primary.direction,false,language);
     await sortEach(page,providers,columns,primary,false,language);
-    if(mode!=='ranked')await expect(page.locator('.rank-cell')).toHaveCount(0);
+    if(mode==='diagnostic')await expect(page.locator('.rank-cell')).toHaveCount(0);
+  }
+});
+
+
+test('all overviews retain every published chart and keep wide-screen selectors beside the charts',async({page},testInfo)=>{
+  await page.setViewportSize({width:3840,height:1500});
+  for(const [track,layer] of [['webfetch','L1'],['websearch','L1'],['websearch','L2'],['websearch','L3'],['webextract','L1'],['trajectory-replay','L1'],['browser-use','L1']]) {
+    await open(page,`/?track=${track}&layer=${layer}`,testInfo.project.metadata.language);
+    const included=catalog.benchmarks.filter(info=>info.trackId===track&&(!info.outputLayer||info.outputLayer===layer));
+    const headings=await page.locator('.benchmark-comparisons h2').allTextContents();
+    expect(headings).toEqual(included.map(info=>info.name.replace(/^LexBench /,'')));
+    const charts=await page.locator('.benchmark-comparisons').boundingBox(),selector=await page.locator('.overview-chart-layout > .method-selector').boundingBox();
+    expect(selector.x-(charts.x+charts.width)).toBeLessThanOrEqual(20);
+    expect(selector.x).toBeGreaterThanOrEqual(charts.x+charts.width);
+    await expect(page.locator('tbody tr:first-child .rank-cell')).toHaveText('1');
+    const expected=overview(catalog.tracks.find(info=>info.id===track),layer);
+    const firstCell=page.locator('tbody tr:first-child td.numeric').first();
+    if(expectedWinner(expected.rows,expected.columns[0])===null)await expect(firstCell).not.toHaveCSS('background-color',winnerBackground);
+    else await expect(firstCell).toHaveCSS('background-color',winnerBackground);
   }
 });

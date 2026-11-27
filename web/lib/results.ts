@@ -104,6 +104,11 @@ export function latestEntry(entries: Entry[], benchmark: string) {
   return benchmarkEntries(entries, benchmark).at(-1) ?? null;
 }
 
+// Source provenance affects labels, not whether published numbers can be ordered.
+export function rankableMetric(benchmark: {rankable?: boolean}) {
+  return benchmark.rankable !== false;
+}
+
 export function comparableMetric(benchmark: {rankable?: boolean; comparisonMode?: string}, metric?: {comparisonMode?: string}) {
   return benchmark.rankable !== false && benchmark.comparisonMode !== "reported" && metric?.comparisonMode !== "reported";
 }
@@ -130,6 +135,7 @@ export function bestValue(values: (number | null | undefined)[], direction: "asc
 }
 
 export function bestValueLabel(definition: {comparisonMode?: "reported"}, direction: "asc" | "desc", metric?: Metric) {
+  if (metric?.highlightBest === false) return direction === "asc" ? "Lowest value" : "Highest value";
   if (definition.comparisonMode === "reported" || metric?.comparisonMode === "reported") return direction === "asc" ? "Lowest reported value" : "Highest reported value";
   return "Best in this column";
 }

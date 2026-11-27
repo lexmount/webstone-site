@@ -41,18 +41,18 @@ a percentage or milliseconds as seconds, but must preserve the underlying value
 and precision. Counts, scores, memory and signed deltas keep their proper units.
 Downloads retain original values, numerators and denominators.
 
-Rank and highlight results only within a comparable evaluation. Matching benchmark
-names are insufficient: task selection, grading policy and attempt aggregation
-must support the comparison. Preserve source-reported scores from different
-evaluations as a sortable results table with edition-specific attribution. Omit
-ranks, winner highlights and comparison charts for `comparisonMode: "reported"`,
-including when only one metric in an otherwise comparable edition is reported.
-Diagnostic `rankable: false` results also have no ranks or winner claims.
+Published numeric results retain sorting, per-column ranks, directional highlights
+and quality charts. Source annotations identify author evaluations, official blogs,
+papers and other publications; they do not control whether these features exist.
+`comparisonMode: "reported"` uses Highest/Lowest reported value wording. Numeric
+order describes the supplied values and does not certify a shared evaluation
+protocol. An explicitly diagnostic `rankable: false` edition has no ranks or
+extremum highlights. Descriptive metrics use neutral Highest/Lowest value wording.
 
-For comparable metrics, the declared direction determines ranks and winners;
+For numeric metrics, the declared direction determines ranks and winners;
 reversing display order changes neither. Ties share competition ranks. Constant or
-insufficiently disclosed columns have no winner. Respect `highlightBest: false`.
-Output length is descriptive, not a quality score. Price ranges and unknown model
+insufficiently disclosed columns have no winner. Use neutral labels for `highlightBest: false`.
+Output length remains a descriptive measurement. Price ranges and unknown model
 charges never become exact totals.
 
 Keep one measured configuration per browser product in a standard public cohort,
@@ -65,8 +65,8 @@ their declared purposes; see the cohort rules in [AGENTS.md](../AGENTS.md).
 Every Benchmark and Overview uses `web/components/results-table.tsx`.
 `web/lib/table-comparison.ts` owns ordering, missing values, competition ranks and
 per-column winners. Adapters supply columns, source values and method details;
-they do not copy table markup or ranking logic. For comparable selected metrics, ranks use the declared direction and stay
-unchanged when display order is reversed. Reported selected metrics have no rank column.
+they do not copy table markup or ranking logic. Ranks use the declared direction and stay unchanged when display order is reversed.
+Source-reported metrics retain the rank column.
 
 Each benchmark has one shared table. Its definition declares Key metrics in order:
 primary quality first, other essential quality measures, useful reported resources or
@@ -92,7 +92,7 @@ releases while showing the tested configuration beside each result;
 service and model variants remain distinct. Table cells link to their exact
 benchmark editions. Every constituent benchmark stays visible, including an empty
 one. Show method coverage and offer a complete-coverage filter. Sort by the first
-primary score with missing values last. Rank a comparable selected benchmark column without a combined rank. Default charts compare comparable primary metrics separately by benchmark; the optional multi-benchmark
+primary score with missing values last. Rank the selected benchmark column without a combined rank. Default charts retain every published primary metric separately by benchmark; the optional multi-benchmark
 radar admits only complete profiles. Search overviews retain the L1/L2/L3 distinction.
 Method details show the method ID, product ID, tested configurations and current
 published results. A shared URL never establishes method equivalence.
@@ -107,7 +107,8 @@ has designated and verified a public contact address. Keep the Star invitation
 brief and link it to the evaluation repository.
 Report pages contain two rows at the actual grid column count; resize and filtering
 clamp the selected page without omitting reports. Chart method selectors
-have bounded height, search and select/clear controls. Favicons use a transparent
+have bounded height, search and select/clear controls. On wide screens keep them
+beside a bounded chart grid, without an empty grid column or detached legend. Favicons use a transparent
 stone cutout without the logo's white page background.
 
 Selecting a benchmark or layer starts its content at the top. Version and metric
@@ -148,8 +149,8 @@ edition. Show a short label beside the method and original links in its dialog,
 including results reached from Overview. Distinguish the report author's own
 evaluation, official blogs, papers, public code/results, model cards and trajectory
 archives. These labels describe provenance; they do not certify reproducibility.
-The current Browser Use tables retain their author-compiled public scores without
-combining different task sets, judges or attempt policies into one ranking.
+The current Browser Use tables retain their author-compiled scores, numeric ranks
+and quality charts with source labels. They do not calculate an overall score.
 
 An existing published report is an authored publication. Preserve its framework,
 illustrations and narrative when correcting facts or adding a necessary detail.

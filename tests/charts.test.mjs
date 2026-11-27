@@ -814,7 +814,7 @@ test("all published versions highlight comparable column winners consistently, i
             const values = benchmark.providers.map(provider => provider.scores[metric.id]).filter(value => value !== null && value !== undefined);
             const varied = new Set(values).size > 1;
             const best = metric.direction === 'asc' ? Math.min(...values) : Math.max(...values);
-            const expected = benchmark.rankable === false || benchmark.comparisonMode === "reported" || metric.comparisonMode === "reported" || metric.highlightBest === false || !varied ? 0 : values.filter(value => value === best).length;
+            const expected = benchmark.rankable === false || !varied ? 0 : values.filter(value => value === best).length;
             assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${metric.id}`);
             for (const provider of benchmark.providers) {
               const row = rows.find(item => item.dataset.provider === provider.id);
@@ -826,7 +826,7 @@ test("all published versions highlight comparable column winners consistently, i
           for (const category of benchmark.categories) {
             const index = headers.findIndex(header => header.classList.contains('category-head') && header.textContent === category.name);
             const values = benchmark.providers.map(provider => provider.categoryPassed?.[category.id]).filter(value => value !== null && value !== undefined);
-            const expected = benchmark.rankable === false || benchmark.comparisonMode === "reported" || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
+            const expected = benchmark.rankable === false || new Set(values).size < 2 ? 0 : values.filter(value => value === Math.max(...values)).length;
             assert.equal(rows.filter(row => row.children[index].classList.contains('best-value')).length, expected, `${file.file}: ${category.id}`);
             for (const provider of benchmark.providers) {
               const row = rows.find(item => item.dataset.provider === provider.id);
@@ -962,7 +962,7 @@ test("Browser Use reuses the shared radar only when real quality dimensions are 
       ],
     });
     assert.deepEqual(benchmark.keyMetricIds, [quality, 'costPerTask']);
-    assert.equal(render(benchmark), '', `${id}: mixed-protocol scores stay in the source table`);
+    assert.match(render(benchmark), /class="quality-comparison"/, `${id}: source-reported quality remains charted`);
     assert.doesNotMatch(render(benchmark), /class="radar-shape"/, `${id}: no artificial radar dimensions`);
     const expanded = {
       ...benchmark, rankable: true, comparisonMode: undefined,
@@ -1027,7 +1027,7 @@ test("Online-Mind2Web retains reported scores and source-specific extremum label
   });
   assert.equal(benchmark.comparisonMode, "reported");
   assert.equal(benchmark.providers[1].scores.successRate, 98);
-  assert.equal(render(benchmark), '', 'Mixed-protocol scores have no comparison chart');
+  assert.match(render(benchmark), /class="quality-comparison"/, 'Source-reported quality remains charted');
   assert.doesNotMatch(render(benchmark), /best-value|radar-shape/);
 });
 
@@ -1045,9 +1045,9 @@ test('track overviews join published methods across the latest benchmark edition
   const aside = agents.rows.find(row => row.id === 'aside-gpt-5-5-high');
   assert.equal(aside.results.webvoyager, undefined);
   assert.equal(agents.profile.providers.find(p=>p.id===aside.id).scores['webvoyager:successRate'], null);
-  assert.equal(radarAxes(agents.profile).length, 0);
-  assert.equal((render(agents.profile).match(/class="radar-shape"/g)??[]).length,0);
-  assert.equal((render(agents.profile).match(/class="radar-series"/g)??[]).length,0);
+  assert.equal(radarAxes(agents.profile).length, 4);
+  assert.equal((render(agents.profile).match(/class="radar-shape"/g)??[]).length,1);
+  assert.equal((render(agents.profile).match(/class="radar-series"/g)??[]).length,16);
   const fetch = trackComparison(catalog,snapshots,'webfetch');
   assert.equal(fetch.columns.length, 2);
   assert.deepEqual(fetch.columns.map(col=>col.snapshot.version),['v2.1.0','v2.1.0']);
@@ -1057,7 +1057,7 @@ test('track overviews join published methods across the latest benchmark edition
   assert.equal(moli.results.webmainbench.provider.scores.overall,39.27);
   assert.equal(moli.results['lexbench-webfetch'].provider.name,'Moli 1.1.17');
   assert.equal(moli.results.webmainbench.provider.name,'Moli 1.1.11');
-  assert.equal(radarAxes(fetch.profile).length,1);
+  assert.equal(radarAxes(fetch.profile).length,2);
   const search=trackComparison(catalog,snapshots,'websearch','L1');
   assert.equal(search.columns.length,2);
   assert.equal(search.rows.length,9);
@@ -1135,7 +1135,7 @@ test('track overview URLs, individual tabs and search layers retain the correct 
       await React.act(async()=>root.render(React.createElement(Dashboard)));
       if(language==='zh') await React.act(async()=>[...container.querySelectorAll('.language-control button')].find(button=>button.textContent==='中文').click());
       assert.ok(container.querySelector('.track-results'),trackId);
-      const expectedAxes={'browser-use':0,webfetch:1,L1:2,L2:2,L3:2};
+      const expectedAxes={'browser-use':4,webfetch:2,L1:2,L2:2,L3:2};
       const columnKey=trackId==='websearch'?initialLayer:trackId;
       assert.equal(container.querySelectorAll('.overview-comparisons .quality-comparison').length,expectedAxes[columnKey]);
       const columns=expectedColumns[columnKey];
@@ -1274,17 +1274,17 @@ test('overview defaults expose coverage, tested configurations and an actual sco
     const win=new Window();
     try{
       win.document.body.innerHTML=renderToStaticMarkup(React.createElement(TrackResults,{catalog,snapshots,trackId,layer:'L1',onLayer:()=>{},t:x=>x,language:'en'}));
-      assert.equal(Boolean(win.document.querySelector('.track-results col.rank-column')),comparison.columns[0].benchmark?.comparisonMode!=='reported','rank column requires a comparable metric');
+      assert.equal(Boolean(win.document.querySelector('.track-results col.rank-column')),true,'published results retain a rank column');
       const firstRank=win.document.querySelector('.track-results tbody .rank-cell');
-      assert.equal(firstRank?.textContent,comparison.columns[0].benchmark?.comparisonMode==='reported'?undefined:'1','only a comparable metric has a rank');
+      assert.equal(firstRank?.textContent,'1','published values retain their numeric rank');
       assert.equal(win.document.querySelector('th[aria-sort="descending"] .sort-button').textContent,comparison.columns[0].metric.label);
       const rows=[...win.document.querySelectorAll('.track-results tbody tr')];
       const values=rows.map(row=>row.querySelector('td.numeric a')?.textContent.replace(/Best in this column/g,'').trim()).filter(Boolean);
       assert.ok(rows.every(row=>row.querySelector('.method-coverage')),'coverage is visible for each method');
       if(trackId==='webfetch')assert.ok(win.document.querySelector('.track-results').textContent.includes('Moli 1.1.17'));
       if(trackId==='browser-use'){
-        assert.equal(win.document.querySelectorAll('.overview-comparisons .quality-comparison').length,0);
-        assert.equal(win.document.querySelectorAll('.overview-comparisons .quality-series').length,0,'mixed-protocol results stay in the source table');
+        assert.equal(win.document.querySelectorAll('.overview-comparisons .quality-comparison').length,4);
+        assert.equal(win.document.querySelectorAll('.overview-comparisons .quality-series').length,20,'all published values remain charted');
         assert.equal(win.document.querySelectorAll('.overview-comparisons .radar-shape').length,0,'sparse overview starts with per-benchmark comparisons');
       }
       assert.ok(values.length);
@@ -1431,7 +1431,7 @@ test('every overview column keeps its sort and winner styles through reversal an
             assert.deepEqual(rows.map(row=>row.dataset.provider),expected.map(row=>row.id));
             for(const [ci,column] of comparison.columns.entries()) {
               const values=candidates.map(row=>row.results[column.info.id]?.provider.scores[column.metric.id]).filter(value=>typeof value==='number');
-              const eligible=column.benchmark?.rankable!==false && column.benchmark?.comparisonMode!=='reported' && column.metric.comparisonMode!=='reported' && column.metric.highlightBest!==false && new Set(values).size>1;
+              const eligible=column.benchmark?.rankable!==false && new Set(values).size>1;
               const best=column.metric.direction==='asc'?Math.min(...values):Math.max(...values);
               rows.forEach(row=>{
                 const value=candidates.find(item=>item.id===row.dataset.provider).results[column.info.id]?.provider.scores[column.metric.id];
@@ -1487,21 +1487,24 @@ test('mixed overview radar uses only comparable axes and their coverage',async()
     const snapshots=['bu-bench-v1','online-mind2web','webvoyager','osworld'].map(id=>load(id,'v1.0.0').snapshot);
     snapshots.at(-1).benchmarks[0].providers=snapshots.at(-1).benchmarks[0].providers.filter(provider=>provider.id!=='lexmount-browser-agent');
     const comparison=trackComparison(fixture,snapshots,'browser-use');
-    assert.equal(radarAxes(comparison.profile).length,3,`${excluded}: only comparable axes`);
+    const axes=excluded==='reported'?4:3;
+    assert.equal(radarAxes(comparison.profile).length,axes,`${excluded}: only explicit diagnostic flags exclude axes`);
     const win=new Window();
     [globalThis.window,globalThis.document,globalThis.IS_REACT_ACT_ENVIRONMENT]=[win,win.document,true];
     const container=win.document.createElement('div');win.document.body.append(container);const root=require('react-dom/client').createRoot(container);
     try{
       await React.act(async()=>root.render(React.createElement(TrackResults,{catalog:fixture,snapshots,trackId:'browser-use',layer:'L1',onLayer:()=>{},t:x=>x,language:'en'})));
       const selector=container.querySelector('.method-selector .radar-legend');
-      assert.ok(!selector.textContent.includes('Ouroboros'),'methods with only excluded scores stay out of the chart selector');
-      assert.ok([...selector.querySelectorAll('label')].find(label=>label.textContent.includes('Lexmount Browser Agent')).textContent.includes('3/3'),'selector coverage counts only chart axes');
+      assert.equal(selector.textContent.includes('Ouroboros'),excluded==='reported','source provenance does not hide a measured method');
+      assert.ok([...selector.querySelectorAll('label')].find(label=>label.textContent.includes('Lexmount Browser Agent')).textContent.includes(`3/${axes}`),'selector coverage counts only chart axes');
       const radar=container.querySelector('.overview-chart-controls button:nth-child(2)');
-      assert.equal(radar.textContent,'Radar · 1 methods',`${excluded}: excluded score is not required`);
+      assert.equal(radar.textContent,`Radar · ${excluded==='reported'?0:1} methods`,`${excluded}: missing scores remain missing`);
       await React.act(async()=>radar.click());
-      assert.equal(container.querySelectorAll('.radar-shape').length,1);
-      assert.ok(container.querySelector('.insights-section').textContent.includes('3/3'));
-      assert.ok(!container.querySelector('.radar-figure').textContent.includes('OSWorld'));
+      assert.equal(container.querySelectorAll('.radar-shape').length,excluded==='reported'?0:1);
+      if(excluded==='diagnostic') {
+        assert.ok(container.querySelector('.insights-section').textContent.includes('3/3'));
+        assert.ok(!container.querySelector('.radar-figure').textContent.includes('OSWorld'));
+      }
       await React.act(async()=>container.querySelector('.table-toolbar .column-views button:nth-child(2)').click());
       assert.equal(container.querySelectorAll('.track-results tbody tr').length,0,'table complete-coverage filter still requires all four benchmarks');
     }finally{await React.act(async()=>root.unmount());await win.happyDOM.close();}

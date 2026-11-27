@@ -40,11 +40,13 @@ changes need accurate commands, valid local links and a check against their owni
 rules; they do not require a new test that searches for prose keywords.
 
 For published comparisons, derive expected directional extrema independently of
-the catalog's highlight switches. Reported or diagnostic values have no rank,
-winner highlight or comparison chart. Verify task scope, grader and attempt
-policy before treating source values as comparable. Keep descriptive output
-length unhighlighted. Check source publisher/type labels and exact-edition original links; a source
-link or repository does not prove a run was reproduced.
+the catalog's highlight switches. Source-reported values retain numeric ranks, directional highlights and quality
+charts, with reported-value labels and original links. Only explicit diagnostic
+definitions suppress ranks and extrema. Descriptive output length uses neutral
+extremum labels. Check source publisher/type labels and exact-edition original links; a source
+link or repository does not prove a run was reproduced. Verify that every
+constituent benchmark still has its chart and the method selector stays adjacent
+at wide desktop widths.
 Check toolbar/table edges, primary-column visibility, card separator spacing and
 the upward resource menu by rendered geometry at desktop and phone widths.
 

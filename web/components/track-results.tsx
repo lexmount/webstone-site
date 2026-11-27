@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { comparableMetric, bestValueLabel, canonicalVersion, formatMetric, type Catalog, type Snapshot } from '../lib/results';
+import { rankableMetric, bestValueLabel, canonicalVersion, formatMetric, type Catalog, type Snapshot } from '../lib/results';
 import { coverage, orderComparison, trackComparison, type ComparisonRow } from '../lib/track-comparison';
 import { benchmarkHref } from '../lib/overview';
 import { providerColors } from '../lib/presentation';
@@ -30,7 +30,7 @@ export default function TrackResults({catalog,snapshots,trackId,layer,onLayer,t,
   const sortColumn=columns.find(column=>column.info.id===sort?.id) ?? columns[0];
   const direction=sort?.direction ?? sortColumn.metric.direction;
   const ordered=orderComparison(rows.filter(row=>!completeOnly||coverage(row,columns)===columns.length),sortColumn,direction);
-  const chartColumns = columns.filter(col => comparableMetric(col.benchmark??{},col.metric));
+  const chartColumns = columns.filter(col => rankableMetric(col.benchmark??{}));
   const complete=ordered.filter(row=>coverage(row,chartColumns)===chartColumns.length);
   const comparableRows=ordered.filter(row=>coverage(row,chartColumns)>0);
   const chartRows=comparableRows.filter(row=>!hidden.includes(row.id));
@@ -45,8 +45,8 @@ export default function TrackResults({catalog,snapshots,trackId,layer,onLayer,t,
       <span>{t('Included benchmarks')}</span>{columns.map(col=><a key={col.info.id} href={benchmarkHref(col.info.id)}>{col.info.name.replace(/^LexBench /,'')}</a>)}
     </nav>
     <ResultsTable caption={`${comparison.track.name} ${t('Overview')}`} rows={ordered} columns={columns.map((col):TableColumn<ComparisonRow>=>({
-      id:`benchmark:${col.info.id}`,label:t(col.metric.label),direction:col.metric.direction,value:row=>row.results[col.info.id]?.provider.scores[col.metric.id],rankable:comparableMetric(col.benchmark??{},col.metric),
-      highlight:comparableMetric(col.benchmark??{},col.metric)&&col.metric.highlightBest!==false,winnerLabel:t(bestValueLabel(col.benchmark??{},col.metric.direction,col.metric)),
+      id:`benchmark:${col.info.id}`,label:t(col.metric.label),direction:col.metric.direction,value:row=>row.results[col.info.id]?.provider.scores[col.metric.id],rankable:rankableMetric(col.benchmark??{}),
+      highlight:rankableMetric(col.benchmark??{}),winnerLabel:t(bestValueLabel(col.benchmark??{},col.metric.direction,col.metric)),
       before:<a className="overview-benchmark-link" href={`${benchmarkHref(col.info.id)}${col.snapshot?'&version='+canonicalVersion(col.snapshot.version):''}`}><span>{col.info.name.replace(/^LexBench /,'')}</span><ArrowUpRight size={11} aria-hidden="true"/></a>,
       details:<InfoTooltip label={col.info.name} description={t(col.metric.description??'')} sources={[{label:t('Evaluation report'),url:col.benchmark?.reportUrl??col.info.reportUrl}]} sourcesLabel={t('Reports')} detailsLabel={t('details')}/>,
       after:<small className="overview-edition">{col.snapshot?canonicalVersion(col.snapshot.version):t('No published results')}</small>,
